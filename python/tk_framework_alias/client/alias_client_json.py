@@ -68,7 +68,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
             # unique, but append the function name for a more human readable id.
             callback_id = f"{id(obj)}.{obj.__name__}"
 
-            # TODO handle sio better
+            # FIXME handle sio better
             import sgtk
             engine = sgtk.platform.current_engine()
             sio = engine.sio
