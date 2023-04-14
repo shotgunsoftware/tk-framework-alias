@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 import threading
+
 from ..api import alias_api
 
 # NOTE do we need to worry about cleaning up the registry in case it gets huge?

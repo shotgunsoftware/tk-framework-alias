@@ -12,10 +12,11 @@ import os
 import inspect
 import socketio
 
+from ...api import alias_api
+
 from .alias_events_namespace import AliasEventsServerNamespace
 from ..alias_api_request import AliasApiRequest
 from ... import alias_bridge
-from ...api import alias_api
 from ...utils.invoker import execute_in_main_thread
 from ...utils.exceptions import (
     AliasApiRequestException,

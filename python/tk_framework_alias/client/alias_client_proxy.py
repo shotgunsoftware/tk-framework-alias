@@ -11,6 +11,8 @@
 import threading
 import types
 
+from .exceptions import ClientNotConnected, ClientNotFound
+
 
 class AliasClientModuleProxy():
     """A proxy class to represent an Alias Python API module."""
@@ -44,7 +46,6 @@ class AliasClientModuleProxy():
             "__members__",
         ])
         value_keys = set(value)
-        # return required_keys.issubset(value_keys)
         return required_keys == value_keys
 
     def _get_attributes(self, members):
@@ -75,20 +76,25 @@ class AliasClientModuleProxy():
         # module_spec = importlib.util.spec_from_loader(module_name, loader=None)
         # module = importlib.util.module_from_spec(module_spec)
 
+        # FIXME handle sio object better
         self.__sio = sio
 
-        if self.module_name in self.__modules:
-            return self.__modules[self.module_name]
+        with self.__module_lock:
+            # Check if the module has already been created.
+            if self.module_name in self.__modules:
+                return self.__modules[self.module_name]
 
-        module = types.ModuleType(self.module_name)
+            # Create the new module
+            module = types.ModuleType(self.module_name)
 
-        module_attrs = self._get_attributes(self.__data["__members__"])
-        module.__dict__.update(module_attrs)
+            # Get and set the module attributes dictionary
+            module_attrs = self._get_attributes(self.__data["__members__"])
+            module.__dict__.update(module_attrs)
 
-        # Store the module in the class list of modules
-        self.__modules[self.module_name] = module
+            # Store the module in the class list of modules
+            self.__modules[self.module_name] = module
 
-        return module
+            return module
 
 
 class AliasClientProxy():
@@ -144,7 +150,6 @@ class AliasClientProxy():
         """
         """
 
-        # raise NotImplementedError("Subclass must implement")
         self._sio = sio
         return self
 
@@ -198,7 +203,7 @@ class AliasClientProxy():
 
 
 
-        from sgtk.platform.qt import QtCore, QtGui
+        # from sgtk.platform.qt import QtCore, QtGui
         # class AliasEventFilter(QtCore.QObject):
         #     def eventFilter(self, obj, event):
         #         event_type = event.type()
@@ -221,13 +226,15 @@ class AliasClientProxy():
 
 
         if not self._sio:
-            print("NO SIO - abort request......")
-            return
+            raise ClientNotFound("Alias client not found. Cannot send api request.")
+
+        if not self._sio.connected:
+            # TODO log warning
+            raise ClientNotConnected("Alias client is not connected. Cannot send api reqest.")
 
         # async def __send_request_async(event, data, namespace):
         def __send_request_async(event, data, namespace=None):
             # We need to emit non-blocking request and wait callback to set the result
-            # self.__sio.emit_threadsafe(
             self._sio.emit_threadsafe(
                 event,
                 data,
@@ -240,27 +247,17 @@ class AliasClientProxy():
                 # NOTE this resolve the issue with the UI freezing due to deadlock, but it does allow
                 # user to interact with Alias during api calls (e.g. data validation)
                 from sgtk.platform.qt import QtCore, QtGui
-
                 qt_app = QtGui.QApplication.instance()
                 event_dispatcher = qt_app.eventDispatcher()
-
                 qt_app.processEvents(
                     QtCore.QEventLoop.ExcludeUserInputEvents
                     # | QtCore.QEventLoop.ExcludeSocketNotifiers
                     # | QtCore.QEventLoop.WaitForMoreEvents
                 )
-                # # sio.sleep(0.1)
-                # await asyncio.sleep(0.1)
 
             return response.get("result")
 
-        # Running in asyncio makes it very slow...
-        # import asyncio 
-        # result = asyncio.run(__send_request_async(func_name, func_data, sio.shotgrid_namespace))
-
         result = __send_request_async(func_name, func_data)
-        # result = __send_request_async(func_name, func_data, sio.shotgrid_namespace)
-        # print(f"\tResult: {result}")
 
         # qt_app.removeEventFilter(tk_alias_event_filter)
 

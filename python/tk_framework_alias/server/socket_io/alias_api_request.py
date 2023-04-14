@@ -8,8 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
-from .. import alias_bridge
 from ..api import alias_api
+
+from .. import alias_bridge
 from ..utils.exceptions import AliasApiRequestNotValid
 
 

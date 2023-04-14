@@ -13,8 +13,9 @@ import inspect
 import types
 import importlib
 
-from .. import alias_bridge
 from ..api import alias_api
+
+from .. import alias_bridge
 from .alias_api_request import AliasApiRequest
 from .namespaces.alias_events_namespace import AliasEventsServerNamespace
 

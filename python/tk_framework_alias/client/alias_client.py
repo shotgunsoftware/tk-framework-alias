@@ -158,7 +158,6 @@ class AliasSocketIoClient(socketio.Client):
                     # TODO log warning?
                     pass
 
-        # cache_loaded = False
         if not cache_loaded:
             module_proxy = self.call_threadsafe("get_alias_api")
 
