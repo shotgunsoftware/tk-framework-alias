@@ -12,18 +12,13 @@ import os
 import subprocess
 import sys
 
-sys.path.append("C:\\python_libs")
-import ptvsd
-ptvsd.enable_attach(address=('localhost', 5679))
-ptvsd.wait_for_attach()
-
 import eventlet
 import socketio
 import threading
 
 from .socket_io.alias_data_model import AliasDataModel
-from .socket_io.alias_server import AliasServer
 from .socket_io.alias_server_json import AliasServerJSON
+from .socket_io.namespaces.alias_server_namespace import AliasServerNamespace
 from .socket_io.namespaces.alias_events_namespace import AliasEventsServerNamespace
 from .socket_io.namespaces.alias_events_client_namespace import AliasEventsClientNamespace
 from .utils.singleton import Singleton
@@ -38,16 +33,12 @@ class AliasBridge(metaclass=Singleton):
 
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
-        self.__default_port = 8080
+        self.__default_port = 8000
         self.__max_retry_count = 25
         self.__server_socket = None
         
         # Create the SocketIO server, support long-polling (default) and websocket transports.
         # We will try to use websocket transport, if possible
-        # self._server_sio = AliasServer(
-            # plugin_version,
-            # alias_version,
-            # python_version,
         self.__server_sio = socketio.Server(
             aysnc_mode="eventlet",
             logger=True,
@@ -68,9 +59,26 @@ class AliasBridge(metaclass=Singleton):
         # Create the Alias data model to store Alias objects to look up
         self.__data_model = AliasDataModel()
 
-        # Track the namespaces registered to the socketio server
-        self.__connectors = {}
+        # Track the clients registered to the socketio server
+        self.__clients = {}
 
+
+    # Properties
+    # ----------------------------------------------------------------------------------------
+
+    @property
+    def alias_data_model(self):
+        """Get the Alias Data Model to access Alias objects."""
+        return self.__data_model
+
+    @property
+    def alias_events_client_sio(self):
+        """Get the client socketio that can be used to emit Alias events to the server."""
+        return self.__alias_events_client_sio
+
+
+    # Public methods
+    # ----------------------------------------------------------------------------------------
 
     def get_hostname(self):
         """Return the name of the host that this server socket is listening on."""
@@ -86,17 +94,7 @@ class AliasBridge(metaclass=Singleton):
             return None
         return self.__server_socket.getsockname()[1]
 
-    @property
-    def alias_data_model(self):
-        """Get the Alias Data Model to access Alias objects."""
-        return self.__data_model
-
-    @property
-    def alias_events_client_sio(self):
-        """Get the client socketio that can be used to emit Alias events to the server."""
-        return self.__alias_events_client_sio
-
-    def start(self, host=None, port=None, max_retries=None):
+    def start_server(self, host=None, port=None, max_retries=None):
         """
         Start the server to communicate between Alias and ShotGrid.
 
@@ -129,7 +127,7 @@ class AliasBridge(metaclass=Singleton):
 
         return True 
 
-    def stop(self):
+    def stop_server(self):
         """Stop the server."""
 
         if self.alias_events_client_sio:
@@ -143,21 +141,98 @@ class AliasBridge(metaclass=Singleton):
         # TODO close the server socket?
         # TODO shutdown the server so it could be reloaded?
 
-    def register_connector(self, connector, namespace):
-        """Register a new connection."""
+    def get_client_by_namespace(self, namespace):
+        """Return the client for the given namespace."""
 
-        namespance_name = namespace.namespace
-        if namespance_name in self.__server_sio.namespaces:
-            # TODO more specific exception
-            raise Exception(f"Namespace '{namespance_name}' already in use. Connector not registered")
+        return next((client_data for client_data in self.__clients.values() if client_data["namespace"] == namespace), {})
+        
+    def register_client_namespace(self, client_name, client_exe_path, client_info):
+        """
+        Register a new client.
 
-        self.__connectors[namespance_name] = connector
-        self.__server_sio.register_namespace(namespace)
+        A client is unique by the `client_name`. A socketio.Namespace will be created for the
+        client and registered to the server.
 
-    def get_connector_by_namespace(self, namespace):
-        """Return the connector object for the given namespace."""
+        If the client already has been registered, the client data will be returned.
+        """
 
-        return self.__connectors.get(namespace)
+        if self.__clients.get(client_name):
+            raise Exception("Client already registered")
+
+        namespace_handler = AliasServerNamespace(client_name)
+        self.__server_sio.register_namespace(namespace_handler)
+
+        client = {
+            "name": client_name,
+            "exe_path": client_exe_path,
+            "info": client_info,
+            "namespace": namespace_handler.namespace,
+        }
+        self.__clients[client_name] = client
+        
+        return client
+
+    def bootstrap_client(self, client_name, client_exe_path, client_info=None):
+        """
+        Bootstrap the Alias client.
+
+        This method does not start the server; if the client process needs to connect to the
+        sever on bootstrap, the server should already be started to ensure it is ready for the
+        client to connect to.
+        """
+
+        client = self.__clients.get(client_name)
+        if not client:
+            client = self.register_client_namespace(client_name, client_exe_path, client_info)
+
+        # Get the python interpreter to use from the environment, fallback to checking the
+        # current interpreter if not set.
+        python_exe = os.environ.get("ALIAS_PLUGIN_CLIENT_PYTHON")
+        if not python_exe:
+            if os.path.basename(sys.executable) != "python.exe":
+                # We may be embedded, in which case the exe will be the running application instaed of
+                # the python exe
+                # Try to construct the python exe from the exec prefix
+                python_exe = os.path.join(sys.exec_prefix, "python.exe")
+                if not os.path.exists(python_exe):
+                    # Fall back to the sys.executable, in could be a specific pythonXY.exe
+                    python_exe = sys.executable
+            else:
+                python_exe = sys.executable
+
+        # Set up the args to start the new process
+        args = [
+            python_exe,
+            client["exe_path"],
+            self.get_hostname(),
+            str(self.get_port()),
+            client["namespace"],
+        ]
+
+        # Store the main Alias process id in the environment
+        os.environ["ALIAS_PID"] = str(os.getpid())
+        startup_env = os.environ.copy()
+
+        # Set up the startup info for opening the new process.
+        si = subprocess.STARTUPINFO()
+        # Only show the console window when in debug mode.
+        if os.environ.get("ALIAS_PLUGIN_CLIENT_DEBUG") != "1":
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        # Start the client in a new a process, don't wait for it to finish.
+        subprocess.Popen(args, env=startup_env, startupinfo=si)
+
+        return True
+
+    def restart_client(self, client_namespace):
+        """Re-bootstrap the client for the given namespace."""
+
+        client = self.get_client_by_namespace(client_namespace)
+        return self.bootstrap_client(client["name"], client["exe_path"], client["info"])
+
+
+    # Private methods
+    # ----------------------------------------------------------------------------------------
 
     def __create_server_socket(self, host, port, max_retries):
         """Open a server socket and return the socket."""
@@ -191,51 +266,3 @@ class AliasBridge(metaclass=Singleton):
         # single threaded (e.g. can only access the socketio server from the thread it was created
         # in).
         eventlet.wsgi.server(self.__server_socket, self.__app, log=self.__wsgi_logger)
-
-    def bootstrap_client(self, client_exe_path, namespace):
-        """
-        Bootstrap the Alias client.
-
-        This method does not start the server; if the client process needs to connect to the
-        sever on bootstrap, the server should already be started to ensure it is ready for the
-        client to connect to.
-        """
-
-        # Get the python interpreter to use from the environment, fallback to checking the
-        # current interpreter if not set.
-        python_exe = os.environ.get("ALIAS_PLUGIN_CLIENT_PYTHON")
-        if not python_exe:
-            if os.path.basename(sys.executable) != "python.exe":
-                # We may be embedded, in which case the exe will be the running application instaed of
-                # the python exe
-                # Try to construct the python exe from the exec prefix
-                python_exe = os.path.join(sys.exec_prefix, "python.exe")
-                if not os.path.exists(python_exe):
-                    # Fall back to the sys.executable, in could be a specific pythonXY.exe
-                    python_exe = sys.executable
-            else:
-                python_exe = sys.executable
-
-        # Set up the args to start the new process
-        args = [
-            python_exe,
-            client_exe_path,
-            self.get_hostname(),
-            str(self.get_port()),
-            namespace
-        ]
-
-        # Store the main Alias process id in the environment
-        os.environ["ALIAS_PID"] = str(os.getpid())
-        startup_env = os.environ.copy()
-
-        # Set up the startup info for opening the new process.
-        si = subprocess.STARTUPINFO()
-        # Only show the console window when in debug mode.
-        if os.environ.get("ALIAS_PLUGIN_CLIENT_DEBUG") != "1":
-            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-        # Start the client in a new a process, don't wait for it to finish.
-        subprocess.Popen(args, env=startup_env, startupinfo=si)
-
-        return True

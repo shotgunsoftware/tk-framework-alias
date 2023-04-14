@@ -30,10 +30,8 @@ class AliasServerNamespace(socketio.Namespace):
 
     _NAME = "alias"
 
-    def __init__(self, sub_namespace=None, client_exe_path=None):
+    def __init__(self, sub_namespace=None):
         """Initialize the namespace."""
-
-        self.__client_exe_path = client_exe_path
 
         namespace = f"/{self._NAME}"
         if sub_namespace:
@@ -78,8 +76,7 @@ class AliasServerNamespace(socketio.Namespace):
         # We can't wait because the client is going to disconnect - should the server disconnect it?
         self.emit("shutdown", namespace=self.namespace)
 
-        if self.__client_exe_path:
-            alias_bridge.AliasBridge().bootstrap_client(self.__client_exe_path, self.namespace)
+        alias_bridge.AliasBridge().restart_client(self.namespace)
 
     def on_get_alias_api(self, sid):
         """Get the global attributes for the Alias Python API."""
@@ -139,15 +136,11 @@ class AliasServerNamespace(socketio.Namespace):
         """Return the server information."""
 
         api_info = self.on_get_alias_api_info(sid)
-        server_info = {
+        client_info = alias_bridge.AliasBridge().get_client_by_namespace(self.namespace).get("info")
+        return {
             "api": api_info,
+            "client": client_info,
         }
-
-        connector = alias_bridge.AliasBridge().get_connector_by_namespace(self.namespace)
-        if connector:
-            server_info.update(connector.info())
-        
-        return server_info
 
     def trigger_event(self, event, sid, *args):
         """Catch all events and dispatch."""

@@ -9,4 +9,3 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 from .alias_bridge import AliasBridge
-from .alias_bridge_connector import AliasBridgeConnector
