@@ -7,6 +7,20 @@
 
 import os
 import sys
+from ..utils.exceptions import AliasPythonApiImportError
+
+# First check the python version is at least 3
+if sys.version_info.major < 3:
+    error_msg = "Alias Python API only supports Python 3. You are using Python {major}.{minor}. Please refer to this <a href='https://github.com/shotgunsoftware/tk-alias/wiki/Python-Version-Support'>page</a> for additional information.".format(
+        major=sys.version_info.major,
+        minor=sys.version_info.minor,
+    )
+    raise AliasPythonApiImportError(error_msg)
+
+# Import requires python >= 3, import it after we check the python version to provide a better
+# error message
+import importlib.util
+
 
 # The Alias Python API (APA) python module is decided based on the current version of Alias
 # that is running. Defined here is the Alias version grouping:
@@ -27,12 +41,6 @@ ALIAS_API = {
     "alias2020.3-alias2021": {"min_version": "2020.3", "max_version": "2021.3"},
     "alias2019-alias2020.2": {"min_version": "2019", "max_version": "2020.3"},
 }
-
-
-class AliasPythonAPIImportError(Exception):
-    """Exception for Alias Python API import errors."""
-
-    pass
 
 
 def version_cmp(version1, version2):
@@ -79,30 +87,20 @@ def version_cmp(version1, version2):
     return 0
 
 
-def import_alias_api():
-    """
-    Import the right Alias Python API module according to the criteria:
-        - the version of Alias
-        - the execution mode (interactive vs non-interactive)
-
-    The Alias Python API supports Python >= 3
-    """
-
-    # Import requires python >= 3, place it inside this function so that the python version
-    # can be checked first, without failing to import.
-    import importlib.util
+def get_alias_version():
+    """Return the Alias version."""
 
     # Get the Alias version from the environment variable
-    alias_release_version = os.environ.get("TK_ALIAS_VERSION")
-    if alias_release_version == "docs":
-        # Special case handling when importing the module to generate docs. Just skip the
-        # whole import process since Sphinx does not actually need the module set up, it
-        # just needs to access the code
-        return
+    version = os.environ.get("ALIAS_PLUGIN_CLIENT_ALIAS_VERSION")
+    if not version:
+        msg = "Alias version is not set. Set the environment variable ALIAS_PLUGIN_CLIENT_ALIAS_VERSION (e.g. 2022.2)."
+        raise AliasPythonApiImportError(msg)
+    
+    return version
 
-    if not alias_release_version:
-        msg = "Alias version is not set. Set the environment variable TK_ALIAS_VERSION (e.g. 2022.2)."
-        raise AliasPythonAPIImportError(msg)
+
+def get_module_path(alias_release_version):
+    """Return the file path to the Alias Python API module to use."""
 
     python_version = "{major}.{minor}".format(
         major=sys.version_info.major,
@@ -146,74 +144,81 @@ def import_alias_api():
             break
 
     if not api_folder_path or not os.path.exists(api_folder_path):
-        raise AliasPythonAPIImportError(
+        raise AliasPythonApiImportError(
             "Failed to get Alias Python API module path for Alias {alias_version} and Python {py_version}".format(
                 alias_version=alias_release_version, py_version=python_version
             )
         )
 
-    # Get the right file to import according to the running mode (interactive vs non-interactive)
-    module_name = (
-        "alias_api"
-        if os.path.basename(sys.executable) == "Alias.exe"
-        else "alias_api_om"
-    )
-    print(f"Using Alias API module: {module_name}")
+    return api_folder_path
+
+
+def get_module_spec(module_name, module_dir):
+    """Return the module spec."""
 
     module_path = os.path.normpath(
         os.path.join(
-            api_folder_path,
+            module_dir,
             "{}.pyd".format(module_name),
         )
     )
     if not os.path.exists(module_path):
-        raise AliasPythonAPIImportError("Module does not exist {}".format(module_path))
+        raise AliasPythonApiImportError("Module does not exist {}".format(module_path))
 
     # Find and create the module spec object for the Alias Python API
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if not spec:
-        # NOTE importlib.util.spec_from_location does not seem to find the module on macos
-        raise AliasPythonAPIImportError(
+        raise AliasPythonApiImportError(
             "Could not find the Alias Python API module {}".format(module_path)
         )
 
+    return spec
+
+
+def get_alias_api_module():
+    """
+    Import the right Alias Python API module according to the criteria:
+        - the version of Alias
+        - the execution mode (interactive vs non-interactive)
+
+    The Alias Python API supports Python >= 3
+    """
+
+    # Get the folder path to the api module for the given Alias version
+    alias_release_version = get_alias_version()
+    api_folder_path = get_module_path(alias_release_version)
+
+    # Determine the module name based on if running in OpenAlias or OpenModel
+    # If the executable is Alias, then it is OpenAlias
+    exe_name = os.path.basename(sys.executable)
+    module_name = "alias_api" if exe_name == "Alias.exe" else "alias_api_om"
+    spec = get_module_spec(module_name, api_folder_path)
+
     try:
         alias_api = importlib.util.module_from_spec(spec)
+
+        # NOTE What does this do?
         spec.loader.exec_module(alias_api)
+
     except Exception as e:
         info_msg = (
             "Running: Alias v{alias_version}, Python v{py_major}.{py_minor}.{py_micro}.\n\n"
-            "Attempted to import Alias Python API: {apa_path}\n\n"
+            "Attempted to import Alias Python API {apa_name}.pyd from: {apa_path}\n\n"
             "Failed import may be caused by a mismatch between the running Alias or Python version and "
             "the versions used to compile the Alias Python API."
         ).format(
-            apa_path=module_path,
+            apa_name=module_name,
+            apa_path=api_folder_path,
             alias_version=alias_release_version,
             py_major=sys.version_info.major,
             py_minor=sys.version_info.minor,
             py_micro=sys.version_info.micro,
         )
-        raise AliasPythonAPIImportError(
+        raise AliasPythonApiImportError(
             "{error}\n\n{info}".format(error=str(e), info=info_msg)
         )
 
-    # # Add the newly created module oject to sys.modules and remap the globals accessor to point at our new module
-    # sys.modules["alias_api"] = alias_api
-    # globals()["alias_api"] = sys.modules["alias_api"]
     return alias_api
 
 
-#
-# First check the python version is at least 3
-#
-if sys.version_info.major < 3:
-    error_msg = "Alias Python API only supports Python 3. You are using Python {major}.{minor}. Please refer to this <a href='https://github.com/shotgunsoftware/tk-alias/wiki/Python-Version-Support'>page</a> for additional information.".format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor,
-    )
-    raise AliasPythonAPIImportError(error_msg)
-
-#
-# Import the Alias Python API module
-#
-alias_api = import_alias_api()
+alias_api = get_alias_api_module()

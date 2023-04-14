@@ -27,28 +27,32 @@ ALIAS_PLUGINS = {
 }
 
 
-def get_plugin_environment(client_name, client_exe_path):
+def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0"):
     """
     Return a dictionary containing the env vars required to launch the plugin.
     
+    :param alias_version: The Alias version that the plugin is running with.
+    :type alias_version: str
     :param client_name: The name of the client. This will be used by the plugin to set up a
         communication channel with Alias.
     :type client_name: str
     :param client_exe_path: The path to the python script used by the plugin to start the
         client application.
     :type client_exe_path: str
+    :param debug: Set to "1" to run in debug mode, else "0" for non-debug mode.
+    :type debug: str
 
     :return: The plugin environment.
     :rtype: dict
     """
 
-    tk_debug = os.environ.get("TK_DEBUG", "0")
 
     return {
         "ALIAS_PLUGIN_CLIENT_NAME": client_name,
         "ALIAS_PLUGIN_CLIENT_EXE_PATH": client_exe_path,
         "ALIAS_PLUGIN_CLIENT_PYTHON": sys.executable,
-        "ALIAS_PLUGIN_CLIENT_DEBUG": tk_debug,
+        "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
+        "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
     }
 
 def ensure_plugin_installed(alias_version):
@@ -139,3 +143,15 @@ def ensure_plugin_installed(alias_version):
         plf.write("{}\n".format(plugin_file_path))
 
     return plugins_list_file
+
+def get_alias_api_module():
+    """
+    Return the Alias Python API module.
+
+    The api module returned will be for OpenAlias if executing with Python embedded in a
+    running instance of Alias. Otherwise, the api module returned will be for OpenModel.
+    """
+
+    from ..tk_framework_alias.server.api import alias_api
+
+    return alias_api

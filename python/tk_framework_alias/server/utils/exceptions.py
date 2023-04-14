@@ -8,6 +8,10 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+
+class AliasPythonApiImportError(Exception):
+    """Exception for Alias Python API import errors."""
+
 class AliasApiRequestException(Exception):
     """Custom exception class..."""
 
