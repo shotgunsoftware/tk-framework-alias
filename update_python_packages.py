@@ -8,12 +8,6 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
-import sys
-sys.path.append("C:\\python_libs")
-import ptvsd
-ptvsd.enable_attach(address=("localhost", 5679))
-ptvsd.wait_for_attach()
-
 import subprocess
 import os
 from pathlib import Path
@@ -57,17 +51,10 @@ with TemporaryDirectory() as temp_dir:
     # Quickly compute the number of requirements we have.
     nb_dependencies = len([_ for _ in open("frozen_requirements.txt", "rt")])
 
-    # Figure out if those packages were installed as single file packages or folders.
-    # package_names = [
-    #     package_name
-    #     for package_name in os.listdir(temp_dir)
-    #     if "info" not in package_name and package_name not in ("bin", "include")
-    # ]
+    # Get installed packages, separate out C extension packages since these
+    # cannot be zipped up (dynamic libraries .pyd, .dll, .so)
     package_names = []
-
-    # Handle C extension modules (dynamic libraries .pyd, .dll, .so)
     c_extension_packages = []
-
     with os.scandir(temp_dir) as entries:
         for entry in entries:
             if "info" in entry.name or entry.name in ("bin", "include"):
@@ -105,30 +92,27 @@ with TemporaryDirectory() as temp_dir:
         copy_tree(include_dir, os.path.join(dist_dir, "include"))
 
     pkgs_zip = ZipFile(Path(dist_dir) / "pkgs.zip", "w")
-
     for package_name in package_names:
         print(f"Zipping {package_name}...")
-
-        # If we have a .py file to zip, simple write it
         temp_dir_path = Path(temp_dir)
         full_package_path = temp_dir_path / package_name
-
         if full_package_path.suffix == ".py":
+            # If we have a .py file to zip, simple write it
             pkgs_zip.write(full_package_path, full_package_path.relative_to(temp_dir))
-
         else:
             # Otherwise zip package folders recursively.
             zip_recursively(pkgs_zip, temp_dir_path, package_name)
 
+    # Copy C Extension packages, these cannot be included in the ZipFile distribution due to
+    # the limitation of ZipFile with dynamic libraries
     if c_extension_packages:
-        print(f"Copying C Extension package {package_name}...")
-
         # Create the library directory to copy dynamic lib packages
         lib_dir = os.path.join(dist_dir, "lib")
         if not os.path.exists(lib_dir):
             os.mkdir(lib_dir)
 
         for package_name in c_extension_packages: 
+            print(f"Copying {package_name}...")
             package_path = os.path.join(temp_dir, package_name)
             dist_package_path = os.path.join(lib_dir, package_name)
             copy_tree(package_path, dist_package_path)
