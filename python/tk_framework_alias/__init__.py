@@ -8,5 +8,25 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+# Add our third-party packages to sys.path. Non-C Extension packages are zipped up to save on
+# space, but C Extension pacakges cannot be distributed via ZipFile so they have been installed
+# locally in the framework dist directory
+import os
+import sys
+
+dist_path = os.path.normpath(
+    os.path.join(
+        os.path.dirname(__file__),  # ./python/tk_framework_alias
+        os.pardir,  # ./python
+        os.pardir,  # .
+        "dist",
+    )
+)
+sys.path.insert(0, dist_path)
+sys.path.insert(0, os.path.join(dist_path, "pkgs.zip"))
+sys.path.insert(0, os.path.join(dist_path, "lib"))
+
+# For python >= 3.9 do we need to use os.add_dll_directory?
+
 from . import client
 from . import server
