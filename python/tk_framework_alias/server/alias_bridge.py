@@ -13,15 +13,9 @@ import subprocess
 import sys
 import threading
 
-
-# sys.path.append("C:\\python_libs")
-# import ptvsd
-# ptvsd.enable_attach(address=("localhost", 5679))
-# ptvsd.wait_for_attach()
-
+# Third party pacakges included in dist/pkgs.zip
 import socketio
 import eventlet
-
 
 from .socket_io.alias_data_model import AliasDataModel
 from .socket_io.alias_server_json import AliasServerJSON
@@ -39,12 +33,6 @@ class AliasBridge(metaclass=Singleton):
 
     def __init__(self):
         """Initialize the server."""
-
-        sys.path.append("C:\\python_libs")
-        import ptvsd
-        ptvsd.enable_attach(address=("localhost", 5679))
-        ptvsd.wait_for_attach()
-
 
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
