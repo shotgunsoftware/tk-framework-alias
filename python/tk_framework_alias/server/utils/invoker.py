@@ -14,6 +14,7 @@ import threading
 # NOTE this may be replaced/not necessary if Alias Python API can execute itself in the main thread
 # e.g. Alias Team to expose the asyncTask in the ext API headers
 
+
 def execute_in_main_thread(func):
     """Decorator function to ensure function is executed in main thread."""
 
@@ -27,8 +28,9 @@ def execute_in_main_thread(func):
             return invoker.invoke(func, *args, **kwargs)
         # No invoker, just run the function normally
         return func(*args, **kwargs)
-    
+
     return wrapper
+
 
 def create_invoker():
     """Create an object used to invoke function calls on the main thread when called from a different thread."""
@@ -47,7 +49,7 @@ def create_invoker():
         #     try:
         #         # NOTE in debug mode cannot access the app instance!
         #         # ALSO, for Alias < 2024.0 we can't do this because Alias is not running Qt
-        #         # 
+        #         #
         #         # We may be in debug mode in which case we need to do some fancy footwork here..
         #         # this is due to using debug dlls in C++ but release in pyside2 python
         #         from PySide2 import QtGui

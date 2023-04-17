@@ -95,7 +95,7 @@ def get_alias_version():
     if not version:
         msg = "Alias version is not set. Set the environment variable ALIAS_PLUGIN_CLIENT_ALIAS_VERSION (e.g. 2022.2)."
         raise AliasPythonApiImportError(msg)
-    
+
     return version
 
 

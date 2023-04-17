@@ -39,7 +39,7 @@ class AliasEventsServerNamespace(socketio.Namespace):
 
     def on_disconnect(self, sid):
         print(f"[{self.namespace}] disconnected from server", sid)
-    
+
     def on_shutdown(self, sid):
         """Shutdown the server."""
 

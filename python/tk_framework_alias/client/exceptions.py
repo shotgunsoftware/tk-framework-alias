@@ -8,12 +8,14 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+
 class AliasClientException(Exception):
     """Custom exception class..."""
+
 
 class ClientNotFound(AliasClientException):
     """Custom exception class..."""
 
+
 class ClientNotConnected(AliasClientException):
     """Custom exception class..."""
-

@@ -14,7 +14,7 @@ import json
 from .alias_client_proxy import AliasClientProxy, AliasClientModuleProxy
 
 
-class AliasClientJSON():
+class AliasClientJSON:
     """A custom json module to handle serializing Alias API objects."""
 
     @staticmethod
@@ -41,25 +41,21 @@ class AliasClientJSONEncoder(json.JSONEncoder):
         """Initialize the encoder."""
 
         super(AliasClientJSONEncoder, self).__init__(*args, **kwargs)
-    
+
     def default(self, obj):
         """Encode the object."""
 
         if isinstance(obj, AliasClientModuleProxy):
             return obj.sanitize()
-        
+
         if isinstance(obj, AliasClientProxy):
             return obj.sanitize()
-        
+
         if inspect.isclass(obj):
-            return {
-                "__class_name__": obj.__name__
-            }
+            return {"__class_name__": obj.__name__}
 
         if isinstance(obj, set):
-            return {
-                "__set__": list(obj)
-            }
+            return {"__set__": list(obj)}
 
         if inspect.isfunction(obj) or inspect.ismethod(obj):
             # This arg is a callback function argument.
@@ -70,6 +66,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
 
             # FIXME handle sio better
             import sgtk
+
             engine = sgtk.platform.current_engine()
             sio = engine.sio
 
@@ -80,10 +77,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
 
             sio.set_callback(callback_id, obj)
 
-            return {
-                "__callback_function_id__": callback_id
-            }
-               
+            return {"__callback_function_id__": callback_id}
 
         return super(AliasClientJSONEncoder, self).default(obj)
 
@@ -94,7 +88,9 @@ class AliasClientJSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
 
-        super(AliasClientJSONDecoder, self).__init__(object_hook=self.object_hook, *args, **kwargs)
+        super(AliasClientJSONDecoder, self).__init__(
+            object_hook=self.object_hook, *args, **kwargs
+        )
 
     def object_hook(self, obj):
         """Decode the object."""
@@ -103,12 +99,13 @@ class AliasClientJSONDecoder(json.JSONDecoder):
             if "exception_class" in obj:
                 exception_class_name = obj["exception_class"]
                 exception_class = type(exception_class_name, (Exception,), {})
-                exception_instance = exception_class(obj.get("msg", "Alias Python API error"))
-                raise(exception_instance)
+                exception_instance = exception_class(
+                    obj.get("msg", "Alias Python API error")
+                )
+                raise (exception_instance)
 
             if isinstance(obj.get("__type__"), set):
                 return set(obj.get("__value__"))
-
 
         if AliasClientModuleProxy.needs_wrapping(obj):
             return AliasClientModuleProxy(obj)

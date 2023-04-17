@@ -11,16 +11,25 @@
 import os
 import subprocess
 import sys
-
-import eventlet
-import socketio
 import threading
+
+
+# sys.path.append("C:\\python_libs")
+# import ptvsd
+# ptvsd.enable_attach(address=("localhost", 5679))
+# ptvsd.wait_for_attach()
+
+import socketio
+import eventlet
+
 
 from .socket_io.alias_data_model import AliasDataModel
 from .socket_io.alias_server_json import AliasServerJSON
 from .socket_io.namespaces.alias_server_namespace import AliasServerNamespace
 from .socket_io.namespaces.alias_events_namespace import AliasEventsServerNamespace
-from .socket_io.namespaces.alias_events_client_namespace import AliasEventsClientNamespace
+from .socket_io.namespaces.alias_events_client_namespace import (
+    AliasEventsClientNamespace,
+)
 from .utils.singleton import Singleton
 from .utils.wsgi_server_logger import WSGIServerLogger
 
@@ -31,12 +40,18 @@ class AliasBridge(metaclass=Singleton):
     def __init__(self):
         """Initialize the server."""
 
+        sys.path.append("C:\\python_libs")
+        import ptvsd
+        ptvsd.enable_attach(address=("localhost", 5679))
+        ptvsd.wait_for_attach()
+
+
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
         self.__default_port = 8000
         self.__max_retry_count = 25
         self.__server_socket = None
-        
+
         # Create the SocketIO server, support long-polling (default) and websocket transports.
         # We will try to use websocket transport, if possible
         self.__server_sio = socketio.Server(
@@ -53,7 +68,9 @@ class AliasBridge(metaclass=Singleton):
         self.__wsgi_logger = WSGIServerLogger()
 
         # Create the SocketIO client to handle Alias events in the main thread
-        self.__alias_events_client_sio = socketio.Client(logger=True, engineio_logger=True)
+        self.__alias_events_client_sio = socketio.Client(
+            logger=True, engineio_logger=True
+        )
         self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
 
         # Create the Alias data model to store Alias objects to look up
@@ -61,7 +78,6 @@ class AliasBridge(metaclass=Singleton):
 
         # Track the clients registered to the socketio server
         self.__clients = {}
-
 
     # Properties
     # ----------------------------------------------------------------------------------------
@@ -82,14 +98,14 @@ class AliasBridge(metaclass=Singleton):
 
     def get_hostname(self):
         """Return the name of the host that this server socket is listening on."""
-        
+
         if not self.__server_socket:
             return None
         return self.__server_socket.getsockname()[0]
 
     def get_port(self):
         """Return the port number that this server socket is listening on."""
-        
+
         if not self.__server_socket:
             return None
         return self.__server_socket.getsockname()[1]
@@ -111,10 +127,9 @@ class AliasBridge(metaclass=Singleton):
         if not self.__server_socket:
             # Failed to open a server socket.
             raise Exception("Failed to open server socket.")
-    
+
         # Start the SocketIO server in a new thread using Python standard threds.
         th = threading.Thread(target=self.__serve_app)
-        # th.daemon = True
         th.start()
 
         # Connect the Alias socketio client to the server. This must be called after the server is started in a new thread.
@@ -125,7 +140,7 @@ class AliasBridge(metaclass=Singleton):
             wait_timeout=20,
         )
 
-        return True 
+        return True
 
     def stop_server(self):
         """Stop the server."""
@@ -135,7 +150,9 @@ class AliasBridge(metaclass=Singleton):
             # this function from the main thread (not the thread that the socketio server is
             # executing in), and the socketio server can only be accessed from the single thread
             # it executes in.
-            self.alias_events_client_sio.call("shutdown", namespace=AliasEventsServerNamespace.get_namespace())
+            self.alias_events_client_sio.call(
+                "shutdown", namespace=AliasEventsServerNamespace.get_namespace()
+            )
             self.alias_events_client_sio.disconnect()
 
         # TODO close the server socket?
@@ -144,8 +161,15 @@ class AliasBridge(metaclass=Singleton):
     def get_client_by_namespace(self, namespace):
         """Return the client for the given namespace."""
 
-        return next((client_data for client_data in self.__clients.values() if client_data["namespace"] == namespace), {})
-        
+        return next(
+            (
+                client_data
+                for client_data in self.__clients.values()
+                if client_data["namespace"] == namespace
+            ),
+            {},
+        )
+
     def register_client_namespace(self, client_name, client_exe_path, client_info):
         """
         Register a new client.
@@ -169,7 +193,7 @@ class AliasBridge(metaclass=Singleton):
             "namespace": namespace_handler.namespace,
         }
         self.__clients[client_name] = client
-        
+
         return client
 
     def bootstrap_client(self, client_name, client_exe_path, client_info=None):
@@ -183,7 +207,9 @@ class AliasBridge(metaclass=Singleton):
 
         client = self.__clients.get(client_name)
         if not client:
-            client = self.register_client_namespace(client_name, client_exe_path, client_info)
+            client = self.register_client_namespace(
+                client_name, client_exe_path, client_info
+            )
 
         # Get the python interpreter to use from the environment, fallback to checking the
         # current interpreter if not set.
@@ -230,7 +256,6 @@ class AliasBridge(metaclass=Singleton):
         client = self.get_client_by_namespace(client_namespace)
         return self.bootstrap_client(client["name"], client["exe_path"], client["info"])
 
-
     # Private methods
     # ----------------------------------------------------------------------------------------
 
@@ -259,8 +284,8 @@ class AliasBridge(metaclass=Singleton):
     def __serve_app(self):
         """Using eventlet, start the WSGI server application to listen for clients connections."""
 
-        # Start the WSGI server to start handling requests from the server socket 
-        # 
+        # Start the WSGI server to start handling requests from the server socket
+        #
         # NOTE eventlet is not compatible with Python standard threads. There are issues trying
         # to use eventlet.monkey_patch, so we just need to ensure that the server acts as it is
         # single threaded (e.g. can only access the socketio server from the thread it was created

@@ -14,7 +14,8 @@ from ..api import alias_api
 
 # NOTE do we need to worry about cleaning up the registry in case it gets huge?
 
-class AliasDataModel():
+
+class AliasDataModel:
     """An object representation of the Alias universe."""
 
     def __init__(self):
@@ -23,7 +24,6 @@ class AliasDataModel():
         self.__lock = threading.Lock()
         self.__registry = {}
         self.__events_registry = {}
-
 
     def destroy(self):
         """Destroy the scope."""
@@ -40,7 +40,7 @@ class AliasDataModel():
 
         finally:
             self.__lock.release()
-        
+
     def get_instance(self, instance_id):
         """Return the instance object for the given id from the registry."""
 
@@ -49,7 +49,7 @@ class AliasDataModel():
             return self.__registry.get(instance_id)
         finally:
             self.__lock.release()
-        
+
     def register_instance(self, instance_id, instance):
         """Store the instance in the registry."""
 
@@ -58,7 +58,7 @@ class AliasDataModel():
             self.__registry[instance_id] = instance
         finally:
             self.__lock.release()
-        
+
     def unregister_instance(self, instance_id):
         """Remove the instance from the registry."""
 
@@ -67,7 +67,7 @@ class AliasDataModel():
             del self.__registry[instance_id]
         finally:
             self.__lock.release()
-        
+
     def get_event_callbacks(self, event_id):
         """Return the instance object for the given id from the registry."""
 
@@ -76,7 +76,7 @@ class AliasDataModel():
             return self.__events_registry.get(event_id)
         finally:
             self.__lock.release()
-        
+
     def register_event(self, event_id, event_callback_id):
         """Store the Alias event callback in the events registry."""
 

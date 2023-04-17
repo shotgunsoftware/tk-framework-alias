@@ -22,7 +22,7 @@ from ...utils.exceptions import (
     AliasApiRequestException,
     AliasApiRequestNotSupported,
     AliasApiPostProcessRequestError,
-    AliasApiRequestError
+    AliasApiRequestError,
 )
 
 
@@ -39,12 +39,11 @@ class AliasServerNamespace(socketio.Namespace):
             namespace = f"{namespace}-{sub_namespace}"
 
         super(AliasServerNamespace, self).__init__(namespace)
-    
+
     @classmethod
     def get_namespace(cls):
         """Return the namespace string."""
         return f"/{cls._NAME}"
-
 
     # Event callback methods for namespace
     # ----------------------------------------------------------------------------------------
@@ -100,8 +99,12 @@ class AliasServerNamespace(socketio.Namespace):
             # Command callback needs to be sent to the events namespace because...?
             menu.add_command(
                 "Restart Client...",
-                lambda: alias_sio.emit("restart", data=data, namespace=AliasEventsServerNamespace.get_namespace()),
-                parent=submenu
+                lambda: alias_sio.emit(
+                    "restart",
+                    data=data,
+                    namespace=AliasEventsServerNamespace.get_namespace(),
+                ),
+                parent=submenu,
             )
 
         with self.session(sid) as session:
@@ -137,7 +140,11 @@ class AliasServerNamespace(socketio.Namespace):
         """Return the server information."""
 
         api_info = self.on_get_alias_api_info(sid)
-        client_info = alias_bridge.AliasBridge().get_client_by_namespace(self.namespace).get("info")
+        client_info = (
+            alias_bridge.AliasBridge()
+            .get_client_by_namespace(self.namespace)
+            .get("info")
+        )
         return {
             "api": api_info,
             "client": client_info,
@@ -163,7 +170,7 @@ class AliasServerNamespace(socketio.Namespace):
 
             return result
 
-    @execute_in_main_thread 
+    @execute_in_main_thread
     def _execute_request(self, request_name, request):
         """Execute the Alias Python API request."""
 

@@ -41,7 +41,6 @@ class AliasSocketIoClient(socketio.Client):
         self.__namespaces = []
         self._default_namespace = None
 
-
     @property
     def hostname(self):
         """Get the hostname that this client is connected to."""
@@ -87,7 +86,9 @@ class AliasSocketIoClient(socketio.Client):
         url = f"http://{self.__hostname}:{self.__port}"
 
         self.connect(
-            url, namespaces=self.__namespaces, wait_timeout=self.__timeout,
+            url,
+            namespaces=self.__namespaces,
+            wait_timeout=self.__timeout,
         )
 
     def has_callback(self, callback_id):
@@ -101,13 +102,13 @@ class AliasSocketIoClient(socketio.Client):
 
         with self.__callback_lock:
             return self.__callbacks.get(callback_id)
-    
+
     def set_callback(self, callback_id, callback_func):
         """Store a callback function by id."""
 
         with self.__callback_lock:
             self.__callbacks[callback_id] = callback_func
-    
+
     def emit_threadsafe(self, *args, **kwargs):
         """Call the emit method in a thread-safe way."""
 
@@ -140,10 +141,7 @@ class AliasSocketIoClient(socketio.Client):
             alias=api_info["alias_version"],
             python=api_info["python_version"],
         )
-        cache_filepath = os.path.join(
-            tempfile.gettempdir(),
-            cache_filename
-        )
+        cache_filepath = os.path.join(tempfile.gettempdir(), cache_filename)
 
         cache_loaded = False
         if os.path.exists(cache_filepath):

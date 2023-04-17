@@ -52,10 +52,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Return True if the object is an Alias Python API enum."""
 
         return (
-            AliasServerJSONEncoder.is_al_object(obj) and
-            hasattr(obj, "name") and
-            hasattr(obj, "value") and
-            hasattr(obj, "__entries")
+            AliasServerJSONEncoder.is_al_object(obj)
+            and hasattr(obj, "name")
+            and hasattr(obj, "value")
+            and hasattr(obj, "__entries")
         )
 
     @staticmethod
@@ -138,7 +138,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             # Functions defined in C (e.g. pybind11 functions) are not supported by inspect,
             # only Python Functions. For C defined functions we cannot include the signature.
             pass
-        
+
         return result
 
     def encode_class_type(self, obj):
@@ -207,7 +207,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         The order in which the type of the object is checked matters.
         """
 
-        try: 
+        try:
             if isinstance(obj, Exception):
                 return self.encode_exception(obj)
 
@@ -261,7 +261,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             print(f"\t{obj}")
             # TODO log an error/warning
             return None
-        
+
 
 class AliasServerJSONDecoder(json.JSONDecoder):
     """A custom class to handle decoding Alias API objects."""
@@ -269,7 +269,9 @@ class AliasServerJSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
 
-        super(AliasServerJSONDecoder, self).__init__(object_hook=self.object_hook, *args, **kwargs)
+        super(AliasServerJSONDecoder, self).__init__(
+            object_hook=self.object_hook, *args, **kwargs
+        )
 
     @staticmethod
     def create_callback(callback_id):
@@ -288,7 +290,7 @@ class AliasServerJSONDecoder(json.JSONDecoder):
             sio.emit(
                 "alias_event_callback",
                 data=result,
-                namespace=AliasEventsServerNamespace.get_namespace()
+                namespace=AliasEventsServerNamespace.get_namespace(),
             )
 
         # Set the sio for when the callback is triggered. Emit the event from the Alias events

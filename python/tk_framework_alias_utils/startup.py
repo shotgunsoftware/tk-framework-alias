@@ -30,7 +30,7 @@ ALIAS_PLUGINS = {
 def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0"):
     """
     Return a dictionary containing the env vars required to launch the plugin.
-    
+
     :param alias_version: The Alias version that the plugin is running with.
     :type alias_version: str
     :param client_name: The name of the client. This will be used by the plugin to set up a
@@ -46,7 +46,6 @@ def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0
     :rtype: dict
     """
 
-
     return {
         "ALIAS_PLUGIN_CLIENT_NAME": client_name,
         "ALIAS_PLUGIN_CLIENT_EXE_PATH": client_exe_path,
@@ -54,6 +53,7 @@ def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0
         "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
         "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
     }
+
 
 def ensure_plugin_installed(alias_version):
     """
@@ -77,12 +77,7 @@ def ensure_plugin_installed(alias_version):
             )
         )
 
-    plugin_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "..",
-        "plugin"
-    )
+    plugin_dir = os.path.join(os.path.dirname(__file__), "..", "..", "plugin")
     if not os.path.exists(plugin_dir) or not os.path.isdir(plugin_dir):
         return None
 
@@ -143,6 +138,7 @@ def ensure_plugin_installed(alias_version):
         plf.write("{}\n".format(plugin_file_path))
 
     return plugins_list_file
+
 
 def get_alias_api_module():
     """

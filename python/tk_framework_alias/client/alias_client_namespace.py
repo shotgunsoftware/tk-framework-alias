@@ -50,6 +50,6 @@ class AliasClientNamespace(socketio.ClientNamespace):
         """Handle callback from the Alias Python Api that was forwarded from the socket."""
 
         data = data or {}
-        args = data.get("args", []) 
-        kwargs = data.get("kwargs", {}) 
+        args = data.get("args", [])
+        kwargs = data.get("kwargs", {})
         return callback_func(*args, **kwargs)

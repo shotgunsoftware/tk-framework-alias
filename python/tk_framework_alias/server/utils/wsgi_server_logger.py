@@ -9,7 +9,7 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 
-class WSGIServerLogger():
+class WSGIServerLogger:
     """
     Logger object to pass to the wsgi server.
 
@@ -22,7 +22,6 @@ class WSGIServerLogger():
 
         # TODO write this to file?
         print(msg)
-        
 
     def debug(self, msg, *args, **kwargs):
         """Log debug message."""

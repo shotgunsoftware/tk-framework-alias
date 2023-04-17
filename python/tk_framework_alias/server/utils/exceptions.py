@@ -12,17 +12,22 @@
 class AliasPythonApiImportError(Exception):
     """Exception for Alias Python API import errors."""
 
+
 class AliasApiRequestException(Exception):
     """Custom exception class..."""
+
 
 class AliasApiRequestNotValid(AliasApiRequestException):
     """Custom exception class..."""
 
+
 class AliasApiRequestNotSupported(AliasApiRequestException):
     """Custom exception class..."""
 
+
 class AliasApiPostProcessRequestError(AliasApiRequestException):
     """Custom exception class..."""
+
 
 class AliasApiRequestError(AliasApiRequestException):
     """Custom exception class..."""

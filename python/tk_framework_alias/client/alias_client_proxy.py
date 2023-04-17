@@ -14,12 +14,11 @@ import types
 from .exceptions import ClientNotConnected, ClientNotFound
 
 
-class AliasClientModuleProxy():
+class AliasClientModuleProxy:
     """A proxy class to represent an Alias Python API module."""
 
     __modules = {}
     __module_lock = threading.Lock()
-
 
     def __init__(self, module_data):
         """Initialize"""
@@ -28,7 +27,6 @@ class AliasClientModuleProxy():
         self.__sio = None
 
         self.module_name = self.__data["__module_name__"]
-
 
     @classmethod
     def get_module(cls, module_name):
@@ -41,10 +39,12 @@ class AliasClientModuleProxy():
     def needs_wrapping(cls, value):
         """Return True if the value represents an object that needs to be wrapped by this proxy class."""
 
-        required_keys = set([
-            "__module_name__",
-            "__members__",
-        ])
+        required_keys = set(
+            [
+                "__module_name__",
+                "__members__",
+            ]
+        )
         value_keys = set(value)
         return required_keys == value_keys
 
@@ -52,15 +52,17 @@ class AliasClientModuleProxy():
         """Return an attributes dictionary from the member data."""
 
         if not members:
-            return  {}
+            return {}
 
         attrs = {}
         for member_name, member_value in members:
             if isinstance(member_value, AliasClientProxy):
-                attrs[member_name] = member_value.create_attribute(member_name, self.__sio)
+                attrs[member_name] = member_value.create_attribute(
+                    member_name, self.__sio
+                )
             else:
                 attrs[member_name] = member_value
-            
+
         return attrs
 
     def sanitize(self):
@@ -97,7 +99,7 @@ class AliasClientModuleProxy():
             return module
 
 
-class AliasClientProxy():
+class AliasClientProxy:
     """The base abstract proxy class to represent Alias API objects."""
 
     def __init__(self, data=None):
@@ -119,7 +121,7 @@ class AliasClientProxy():
             if getattr(subclass, "_needs_wrapping")(data):
                 return subclass._create(data)
                 # return subclass(data)
-        
+
         return None
 
     @classmethod
@@ -141,14 +143,13 @@ class AliasClientProxy():
     @property
     def data(self):
         """Get the original data that created this proxy wrapper object."""
-        return self.__data 
+        return self.__data
 
     # Abstract methods must be implemented by subclass
     # ----------------------------------------------------------------------------------------
 
     def create_attribute(self, attribute_name, sio):
-        """
-        """
+        """ """
 
         self._sio = sio
         return self
@@ -176,10 +177,12 @@ class AliasClientProxy():
 
         for member_name, member_value in members:
             if isinstance(member_value, AliasClientProxy):
-                attrs[member_name] = member_value.create_attribute(member_name, self._sio)
+                attrs[member_name] = member_value.create_attribute(
+                    member_name, self._sio
+                )
             else:
                 attrs[member_name] = member_value
-            
+
         return attrs
 
     def send_request(self, func_name, func_data):
@@ -189,6 +192,7 @@ class AliasClientProxy():
             "ack": False,
             "result": None,
         }
+
         def __get_request_callback(response):
             def __callback(*result):
                 if len(result) == 1:
@@ -197,11 +201,8 @@ class AliasClientProxy():
                     response["result"] = result
                 response["ack"] = True
 
-            # TODO set the results so that the main thread gets these values back 
+            # TODO set the results so that the main thread gets these values back
             return __callback
-
-
-
 
         # from sgtk.platform.qt import QtCore, QtGui
         # class AliasEventFilter(QtCore.QObject):
@@ -222,15 +223,14 @@ class AliasClientProxy():
         # qt_app = QtGui.QApplication.instance()
         # qt_app.installEventFilter(tk_alias_event_filter)
 
-
-
-
         if not self._sio:
             raise ClientNotFound("Alias client not found. Cannot send api request.")
 
         if not self._sio.connected:
             # TODO log warning
-            raise ClientNotConnected("Alias client is not connected. Cannot send api reqest.")
+            raise ClientNotConnected(
+                "Alias client is not connected. Cannot send api reqest."
+            )
 
         # async def __send_request_async(event, data, namespace):
         def __send_request_async(event, data, namespace=None):
@@ -239,7 +239,7 @@ class AliasClientProxy():
                 event,
                 data,
                 namespace=namespace,
-                callback=__get_request_callback(response)
+                callback=__get_request_callback(response),
             )
 
             # Wait for server response, process any GUI events while waiting
@@ -247,6 +247,7 @@ class AliasClientProxy():
                 # NOTE this resolve the issue with the UI freezing due to deadlock, but it does allow
                 # user to interact with Alias during api calls (e.g. data validation)
                 from sgtk.platform.qt import QtCore, QtGui
+
                 qt_app = QtGui.QApplication.instance()
                 event_dispatcher = qt_app.eventDispatcher()
                 qt_app.processEvents(
@@ -264,18 +265,18 @@ class AliasClientProxy():
         return result
 
 
-
 class AliasClientClassTypeProxy(AliasClientProxy):
-
     @classmethod
     def _needs_wrapping(cls, value):
         """Return True if the value represents an object that needs to be wrapped by this proxy class."""
 
-        required_keys = set([
-            "__module_name__",
-            "__class_name__",
-            "__members__",
-        ])
+        required_keys = set(
+            [
+                "__module_name__",
+                "__class_name__",
+                "__members__",
+            ]
+        )
         value_keys = set(value)
         return required_keys.issubset(value_keys)
 
@@ -321,8 +322,7 @@ class AliasClientPropertyProxy(AliasClientProxy):
         self.__property_name = name
 
     def __get__(self, instance, owner):
-        """
-        """
+        """ """
 
         data = {
             "__instance_id__": instance.unique_id,
@@ -331,8 +331,7 @@ class AliasClientPropertyProxy(AliasClientProxy):
         return self.send_request(self.__property_name, data)
 
     def __set__(self, instance, value):
-        """
-        """
+        """ """
 
         data = {
             "__instance_id__": instance.unique_id,
@@ -353,28 +352,26 @@ class AliasClientEnumProxy(AliasClientProxy):
     def _needs_wrapping(cls, value):
         """Return True if the value represents an object that needs to be wrapped by this proxy class."""
 
-        required_keys = set([
-            "__class_name__",
-            "__enum_name__",
-            "__enum_value__",
-        ])
+        required_keys = set(
+            [
+                "__class_name__",
+                "__enum_name__",
+                "__enum_value__",
+            ]
+        )
         value_keys = set(value)
         return required_keys.issubset(value_keys)
-    
+
     @classmethod
     def _create(cls, data):
-        """
-        """
+        """ """
 
         enum_class = data["__class_name__"]
         enum_name = data["__enum_name__"]
         enum_type_name = f"{enum_class}.{enum_name}"
-        enum_attributes = {
-            "name": enum_name,
-            "value": data["__enum_value__"]
-        }
+        enum_attributes = {"name": enum_name, "value": data["__enum_value__"]}
 
-        enum_type = type(enum_type_name, (cls, ), enum_attributes)
+        enum_type = type(enum_type_name, (cls,), enum_attributes)
         return enum_type(data)
 
 
@@ -385,18 +382,19 @@ class AliasClientObjectProxy(AliasClientProxy):
     def _needs_wrapping(cls, value):
         """Return True if the value represents an object that needs to be wrapped by this proxy class."""
 
-        required_keys = set([
-            "__module_name__",
-            "__class_name__",
-            "__instance_id__",
-        ])
+        required_keys = set(
+            [
+                "__module_name__",
+                "__class_name__",
+                "__instance_id__",
+            ]
+        )
         value_keys = set(value.keys())
         return required_keys.issubset(value_keys)
 
     @classmethod
     def _create(cls, data):
-        """
-        """
+        """ """
 
         proxy_module_name = data["__module_name__"]
         module = AliasClientModuleProxy.get_module(proxy_module_name)
@@ -407,7 +405,9 @@ class AliasClientObjectProxy(AliasClientProxy):
         lookup_type = getattr(module, proxy_type_name)
 
         proxy_attributes = lookup_type.__dict__
-        proxy_attributes = {k:v for k, v in proxy_attributes.items() if not k.startswith("__")}
+        proxy_attributes = {
+            k: v for k, v in proxy_attributes.items() if not k.startswith("__")
+        }
         proxy_type = type(proxy_type_name, (cls,), proxy_attributes)
 
         # Return an actual instance of the proxy type, not just the type object (like other classes do)
@@ -424,7 +424,6 @@ class AliasClientFunctionProxy(AliasClientProxy):
 
         self.__func_name = data.get("__function_name__")
         self.__is_instance_method = data.get("__is_method__", False)
-
 
     @classmethod
     def _needs_wrapping(cls, value):
@@ -448,7 +447,7 @@ class AliasClientFunctionProxy(AliasClientProxy):
 
         def __method(instance, *args, **kwargs):
             """The attribute function."""
-            
+
             data = {
                 "__instance_id__": instance.unique_id,
                 "__function_name__": self.__func_name,
@@ -464,7 +463,7 @@ class AliasClientFunctionProxy(AliasClientProxy):
 
         def __function(*args, **kwargs):
             """The attribute function."""
-            
+
             data = {
                 "__function_name__": self.__func_name,
                 "__function_args__": args,
@@ -473,4 +472,3 @@ class AliasClientFunctionProxy(AliasClientProxy):
             return self.send_request(self.__func_name, data)
 
         return __function
-
