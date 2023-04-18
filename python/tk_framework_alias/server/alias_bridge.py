@@ -223,8 +223,7 @@ class AliasBridge(metaclass=Singleton):
             client["namespace"],
         ]
 
-        # Store the main Alias process id in the environment
-        os.environ["ALIAS_PID"] = str(os.getpid())
+        # Copy the env variables to start the new process with
         startup_env = os.environ.copy()
 
         # Set up the startup info for opening the new process.
