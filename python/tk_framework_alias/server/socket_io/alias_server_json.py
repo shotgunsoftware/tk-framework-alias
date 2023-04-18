@@ -33,7 +33,7 @@ class AliasServerJSON:
 
 
 class AliasServerJSONEncoder(json.JSONEncoder):
-    """A custom class to handle encoding Alis API objects."""
+    """A custom class to handle encoding Alias API objects."""
 
     def __init__(self, *args, **kwargs):
         """Initialize the encoder."""
