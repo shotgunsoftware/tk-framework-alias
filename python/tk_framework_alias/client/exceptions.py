@@ -12,10 +12,11 @@
 class AliasClientException(Exception):
     """Custom exception class..."""
 
-
 class ClientNotFound(AliasClientException):
     """Custom exception class..."""
 
-
 class ClientNotConnected(AliasClientException):
+    """Custom exception class..."""
+
+class ClientJSONEncoderError(AliasClientException):
     """Custom exception class..."""

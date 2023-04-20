@@ -11,7 +11,9 @@
 import inspect
 import json
 
-from .alias_client_proxy import AliasClientModuleProxyAttribute, AliasClientModuleProxy
+# from .data.alias_client_proxy import AliasClientObjectProxyWrapper
+from .alias_client_proxy import AliasClientObjectProxyWrapper
+from .exceptions import ClientJSONEncoderError
 
 
 class AliasClientJSON:
@@ -45,39 +47,19 @@ class AliasClientJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         """Encode the object."""
 
-        if isinstance(obj, AliasClientModuleProxy):
+        if isinstance(obj, AliasClientObjectProxyWrapper):
             return obj.sanitize()
-
-        if isinstance(obj, AliasClientModuleProxyAttribute):
-            return obj.sanitize()
-
-        if inspect.isclass(obj):
-            # if issubclass(obj, AliasClientModuleProxyAttribute):
-                # return obj.sanitize_class()
-            return {"__class_name__": obj.__name__}
 
         if isinstance(obj, set):
             return {"__set__": list(obj)}
 
+        if inspect.isclass(obj):
+            return {"__class_name__": obj.__name__}
+
         if inspect.isfunction(obj) or inspect.ismethod(obj):
-            # This arg is a callback function argument.
-
-            # Generate a unique id for the function. Use the id() function to make the id
-            # unique, but append the function name for a more human readable id.
-            # callback_id = f"{id(obj)}.{obj.__name__}"
-
-            # FIXME remove engine dependecy for sio
-            import sgtk
-            engine = sgtk.platform.current_engine()
-            sio = engine.sio
-            if sio.has_callback(obj):
-                print("Callback already exists!")
-                callback_id = sio.get_callback_id(obj)
-            else:
-                callback_id = sio.set_callback(obj)
-
-            return {"__callback_function_id__": callback_id}
-            # return {"__function__": obj}
+            # Functions must be registered in the AliasSocketIoClient. Since the client io
+            # cannot be accessed here, functions must be encoded before getting to this stage.
+            raise ClientJSONEncoderError("Functions should already be encoded.")
 
         return super(AliasClientJSONEncoder, self).default(obj)
 
@@ -107,11 +89,8 @@ class AliasClientJSONDecoder(json.JSONDecoder):
             if isinstance(obj.get("__type__"), set):
                 return set(obj.get("__value__"))
 
-        if AliasClientModuleProxy.needs_wrapping(obj):
-            return AliasClientModuleProxy(obj)
-
-        proxy = AliasClientModuleProxyAttribute.create_proxy(obj)
-        if proxy is not None:
-            return proxy
+        proxy_wrapper = AliasClientObjectProxyWrapper.create(obj)
+        if proxy_wrapper is not None:
+            return proxy_wrapper
 
         return obj

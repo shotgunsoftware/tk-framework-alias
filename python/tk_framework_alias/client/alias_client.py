@@ -170,7 +170,7 @@ class AliasSocketIoClient(socketio.Client):
                     pass
 
         # FIXME TEMP force cache reload
-        cache_loaded = False
+        # cache_loaded = False
         if not cache_loaded:
             # Make the request to get the api, and cache it.
             module_proxy = self.call_threadsafe("get_alias_api")
