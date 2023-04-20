@@ -34,6 +34,12 @@ class AliasBridge(metaclass=Singleton):
     def __init__(self):
         """Initialize the server."""
 
+        # import sys
+        # sys.path.append("C:\\python_libs")
+        # import ptvsd
+        # ptvsd.enable_attach()
+        # ptvsd.wait_for_attach()
+
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
         self.__default_port = 8000

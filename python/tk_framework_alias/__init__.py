@@ -14,12 +14,17 @@
 import os
 import sys
 
+major = sys.version_info.major
+minor = sys.version_info.minor
+python_dir = f"python{major}.{minor}"
+
 dist_path = os.path.normpath(
     os.path.join(
         os.path.dirname(__file__),  # ./python/tk_framework_alias
         os.pardir,  # ./python
         os.pardir,  # .
         "dist",
+        python_dir,
     )
 )
 sys.path.insert(0, dist_path)

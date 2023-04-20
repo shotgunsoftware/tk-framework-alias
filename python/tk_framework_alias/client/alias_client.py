@@ -91,9 +91,20 @@ class AliasSocketIoClient(socketio.Client):
             wait_timeout=self.__timeout,
         )
 
-    def has_callback(self, callback_id):
+    def get_callback_id(self, callback):
+        """Return a unique identifier for the callback function."""
+
+        if isinstance(callback, str):
+            return callback
+
+        # Generate a unique id for the function. Use the id() function to make the id
+        # unique, but append the function name for a more human readable id.
+        return f"{id(callback)}.{callback.__name__}"
+
+    def has_callback(self, callback):
         """Return True if there is a callback registered already for the id."""
 
+        callback_id = self.get_callback_id(callback)
         with self.__callback_lock:
             return callback_id in self.__callbacks
 
@@ -103,11 +114,13 @@ class AliasSocketIoClient(socketio.Client):
         with self.__callback_lock:
             return self.__callbacks.get(callback_id)
 
-    def set_callback(self, callback_id, callback_func):
+    def set_callback(self, callback):
         """Store a callback function by id."""
 
+        callback_id = self.get_callback_id(callback)
         with self.__callback_lock:
-            self.__callbacks[callback_id] = callback_func
+            self.__callbacks[callback_id] = callback
+        return callback_id
 
     def emit_threadsafe(self, *args, **kwargs):
         """Call the emit method in a thread-safe way."""
@@ -156,10 +169,11 @@ class AliasSocketIoClient(socketio.Client):
                     # TODO log warning?
                     pass
 
+        # FIXME TEMP force cache reload
+        cache_loaded = False
         if not cache_loaded:
+            # Make the request to get the api, and cache it.
             module_proxy = self.call_threadsafe("get_alias_api")
-
-            # Cache it
             with open(cache_filepath, "w") as fp:
                 json.dump(module_proxy, fp=fp, cls=self.get_json_encoder())
 

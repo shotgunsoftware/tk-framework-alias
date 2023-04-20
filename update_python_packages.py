@@ -8,8 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
-import subprocess
 import os
+import subprocess
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
@@ -25,6 +26,7 @@ def zip_recursively(zip_file, root_dir, folder_name):
 
 with TemporaryDirectory() as temp_dir:
 
+    # FIXME what about different python versions?
     # Pip install everything and capture everything that was installed.
     subprocess.run(
         [
@@ -79,9 +81,13 @@ with TemporaryDirectory() as temp_dir:
     assert len(package_names) + len(c_extension_packages) == nb_dependencies
 
     # Create the distribution directory
+    major = sys.version_info.major
+    minor = sys.version_info.minor
+    python_dir = f"python{major}.{minor}"
     dist_dir = os.path.join(
         os.path.dirname(__file__),
         "dist",
+        python_dir,
     )
     if not os.path.exists(dist_dir):
         os.mkdir(dist_dir)

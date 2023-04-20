@@ -11,7 +11,7 @@
 import inspect
 import json
 
-from .alias_client_proxy import AliasClientProxy, AliasClientModuleProxy
+from .alias_client_proxy import AliasClientModuleProxyAttribute, AliasClientModuleProxy
 
 
 class AliasClientJSON:
@@ -48,10 +48,12 @@ class AliasClientJSONEncoder(json.JSONEncoder):
         if isinstance(obj, AliasClientModuleProxy):
             return obj.sanitize()
 
-        if isinstance(obj, AliasClientProxy):
+        if isinstance(obj, AliasClientModuleProxyAttribute):
             return obj.sanitize()
 
         if inspect.isclass(obj):
+            # if issubclass(obj, AliasClientModuleProxyAttribute):
+                # return obj.sanitize_class()
             return {"__class_name__": obj.__name__}
 
         if isinstance(obj, set):
@@ -62,22 +64,20 @@ class AliasClientJSONEncoder(json.JSONEncoder):
 
             # Generate a unique id for the function. Use the id() function to make the id
             # unique, but append the function name for a more human readable id.
-            callback_id = f"{id(obj)}.{obj.__name__}"
+            # callback_id = f"{id(obj)}.{obj.__name__}"
 
-            # FIXME handle sio better
+            # FIXME remove engine dependecy for sio
             import sgtk
-
             engine = sgtk.platform.current_engine()
             sio = engine.sio
-
-            if sio.has_callback(callback_id):
-                # Make the callback id unique?
-                # raise Exception("Callback already exists!")
+            if sio.has_callback(obj):
                 print("Callback already exists!")
-
-            sio.set_callback(callback_id, obj)
+                callback_id = sio.get_callback_id(obj)
+            else:
+                callback_id = sio.set_callback(obj)
 
             return {"__callback_function_id__": callback_id}
+            # return {"__function__": obj}
 
         return super(AliasClientJSONEncoder, self).default(obj)
 
@@ -110,7 +110,7 @@ class AliasClientJSONDecoder(json.JSONDecoder):
         if AliasClientModuleProxy.needs_wrapping(obj):
             return AliasClientModuleProxy(obj)
 
-        proxy = AliasClientProxy.create_proxy(obj)
+        proxy = AliasClientModuleProxyAttribute.create_proxy(obj)
         if proxy is not None:
             return proxy
 
