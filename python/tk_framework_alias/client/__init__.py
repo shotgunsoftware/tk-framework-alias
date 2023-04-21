@@ -8,5 +8,5 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-from .alias_client import AliasSocketIoClient
-from .alias_client_namespace import AliasClientNamespace
+from .client import AliasSocketIoClient
+from .client_namespace import AliasClientNamespace

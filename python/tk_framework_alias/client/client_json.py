@@ -11,8 +11,7 @@
 import inspect
 import json
 
-# from .data.alias_client_proxy import AliasClientObjectProxyWrapper
-from .alias_client_proxy import AliasClientObjectProxyWrapper
+from .proxy_wrapper import AliasClientObjectProxyWrapper
 from .exceptions import ClientJSONEncoderError
 
 
@@ -89,8 +88,8 @@ class AliasClientJSONDecoder(json.JSONDecoder):
             if isinstance(obj.get("__type__"), set):
                 return set(obj.get("__value__"))
 
-        proxy_wrapper = AliasClientObjectProxyWrapper.create(obj)
-        if proxy_wrapper is not None:
-            return proxy_wrapper
+        proxy_obj = AliasClientObjectProxyWrapper.create_proxy(obj)
+        if proxy_obj is not None:
+            return proxy_obj
 
         return obj

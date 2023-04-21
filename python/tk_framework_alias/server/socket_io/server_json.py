@@ -16,8 +16,8 @@ import importlib
 from ..api import alias_api
 
 from .. import alias_bridge
-from .alias_api_request import AliasApiRequest
-from .namespaces.alias_events_namespace import AliasEventsServerNamespace
+from .api_request import AliasApiRequest
+from .namespaces.events_namespace import AliasEventsServerNamespace
 
 
 class AliasServerJSON:
@@ -106,40 +106,18 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         # instance method. The other option is to check the object class name is
         # "instancemethod"
         if obj.__class__.__name__ == "instancemethod":
-            return AliasServerJSONEncoder.encode_method(obj)
+            return AliasServerJSONEncoder.encode_function(obj, is_method=True)
 
         return AliasServerJSONEncoder.encode_function(obj)
 
     @staticmethod
-    def encode_method(obj):
-        """Encode a method such that is JSON serializable."""
-
-        result = AliasServerJSONEncoder.encode_function(obj)
-        result["__is_method__"] = True
-        return result
-
-    @staticmethod
-    def encode_function(obj):
+    def encode_function(obj, is_method=False):
         """Encode a function such that is JSON serializable."""
 
-        result = {
+        return {
             "__function_name__": obj.__name__,
+            "__is_method__": is_method,
         }
-        try:
-            argspec = inspect.getfullargspec(obj)
-            result["args"] = argspec.args
-            result["varargs"] = argspec.varargs
-            result["varkw"] = argspec.varkw
-            result["defaults"] = argspec.defaults
-            result["kwonlyargs"] = argspec.kwonlyargs
-            result["kwonlydefaults"] = argspec.kwonlydefaults
-            result["annotations"] = argspec.annotation
-        except Exception:
-            # Functions defined in C (e.g. pybind11 functions) are not supported by inspect,
-            # only Python Functions. For C defined functions we cannot include the signature.
-            pass
-
-        return result
 
     def encode_class_type(self, obj):
         """Encode a class type object such that is JSON serializable."""
@@ -176,7 +154,6 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Encode an Alias Python API enum such that is JSON serializable."""
 
         return {
-            "__module_name__": obj.__module__,
             "__class_name__": obj.__class__.__name__,
             "__enum_name__": obj.name,
             "__enum_value__": obj.value,
@@ -227,7 +204,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
                 return None
 
             if inspect.ismethod(obj):
-                return self.encode_method(obj)
+                return self.encode_function(obj, is_method=True)
 
             if inspect.isfunction(obj):
                 return self.encode_function(obj)

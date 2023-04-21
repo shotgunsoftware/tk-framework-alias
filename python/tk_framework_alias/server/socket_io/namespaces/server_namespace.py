@@ -14,8 +14,8 @@ import socketio
 
 from ...api import alias_api
 
-from .alias_events_namespace import AliasEventsServerNamespace
-from ..alias_api_request import AliasApiRequest
+from .events_namespace import AliasEventsServerNamespace
+from ..api_request import AliasApiRequest
 from ... import alias_bridge
 from ...utils.invoker import execute_in_main_thread
 from ...utils.exceptions import (

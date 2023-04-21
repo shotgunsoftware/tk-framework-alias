@@ -14,7 +14,7 @@ import socketio
 import threading
 import tempfile
 
-from .alias_client_json import AliasClientJSON
+from .client_json import AliasClientJSON
 
 
 class AliasSocketIoClient(socketio.Client):

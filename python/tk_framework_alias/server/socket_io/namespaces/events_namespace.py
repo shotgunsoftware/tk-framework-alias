@@ -57,8 +57,19 @@ class AliasEventsServerNamespace(socketio.Namespace):
         # self.on_shutdown(sid)
         # self._restart_shotgrid(data)
 
-        # Forward the restart event to other namespaces
-        self._emit("restart", data)
+        # # First destroy the scope
+        # data_model = alias_bridge.AliasBridge().alias_data_model
+        # data_model.destroy()
+
+        # self._emit("shutdown")
+
+        # Shut down all clients
+        self.on_shutdown(sid)
+
+        # Restart all clients
+        for namespace in self.server.namespace_handlers:
+            if namespace != self.namespace:
+                alias_bridge.AliasBridge().restart_client(namespace)
 
     def on_alias_event_callback(self, sid, data):
         """Forward the Alias event callback to the server, to send to all other client namespaces."""

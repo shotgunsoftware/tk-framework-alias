@@ -17,11 +17,11 @@ import threading
 import socketio
 import eventlet
 
-from .socket_io.alias_data_model import AliasDataModel
-from .socket_io.alias_server_json import AliasServerJSON
-from .socket_io.namespaces.alias_server_namespace import AliasServerNamespace
-from .socket_io.namespaces.alias_events_namespace import AliasEventsServerNamespace
-from .socket_io.namespaces.alias_events_client_namespace import (
+from .socket_io.data_model import AliasDataModel
+from .socket_io.server_json import AliasServerJSON
+from .socket_io.namespaces.server_namespace import AliasServerNamespace
+from .socket_io.namespaces.events_namespace import AliasEventsServerNamespace
+from .socket_io.namespaces.events_client_namespace import (
     AliasEventsClientNamespace,
 )
 from .utils.singleton import Singleton
@@ -247,6 +247,10 @@ class AliasBridge(metaclass=Singleton):
         """Re-bootstrap the client for the given namespace."""
 
         client = self.get_client_by_namespace(client_namespace)
+        if not client:
+            # TODO log warning
+            return
+
         return self.bootstrap_client(client["name"], client["exe_path"], client["info"])
 
     # Private methods

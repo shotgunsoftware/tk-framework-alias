@@ -9,7 +9,7 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import socketio
-from .alias_events_namespace import AliasEventsServerNamespace
+from .events_namespace import AliasEventsServerNamespace
 
 
 class AliasEventsClientNamespace(socketio.ClientNamespace):
@@ -20,16 +20,3 @@ class AliasEventsClientNamespace(socketio.ClientNamespace):
 
         namespace = AliasEventsServerNamespace.get_namespace()
         super(AliasEventsClientNamespace, self).__init__(namespace)
-
-    # Event callback methods for namespace
-    # ----------------------------------------------------------------------------------------
-
-    def on_connect(self):
-        print(f"{[self.namespace]} connect")
-
-    def on_connect_error(self, data):
-        print(f"{[self.namespace]} connection error")
-        print(f"\t{data}")
-
-    def on_disconnect(self):
-        print(f"{[self.namespace]} disconnect")
