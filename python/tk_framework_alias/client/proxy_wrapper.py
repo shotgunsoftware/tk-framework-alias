@@ -336,15 +336,10 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
         # callback to set the response result.
         self.sio.emit_threadsafe(request_name, request_data, callback=self.__get_request_callback(response))
 
-        # Process GUI events while waiting for the server response.
-        while not response.get("ack", False):
-            # NOTE this resolve the issue with the UI freezing due to deadlock, but it does allow
-            # user to interact with Alias during api calls (e.g. data validation)
-            from sgtk.platform.qt import QtCore, QtGui
-            qt_app = QtGui.QApplication.instance()
-            qt_app.processEvents(
-                QtCore.QEventLoop.ExcludeUserInputEvents
-            )
+        # Call the client method to wait for the response. This function is called in case the
+        # client needs to do any processing while waiting for the server response (e.g.
+        # GUI events)
+        self.sio.wait_for_response(response)
 
         return response.get("result")
 

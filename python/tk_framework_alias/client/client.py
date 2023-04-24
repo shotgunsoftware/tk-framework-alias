@@ -142,6 +142,33 @@ class AliasSocketIoClient(socketio.Client):
         with self.__message_queue_lock:
             return self.call(*args, **kwargs)
 
+    def wait_for_response(self, response):
+        """
+        Wait for the server to set the response object.
+
+        Override this default method to do any processing while waiting for the server to
+        return the response value. For example, a client may need to ensure the GUI is not
+        blocking if Alias needs to perform GUI events during the api request.
+
+        The response object is a dictionary with two key-values:
+
+            ack:
+                type: bool
+                description: True if the response has been acknowledged and result is set,
+                             else False if the server has not completed the api request.
+            result:
+                type: any
+                description: The return value from the server api request.
+
+        :param response: The response object that will be set with the server result once the
+            server completes the api request.
+        :type response: dict
+        """
+
+        while not response.get("ack", False):
+            continue
+
+
     def get_alias_api(self):
         """Return the Alias Python API module."""
 
