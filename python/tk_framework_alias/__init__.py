@@ -31,7 +31,7 @@ sys.path.insert(0, dist_path)
 sys.path.insert(0, os.path.join(dist_path, "pkgs.zip"))
 sys.path.insert(0, os.path.join(dist_path, "lib"))
 
-# For python >= 3.9 do we need to use os.add_dll_directory?
+# FIXME For python >= 3.9 do we need to use os.add_dll_directory
 
 from . import client
 from . import server

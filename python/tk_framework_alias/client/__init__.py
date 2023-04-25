@@ -10,3 +10,4 @@
 
 from .client import AliasSocketIoClient
 from .client_namespace import AliasClientNamespace
+from . import exceptions

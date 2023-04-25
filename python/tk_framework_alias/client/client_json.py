@@ -12,7 +12,7 @@ import inspect
 import json
 
 from .proxy_wrapper import AliasClientObjectProxyWrapper
-from .exceptions import ClientJSONEncoderError
+from .exceptions import AliasClientJSONEncoderError
 
 
 class AliasClientJSON:
@@ -58,7 +58,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
         if inspect.isfunction(obj) or inspect.ismethod(obj):
             # Functions must be registered in the AliasSocketIoClient. Since the client io
             # cannot be accessed here, functions must be encoded before getting to this stage.
-            raise ClientJSONEncoderError("Functions should already be encoded.")
+            raise AliasClientJSONEncoderError("Functions should already be encoded.")
 
         return super(AliasClientJSONEncoder, self).default(obj)
 

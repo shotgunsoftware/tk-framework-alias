@@ -12,7 +12,7 @@ import inspect
 import threading
 import types
 
-from .exceptions import ClientNotConnected, ClientNotFound
+from .exceptions import AliasClientNotConnected, AliasClientNotFound
 
 
 class AliasClientObjectProxyWrapper:
@@ -305,10 +305,10 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
         """
 
         if not self.sio:
-            raise ClientNotFound("Alias client not found. Cannot send api request.")
+            raise AliasClientNotFound("Alias client not found. Cannot send api request.")
 
         if not self.sio.connected:
-            raise ClientNotConnected(
+            raise AliasClientNotConnected(
                 "Alias client is not connected. Cannot send api reqest."
             )
 
