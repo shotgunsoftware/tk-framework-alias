@@ -5,22 +5,14 @@
 # This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
 
+import importlib.util
 import os
 import sys
 from ..utils.exceptions import AliasPythonApiImportError
 
-# First check the python version is at least 3
-if sys.version_info.major < 3:
-    error_msg = "Alias Python API only supports Python 3. You are using Python {major}.{minor}. Please refer to this <a href='https://github.com/shotgunsoftware/tk-alias/wiki/Python-Version-Support'>page</a> for additional information.".format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor,
-    )
-    raise AliasPythonApiImportError(error_msg)
-
-# Import requires python >= 3, import it after we check the python version to provide a better
-# error message
-import importlib.util
-
+# Python module names for specific Alias modes
+OPEN_ALIAS_API_NAME = "alias_api"
+OPEN_MODEL_API_NAME = "alias_api_om"
 
 # The Alias Python API (APA) python module is decided based on the current version of Alias
 # that is running. Defined here is the Alias version grouping:
@@ -189,17 +181,14 @@ def get_alias_api_module():
     api_folder_path = get_module_path(alias_release_version)
 
     # Determine the module name based on if running in OpenAlias or OpenModel
-    # If the executable is Alias, then it is OpenAlias
-    exe_name = os.path.basename(sys.executable)
-    module_name = "alias_api" if exe_name == "Alias.exe" else "alias_api_om"
+    # If the executable is Alias, then it is OpenAlias, else OpenModel.
+    is_open_model = os.path.basename(sys.executable) != "Alias.exe"
+    module_name = OPEN_MODEL_API_NAME if is_open_model else OPEN_ALIAS_API_NAME
     spec = get_module_spec(module_name, api_folder_path)
 
     try:
         alias_api = importlib.util.module_from_spec(spec)
-
-        # NOTE What does this do?
         spec.loader.exec_module(alias_api)
-
     except Exception as e:
         info_msg = (
             "Running: Alias v{alias_version}, Python v{py_major}.{py_minor}.{py_micro}.\n\n"
@@ -221,4 +210,19 @@ def get_alias_api_module():
     return alias_api
 
 
-alias_api = get_alias_api_module()
+#
+# Import the Alias API module as 'alias_api'
+#
+if hasattr(os, "add_dll_directory"):
+    # For Python >= 3.9, ensure that the DLL path is in the search path by using the os method
+    # add_dll_directory. Starting in 3.9, the sys.path is no longer used to find DLLs.
+    alias_bin_path = os.environ.get("ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH")
+    if not alias_bin_path:
+        raise AliasPythonApiImportError(
+            "Couldn't get Alias bin path: set the environment variable ALIAS_PLUGIN_CLINET_ALIAS_EXECPATH."
+        )
+    alias_dll_path = os.path.dirname(alias_bin_path)
+    with os.add_dll_directory(alias_dll_path):
+        alias_api = get_alias_api_module()
+else:
+    alias_api = get_alias_api_module()

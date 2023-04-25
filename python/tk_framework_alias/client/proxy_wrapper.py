@@ -289,13 +289,13 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
 
     def send_request(self, request_name, request_data):
         """
-        Send a request to the server to retrieve the module data.
+        Send an api request to the server to retrieve the module data.
 
         This is the method that allows the proxy module to actually retrieve the data from
         the server, to access Alias data. It will make the api request using the socketio
         communication.
 
-        :param request_name: The api request (e.g. function name)
+        :param request_name: The api request name (e.g. function name)
         :type request_name: str
         :param request_data: The api request payload
         :typ request_data: dict
@@ -326,47 +326,12 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
                     kwargs[name] = self.__sanitize_arg(arg)
                 request_data["__function_kwargs__"] = kwargs
 
-        # Set up the response object that will get updated once the api request has returned.
-        response = {
-            "ack": False,    # The request was acknowledged (finished)
-            "result": None,  # The request result
-        }
+        # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
+        return self.sio.emit_threadsafe_async(request_name, request_data)
 
-        # Emit non-blocking request (to avoid deadlocks with Alias) and wait for the event
-        # callback to set the response result.
-        self.sio.emit_threadsafe(request_name, request_data, callback=self.__get_request_callback(response))
-
-        # Call the client method to wait for the response. This function is called in case the
-        # client needs to do any processing while waiting for the server response (e.g.
-        # GUI events)
-        self.sio.wait_for_response(response)
-
-        return response.get("result")
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
-
-    def __get_request_callback(self, response):
-        """
-        Return a function that can be passed as a callback to handle a socketio event callback.
-
-        :param response: The response object to pass to the callback to set with the event result data.
-        :type response: dict
-
-        :return: The callback function.
-        :rtype: function
-        """
-
-        def __request_callback(*result):
-            """Callback invoked when emit finished. The result is the return value of the api request."""
-            if len(result) == 1:
-                response["result"] = result[0]
-            else:
-                response["result"] = result
-            response["ack"] = True
-
-        # TODO set the results so that the main thread gets these values back
-        return __request_callback
 
     def __sanitize_arg(self, arg):
         """

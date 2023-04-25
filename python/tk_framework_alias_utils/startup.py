@@ -27,7 +27,7 @@ ALIAS_PLUGINS = {
 }
 
 
-def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0"):
+def get_plugin_environment(alias_version, alias_exec_path, client_name, client_exe_path, debug="0"):
     """
     Return a dictionary containing the env vars required to launch the plugin.
 
@@ -52,6 +52,7 @@ def get_plugin_environment(alias_version, client_name, client_exe_path, debug="0
         "ALIAS_PLUGIN_CLIENT_PYTHON": sys.executable,
         "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
         "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
+        "ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH": alias_exec_path,
     }
 
 
@@ -138,16 +139,3 @@ def ensure_plugin_installed(alias_version):
         plf.write("{}\n".format(plugin_file_path))
 
     return plugins_list_file
-
-
-def get_alias_api_module():
-    """
-    Return the Alias Python API module.
-
-    The api module returned will be for OpenAlias if executing with Python embedded in a
-    running instance of Alias. Otherwise, the api module returned will be for OpenModel.
-    """
-
-    from ..tk_framework_alias.server.api import alias_api
-
-    return alias_api

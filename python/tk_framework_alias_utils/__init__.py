@@ -9,3 +9,4 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 from . import startup
+from . import utils

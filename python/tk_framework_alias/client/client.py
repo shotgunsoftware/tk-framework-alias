@@ -41,6 +41,10 @@ class AliasSocketIoClient(socketio.Client):
         self.__namespaces = []
         self._default_namespace = None
 
+
+    # -------------------------------------------------------------------------------------------------------
+    # Properties
+
     @property
     def hostname(self):
         """Get the hostname that this client is connected to."""
@@ -55,6 +59,10 @@ class AliasSocketIoClient(socketio.Client):
     def json(self):
         """Get the JSON module used to handle serializing data with the server."""
         return self.__json
+
+
+    # -------------------------------------------------------------------------------------------------------
+    # Public methods
 
     def get_json_encoder(self):
         """Get the JSON encoder class used to handle serializing data with the server."""
@@ -91,6 +99,12 @@ class AliasSocketIoClient(socketio.Client):
             wait_timeout=self.__timeout,
         )
 
+    def cleanup(self):
+        """Clean up the client on disconnect."""
+
+    #####################################################################################
+    # Methods to handle callback functions
+
     def get_callback_id(self, callback):
         """Return a unique identifier for the callback function."""
 
@@ -122,15 +136,8 @@ class AliasSocketIoClient(socketio.Client):
             self.__callbacks[callback_id] = callback
         return callback_id
 
-    def emit_threadsafe(self, *args, **kwargs):
-        """Call the emit method in a thread-safe way."""
-
-        # Set a default namespace, if not given.
-        if kwargs.get("namespace") is None and self._default_namespace:
-            kwargs["namespace"] = self._default_namespace
-
-        with self.__message_queue_lock:
-            self.emit(*args, **kwargs)
+    #####################################################################################
+    # Methods to emitting events
 
     def call_threadsafe(self, *args, **kwargs):
         """Call the emit method in a thread-safe way."""
@@ -142,32 +149,40 @@ class AliasSocketIoClient(socketio.Client):
         with self.__message_queue_lock:
             return self.call(*args, **kwargs)
 
-    def wait_for_response(self, response):
-        """
-        Wait for the server to set the response object.
+    def emit_threadsafe(self, *args, **kwargs):
+        """Call the emit method in a thread-safe way."""
 
-        Override this default method to do any processing while waiting for the server to
-        return the response value. For example, a client may need to ensure the GUI is not
-        blocking if Alias needs to perform GUI events during the api request.
+        # Set a default namespace, if not given.
+        if kwargs.get("namespace") is None and self._default_namespace:
+            kwargs["namespace"] = self._default_namespace
 
-        The response object is a dictionary with two key-values:
+        with self.__message_queue_lock:
+            self.emit(*args, **kwargs)
 
-            ack:
-                type: bool
-                description: True if the response has been acknowledged and result is set,
-                             else False if the server has not completed the api request.
-            result:
-                type: any
-                description: The return value from the server api request.
+    def emit_threadsafe_async(self, *args, **kwargs):
+        """Call the emit method in a thread-safe and non-GUI blocking way."""
 
-        :param response: The response object that will be set with the server result once the
-            server completes the api request.
-        :type response: dict
-        """
+        # Set up the response object that will get updated once the api request has returned
+        # from the server.
+        response = {
+            "ack": False,    # The request was acknowledged (finished)
+            "result": None,  # The request result
+        }
 
-        while not response.get("ack", False):
-            continue
+        # Add the event callback to pass to the sio emit method, which will call this function
+        # once the server returns.
+        kwargs["callback"] = self._get_request_callback(response)
+        
+        # Emit the event
+        self.emit_threadsafe(*args, **kwargs)
 
+        # Wait for the callback to set the event result
+        self._wait_for_response(response)
+        return response.get("result")
+
+
+    #####################################################################################
+    # Methods to emit specific events
 
     def get_alias_api(self):
         """Return the Alias Python API module."""
@@ -196,8 +211,6 @@ class AliasSocketIoClient(socketio.Client):
                     # TODO log warning?
                     pass
 
-        # FIXME TEMP force cache reload
-        # cache_loaded = False
         if not cache_loaded:
             # Make the request to get the api, and cache it.
             module_proxy = self.call_threadsafe("get_alias_api")
@@ -205,3 +218,64 @@ class AliasSocketIoClient(socketio.Client):
                 json.dump(module_proxy, fp=fp, cls=self.get_json_encoder())
 
         return module_proxy.get_or_create_module(self)
+
+
+    # -------------------------------------------------------------------------------------------------------
+    # Protected methods
+
+    def _get_request_callback(self, response):
+        """
+        Return a function that can be passed as a callback to handle a socketio event callback.
+
+        :param response: The response object to pass to the callback to set with the event result data.
+        :type response: dict
+
+        :return: The callback function.
+        :rtype: function
+        """
+
+        def __request_callback(*result):
+            """Callback invoked when emit finished. The result is the return value of the api request."""
+            if len(result) == 1:
+                response["result"] = result[0]
+            else:
+                response["result"] = result
+            response["ack"] = True
+
+        return __request_callback
+
+    def _wait_for_response(self, response):
+        """
+        Wait for the server to set the response object.
+
+        Override this default method to do any processing while waiting for the server to
+        return the response value. For example, a client may need to ensure the GUI is not
+        blocking if Alias needs to perform GUI events during the api request.
+
+        The response object is a dictionary with two key-values:
+
+            ack:
+                type: bool
+                description: True if the response has been acknowledged and result is set,
+                             else False if the server has not completed the api request.
+            result:
+                type: any
+                description: The return value from the server api request.
+
+        :param response: The response object that will be set with the server result once the
+            server completes the api request.
+        :type response: dict
+        """
+
+        while not response.get("ack", False):
+            self._process_events()
+    
+    def _process_events(self):
+        """
+        Process GUI events.
+
+        This default method does nothing. Override it to provide custom event processing.
+        """
+
+        # By default, do nothing. Override this method to provide event processing handling
+        # specific to the running application.

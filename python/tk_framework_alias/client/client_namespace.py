@@ -14,11 +14,10 @@ import socketio
 class AliasClientNamespace(socketio.ClientNamespace):
     """Namespace for communication with Alias."""
 
-    def on_connect(self):
-        """Connect event"""
-
     def on_disconnect(self):
         """Disconnect event"""
+
+        self.client.cleanup()
 
     def on_shutdown(self):
         """Shutdown event received from server."""
@@ -41,6 +40,7 @@ class AliasClientNamespace(socketio.ClientNamespace):
         # No specific event found, check if this is a callback from Alias.
         callback_function = self.client.get_callback(event)
         if callback_function:
+            # TODO logging here
             print(f"ALIAS CALLBACK {event}")
             result = self._handle_callback(callback_function, *args)
             print(f"\tcallback result {result}")
