@@ -86,10 +86,8 @@ class AliasServerNamespace(socketio.Namespace):
             "__members__": inspect.getmembers(alias_api),
         }
 
-    def on_menu_created(self, sid, menu):
+    def on_add_server_menu(self, sid, menu):
         """The Alias plugin menu was created. Add server menu actions to it."""
-
-        # FIXME temp
 
         @execute_in_main_thread
         def add_menu_action(menu, data):
