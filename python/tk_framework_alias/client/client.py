@@ -8,6 +8,7 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from functools import wraps
 import json
 import os
 import socketio
@@ -16,6 +17,23 @@ import tempfile
 
 from .client_json import AliasClientJSON
 
+# TODO move this decorator somewhere else..
+def check_result(func):
+    """Check the result returned by the server."""
+
+    @wraps(func)
+    def wrapper(client, *args, **kwargs):
+        try:
+            result = func(client, *args, **kwargs)
+        except Exception as error:
+            result = error
+        
+        if isinstance(result, Exception):
+            return client._handle_server_error(result)
+        return result
+    
+    return wrapper
+        
 
 class AliasSocketIoClient(socketio.Client):
     """A custom socketio client to communicate with Alias."""
@@ -139,6 +157,7 @@ class AliasSocketIoClient(socketio.Client):
     #####################################################################################
     # Methods to emitting events
 
+    @check_result
     def call_threadsafe(self, *args, **kwargs):
         """Call the emit method in a thread-safe way."""
 
@@ -159,6 +178,7 @@ class AliasSocketIoClient(socketio.Client):
         with self.__message_queue_lock:
             self.emit(*args, **kwargs)
 
+    @check_result
     def emit_threadsafe_async(self, *args, **kwargs):
         """Call the emit method in a thread-safe and non-GUI blocking way."""
 
@@ -180,6 +200,10 @@ class AliasSocketIoClient(socketio.Client):
         self._wait_for_response(response)
         return response.get("result")
 
+    def _handle_server_error(self, error):
+        """Handle an error returned by the server from an event."""
+
+        raise(error)
 
     #####################################################################################
     # Methods to emit specific events

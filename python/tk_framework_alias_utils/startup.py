@@ -14,6 +14,7 @@ import tempfile
 from .utils import version_cmp
 
 
+# Name of the compiled plugin file, e.g. alias_py.plugin
 PLUGIN_FILENAME = "alias_py"
 
 # NOTE this is the old way to look up the plugin for the current running Alias version.
@@ -30,6 +31,14 @@ ALIAS_PLUGINS = {
 def get_plugin_environment(alias_version, alias_exec_path, client_name, client_exe_path, debug="0"):
     """
     Return a dictionary containing the env vars required to launch the plugin.
+
+    Environment:
+        ALIAS_PLUGIN_CLIENT_NAME - name used to uniquely identify the Alias client app
+        ALIAS_PLUGIN_CLIENT_EXE_PATH - path to python script to start the client app
+        ALIAS_PLUGIN_CLIENT_PYTHON - the path to the python exe to run the python script
+        ALIAS_PLUGIN_CLIENT_DEBUG - indicate debug mode on or off
+        ALIAS_PLUGIN_CLIENT_ALIAS_VERSION - the Alias version the client is requesting
+        ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH - the path to the Alias exe
 
     :param alias_version: The Alias version that the plugin is running with.
     :type alias_version: str

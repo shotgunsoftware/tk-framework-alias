@@ -91,7 +91,7 @@ def get_alias_version():
     return version
 
 
-def get_module_path(alias_release_version):
+def get_module_path(module_name, alias_version):
     """Return the file path to the Alias Python API module to use."""
 
     python_version = "{major}.{minor}".format(
@@ -104,7 +104,7 @@ def get_module_path(alias_release_version):
     # of Alias
 
     # First try to get the api folder directly matching the running version of Alias
-    api_folder_name = "alias{version}".format(version=alias_release_version)
+    api_folder_name = "alias{version}".format(version=alias_version)
     api_folder_path = os.path.normpath(
         os.path.join(
             os.path.dirname(__file__),
@@ -118,11 +118,11 @@ def get_module_path(alias_release_version):
         api_folder_path = None
         for api_folder_name in ALIAS_API:
             min_version = ALIAS_API[api_folder_name].get("min_version")
-            if min_version and version_cmp(alias_release_version, min_version) < 0:
+            if min_version and version_cmp(alias_version, min_version) < 0:
                 continue
 
             max_version = ALIAS_API[api_folder_name].get("max_version")
-            if max_version and version_cmp(alias_release_version, max_version) >= 0:
+            if max_version and version_cmp(alias_version, max_version) >= 0:
                 continue
 
             # Found the api folder name, now try to get the full path.
@@ -138,33 +138,20 @@ def get_module_path(alias_release_version):
     if not api_folder_path or not os.path.exists(api_folder_path):
         raise AliasPythonApiImportError(
             "Failed to get Alias Python API module path for Alias {alias_version} and Python {py_version}".format(
-                alias_version=alias_release_version, py_version=python_version
+                alias_version=alias_version, py_version=python_version
             )
         )
 
-    return api_folder_path
-
-
-def get_module_spec(module_name, module_dir):
-    """Return the module spec."""
-
     module_path = os.path.normpath(
         os.path.join(
-            module_dir,
+            api_folder_path,
             "{}.pyd".format(module_name),
         )
     )
     if not os.path.exists(module_path):
         raise AliasPythonApiImportError("Module does not exist {}".format(module_path))
-
-    # Find and create the module spec object for the Alias Python API
-    spec = importlib.util.spec_from_file_location(module_name, module_path)
-    if not spec:
-        raise AliasPythonApiImportError(
-            "Could not find the Alias Python API module {}".format(module_path)
-        )
-
-    return spec
+    
+    return module_path
 
 
 def get_alias_api_module():
@@ -176,19 +163,24 @@ def get_alias_api_module():
     The Alias Python API supports Python >= 3
     """
 
-    # Get the folder path to the api module for the given Alias version
-    alias_release_version = get_alias_version()
-    api_folder_path = get_module_path(alias_release_version)
-
     # Determine the module name based on if running in OpenAlias or OpenModel
     # If the executable is Alias, then it is OpenAlias, else OpenModel.
     is_open_model = os.path.basename(sys.executable) != "Alias.exe"
     module_name = OPEN_MODEL_API_NAME if is_open_model else OPEN_ALIAS_API_NAME
-    spec = get_module_spec(module_name, api_folder_path)
+    alias_version = get_alias_version()
+    module_path = get_module_path(module_name, alias_version)
+
+    # Find and create the module spec object for the Alias Python API
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if not spec:
+        raise AliasPythonApiImportError(
+            "Could not find the Alias Python API module {}".format(module_path)
+        )
 
     try:
-        alias_api = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(alias_api)
+        # module_from_spec will add the api module to the sys.modules
+        api_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(api_module)
     except Exception as e:
         info_msg = (
             "Running: Alias v{alias_version}, Python v{py_major}.{py_minor}.{py_micro}.\n\n"
@@ -197,8 +189,8 @@ def get_alias_api_module():
             "the versions used to compile the Alias Python API."
         ).format(
             apa_name=module_name,
-            apa_path=api_folder_path,
-            alias_version=alias_release_version,
+            apa_path=module_path,
+            alias_version=alias_version,
             py_major=sys.version_info.major,
             py_minor=sys.version_info.minor,
             py_micro=sys.version_info.micro,
@@ -207,11 +199,12 @@ def get_alias_api_module():
             "{error}\n\n{info}".format(error=str(e), info=info_msg)
         )
 
-    return alias_api
+    return api_module
 
 
 #
-# Import the Alias API module as 'alias_api'
+# Get the Alias API module and and make it available through this api module global variable
+# 'alias_api', e.g. api.alias_api
 #
 if hasattr(os, "add_dll_directory"):
     # For Python >= 3.9, ensure that the DLL path is in the search path by using the os method

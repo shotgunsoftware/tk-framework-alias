@@ -30,15 +30,15 @@ class AliasEventsServerNamespace(socketio.Namespace):
     # Event callback methods for namespace
     # ----------------------------------------------------------------------------------------
 
-    def on_connect(self, sid, environ):
-        print(f"{[self.namespace]} connection established", sid)
-        print("\tenvironment", environ)
+    # def on_connect(self, sid, environ):
+    #     print(f"{[self.namespace]} connection established", sid)
+    #     print("\tenvironment", environ)
 
-    def on_connect_error(self, data):
-        print(f"{[self.namespace]} connection error", data)
+    # def on_connect_error(self, data):
+    #     print(f"{[self.namespace]} connection error", data)
 
-    def on_disconnect(self, sid):
-        print(f"[{self.namespace}] disconnected from server", sid)
+    # def on_disconnect(self, sid):
+    #     print(f"[{self.namespace}] disconnected from server", sid)
 
     def on_shutdown(self, sid):
         """Shutdown the server."""
@@ -53,15 +53,6 @@ class AliasEventsServerNamespace(socketio.Namespace):
 
     def on_restart(self, sid, data):
         """Restart the client."""
-
-        # self.on_shutdown(sid)
-        # self._restart_shotgrid(data)
-
-        # # First destroy the scope
-        # data_model = alias_bridge.AliasBridge().alias_data_model
-        # data_model.destroy()
-
-        # self._emit("shutdown")
 
         # Shut down all clients
         self.on_shutdown(sid)

@@ -400,9 +400,6 @@ class AliasClientPropertyProxyWrapper(AliasClientObjectProxyWrapper):
         }
         return self.module.send_request(self.attribute_name, data)
 
-    # def __delete__(self, instance):
-    #     # Not sure what to do here yet..
-    #     pass
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods

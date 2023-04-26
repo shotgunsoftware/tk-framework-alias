@@ -29,10 +29,22 @@ from .utils.wsgi_server_logger import WSGIServerLogger
 
 
 class AliasBridge(metaclass=Singleton):
-    """A class to handle communication with Alias."""
+    """
+    A class to handle communication with Alias.
+
+    The AliasBridge is responsible for starting a socketio server that listens for Alias
+    clients to connect to, in order to communicate with a running instance of Alias. The
+    server can execute Alias API requests such that external clients can interact with Alias.
+
+    In addition to the socketio server, the bridge creates a socketio client that handles
+    events Alias triggered from Alias. This Alias event client forwards the socketio events to
+    the server which then sends it to all other connected clients. This Alias event client is
+    required because the server can only execute in the thread it was created it, but Alias
+    events trigger the socketio event in the Alias main thread.
+    """
 
     def __init__(self):
-        """Initialize the server."""
+        """Initialize the bridge."""
 
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
@@ -49,6 +61,8 @@ class AliasBridge(metaclass=Singleton):
             ping_interval=120,
             json=AliasServerJSON,
         )
+        
+        # Register a namespace to handle Alias events specifically
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
 
         # Create the WSGI middleware for the SocketIO server
@@ -104,6 +118,18 @@ class AliasBridge(metaclass=Singleton):
 
         This will create a new thread to serve the WSGI server application to listen for
         client connections to the socketio server.
+
+        :param host: The host name to open the socket server on.
+        :type host: str
+        :param port: The port number to open the socket server on.
+        :type port: int
+        :param max_retries: The number of retries to create the socket server.
+        :type max_retries: int
+
+        :return: True if the server started successfully, else False.
+        :rtype: bool
+
+        :raises Exception: If the socket failed to be created.
         """
 
         if self.__server_socket:
@@ -113,8 +139,7 @@ class AliasBridge(metaclass=Singleton):
         # First, find an open port on the host for the server socket to listen on.
         self.__server_socket = self.__create_server_socket(host, port, max_retries)
         if not self.__server_socket:
-            # Failed to open a server socket.
-            raise Exception("Failed to open server socket.")
+            raise Exception("Failed to create server socket.")
 
         # Start the SocketIO server in a new thread using Python standard threds.
         th = threading.Thread(target=self.__serve_app)
@@ -142,9 +167,6 @@ class AliasBridge(metaclass=Singleton):
                 "shutdown", namespace=AliasEventsServerNamespace.get_namespace()
             )
             self.alias_events_client_sio.disconnect()
-
-        # TODO close the server socket?
-        # TODO shutdown the server so it could be reloaded?
 
     def get_client_by_namespace(self, namespace):
         """Return the client for the given namespace."""
