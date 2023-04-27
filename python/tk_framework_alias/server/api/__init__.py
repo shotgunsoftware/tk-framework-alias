@@ -150,7 +150,7 @@ def get_module_path(module_name, alias_version):
     )
     if not os.path.exists(module_path):
         raise AliasPythonApiImportError("Module does not exist {}".format(module_path))
-    
+
     return module_path
 
 

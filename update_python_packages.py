@@ -76,7 +76,7 @@ with TemporaryDirectory() as temp_dir:
                         package_names.append(entry.name)
             else:
                 package_names.append(entry.name)
-        
+
     # Make sure we found as many Python packages as there are packages listed inside frozen_requirements.txt
     assert len(package_names) + len(c_extension_packages) == nb_dependencies
 
@@ -91,7 +91,7 @@ with TemporaryDirectory() as temp_dir:
     )
     if not os.path.exists(dist_dir):
         os.mkdir(dist_dir)
-    
+
     # Copy the include directory to the dist dir
     include_dir = os.path.join(temp_dir, "include", "python")
     if os.path.exists(include_dir):
@@ -117,7 +117,7 @@ with TemporaryDirectory() as temp_dir:
         if not os.path.exists(lib_dir):
             os.mkdir(lib_dir)
 
-        for package_name in c_extension_packages: 
+        for package_name in c_extension_packages:
             print(f"Copying {package_name}...")
             package_path = os.path.join(temp_dir, package_name)
             dist_package_path = os.path.join(lib_dir, package_name)

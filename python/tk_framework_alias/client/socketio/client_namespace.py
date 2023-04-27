@@ -41,7 +41,7 @@ class AliasClientNamespace(socketio.ClientNamespace):
         event method is defined as "on_{event_name}". If an event method is not found, then
         next check if the event is a callback event. If a callback function is found for the
         event, the callback function is executed.
-        
+
         :param event: The event received.
         :type event: str
         :param args: The arguments passed from the server for this event.

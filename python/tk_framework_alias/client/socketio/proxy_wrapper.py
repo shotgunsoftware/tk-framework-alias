@@ -30,7 +30,6 @@ class AliasClientObjectProxyWrapper:
     __modules = {}
     __module_lock = threading.Lock()
 
-
     def __init__(self, data, module=None, attribute_name=None):
         """Initialize the proxy wrapper object."""
 
@@ -47,7 +46,6 @@ class AliasClientObjectProxyWrapper:
         # If this wrapper represents a module or class object, these are the memebrs of the
         # module or class as a JSON object.
         self.__members = data.get("__members__") or []
-
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods
@@ -70,13 +68,13 @@ class AliasClientObjectProxyWrapper:
     def required_data(cls):
         """
         Abstract class method.
-        
+
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         raise NotImplementedError("Subclass must implement this method")
 
     @classmethod
@@ -124,7 +122,7 @@ class AliasClientObjectProxyWrapper:
 
         :param data: The Alias data to create a proxy for on our client side.
         :type data: Any
-        
+
         :return: A proxy instance.
         :rtype: AliasClientObjectProxyWrapper
         """
@@ -180,7 +178,7 @@ class AliasClientObjectProxyWrapper:
     def _init(self, module, attribute_name):
         """
         Initialize the proxy wrapper object for the given module.
-        
+
         This must be called before the object can be created from the proxy (e.g. _create_object).
         """
 
@@ -225,12 +223,12 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
     This class is responsible for taking a dictionary describing a python module (that lives
     on the server), and re-creating that module such that it can be interacted with as if it
     existed on the client side.
-    
+
     The reason for this set up is to allow for seamless access to the Alias Python API, and
     minimal maintenance. The Alias Python API must be imported on the server side, in the same
     process as Alias, in order to communicate with the running instance of Alias. Since the
     client is running in a separate process, it does not have access to the Alias Python API.
-    So we create this proxy module, such that it can be used in the same as when it is 
+    So we create this proxy module, such that it can be used in the same as when it is
     imported as usual. The way it achieves this is by creating a dynamic module with the same
     attributes as the original module, and intercepts any data accesses and instead creates a
     socketio call to retrieve the data from the server, which makes the actual api request.
@@ -244,7 +242,6 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
 
-
     # -------------------------------------------------------------------------------------------------------
     # Class methods
 
@@ -252,11 +249,11 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__module_name__",
@@ -301,7 +298,7 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
 
             # Store the module
             self.store_module(self.__module_name, module)
-        
+
         return module
 
     def send_request(self, request_name, request_data):
@@ -322,7 +319,9 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
         """
 
         if not self.sio:
-            raise AliasClientNotFound("Alias client not found. Cannot send api request.")
+            raise AliasClientNotFound(
+                "Alias client not found. Cannot send api request."
+            )
 
         if not self.sio.connected:
             raise AliasClientNotConnected(
@@ -345,7 +344,6 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
 
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
-
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
@@ -380,7 +378,7 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
 
             # Return a dictionary specific to describing a callback function.
             return {"__callback_function_id__": callback_id}
-        
+
         # No sanitizing necessary, just return the argument as is.
         return arg
 
@@ -417,7 +415,6 @@ class AliasClientPropertyProxyWrapper(AliasClientObjectProxyWrapper):
         }
         return self.module.send_request(self.attribute_name, data)
 
-
     # -------------------------------------------------------------------------------------------------------
     # Class methods
 
@@ -425,11 +422,11 @@ class AliasClientPropertyProxyWrapper(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__property_name__",
@@ -452,11 +449,11 @@ class AliasClientModuleFunctionProxy(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__function_name__",
@@ -519,11 +516,11 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__module_name__",
@@ -554,11 +551,11 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__class_name__",
@@ -607,11 +604,11 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an intance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
-        
+
         return set(
             [
                 "__module_name__",

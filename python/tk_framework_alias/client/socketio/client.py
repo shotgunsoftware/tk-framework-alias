@@ -66,7 +66,6 @@ class AliasSocketIoClient(socketio.Client):
         # emitting an event, this default namespace is used).
         self._default_namespace = None
 
-
     # -------------------------------------------------------------------------------------------------------
     # Properties
 
@@ -74,7 +73,6 @@ class AliasSocketIoClient(socketio.Client):
     def default_namespace(self):
         """Get the default namespace used to emit events to the server."""
         return self._default_namespace
-
 
     # -------------------------------------------------------------------------------------------------------
     # Public methods
@@ -131,7 +129,6 @@ class AliasSocketIoClient(socketio.Client):
 
         pass
 
-
     #####################################################################################
     # Methods to handle callback functions
 
@@ -143,7 +140,7 @@ class AliasSocketIoClient(socketio.Client):
         :type callback: function
 
         :return: A unique id for the callback.
-        :rtype: str 
+        :rtype: str
         """
 
         # Generate a unique id for the function. Use the id() function to make the id
@@ -188,7 +185,6 @@ class AliasSocketIoClient(socketio.Client):
         with self.__callback_lock:
             self.__callbacks[callback_id] = callback
         return callback_id
-
 
     #####################################################################################
     # Methods to emitting events
@@ -236,14 +232,14 @@ class AliasSocketIoClient(socketio.Client):
         # Set up the response object that will get updated once the api request has returned
         # from the server.
         response = {
-            "ack": False,    # The request was acknowledged (finished)
+            "ack": False,  # The request was acknowledged (finished)
             "result": None,  # The request result
         }
 
         # Add the event callback to pass to the sio emit method, which will call this function
         # once the server returns.
         kwargs["callback"] = self._get_request_callback(response)
-        
+
         # Emit the event
         self.emit_threadsafe(*args, **kwargs)
 
@@ -281,7 +277,7 @@ class AliasSocketIoClient(socketio.Client):
         :type error: Exception
         """
 
-        raise(error)
+        raise (error)
 
     #####################################################################################
     # Methods to emit specific events
@@ -333,7 +329,6 @@ class AliasSocketIoClient(socketio.Client):
 
         return module_proxy.get_or_create_module(self)
 
-
     # -------------------------------------------------------------------------------------------------------
     # Protected methods
 
@@ -383,7 +378,7 @@ class AliasSocketIoClient(socketio.Client):
 
         while not response.get("ack", False):
             self._process_events()
-    
+
     def _process_events(self):
         """
         Process GUI events.

@@ -12,11 +12,14 @@
 class AliasClientException(Exception):
     """Custom exception for reporting Alias client errors."""
 
+
 class AliasClientNotFound(AliasClientException):
     """Custom exception for reporting Alias client not found."""
 
+
 class AliasClientNotConnected(AliasClientException):
     """Custom exception for reporting Alias client not connected."""
+
 
 class AliasClientJSONEncoderError(AliasClientException):
     """Custom exception for reporting Alias client JSON encoder errors."""

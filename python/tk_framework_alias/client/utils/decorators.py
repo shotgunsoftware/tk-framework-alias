@@ -27,7 +27,7 @@ def check_server_result(func):
     :type func: function
 
     :return: The value returned by func.
-    :rtype: any 
+    :rtype: any
     """
 
     @wraps(func)
@@ -36,10 +36,9 @@ def check_server_result(func):
             result = func(client, *args, **kwargs)
         except Exception as error:
             result = error
-        
+
         if isinstance(result, Exception):
             return client._handle_server_error(result)
         return result
-    
+
     return wrapper
-        

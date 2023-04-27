@@ -28,7 +28,9 @@ ALIAS_PLUGINS = {
 }
 
 
-def get_plugin_environment(alias_version, alias_exec_path, client_name, client_exe_path, debug="0"):
+def get_plugin_environment(
+    alias_version, alias_exec_path, client_name, client_exe_path, debug="0"
+):
     """
     Return a dictionary containing the env vars required to launch the plugin.
 

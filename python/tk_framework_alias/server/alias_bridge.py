@@ -61,7 +61,7 @@ class AliasBridge(metaclass=Singleton):
             ping_interval=120,
             json=AliasServerJSON,
         )
-        
+
         # Register a namespace to handle Alias events specifically
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
 
@@ -93,7 +93,6 @@ class AliasBridge(metaclass=Singleton):
     def alias_events_client_sio(self):
         """Get the client socketio that can be used to emit Alias events to the server."""
         return self.__alias_events_client_sio
-
 
     # Public methods
     # ----------------------------------------------------------------------------------------
@@ -255,7 +254,7 @@ class AliasBridge(metaclass=Singleton):
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Start the client in a new a process, don't wait for it to finish.
-        subprocess.Popen(args, env=startup_env, startupinfo=si)
+        result = subprocess.Popen(args, env=startup_env, startupinfo=si)
 
         return True
 
