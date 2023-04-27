@@ -29,14 +29,14 @@ ALIAS_PLUGINS = {
 
 
 def get_plugin_environment(
-    alias_version, alias_exec_path, client_name, client_exe_path, debug="0"
+    alias_version, alias_exec_path, client_name, client_exe_path, python_exe=None, debug="0"
 ):
     """
     Return a dictionary containing the env vars required to launch the plugin.
 
     Environment:
         ALIAS_PLUGIN_CLIENT_NAME - name used to uniquely identify the Alias client app
-        ALIAS_PLUGIN_CLIENT_EXE_PATH - path to python script to start the client app
+        ALIAS_PLUGIN_CLIENT_EXECPATH - path to python script to start the client app
         ALIAS_PLUGIN_CLIENT_PYTHON - the path to the python exe to run the python script
         ALIAS_PLUGIN_CLIENT_DEBUG - indicate debug mode on or off
         ALIAS_PLUGIN_CLIENT_ALIAS_VERSION - the Alias version the client is requesting
@@ -50,6 +50,9 @@ def get_plugin_environment(
     :param client_exe_path: The path to the python script used by the plugin to start the
         client application.
     :type client_exe_path: str
+    :param python_exe: Option to specify a python.exe to run the client app with. Defaults
+        to the sys.executable
+    :type python_exe: str
     :param debug: Set to "1" to run in debug mode, else "0" for non-debug mode.
     :type debug: str
 
@@ -59,43 +62,52 @@ def get_plugin_environment(
 
     return {
         "ALIAS_PLUGIN_CLIENT_NAME": client_name,
-        "ALIAS_PLUGIN_CLIENT_EXE_PATH": client_exe_path,
-        "ALIAS_PLUGIN_CLIENT_PYTHON": sys.executable,
+        "ALIAS_PLUGIN_CLIENT_EXECPATH": client_exe_path,
+        "ALIAS_PLUGIN_CLIENT_PYTHON": python_exe or sys.executable,
         "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
         "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
         "ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH": alias_exec_path,
     }
 
 
-def ensure_plugin_installed(alias_version):
+def get_plugin_dir():
+    """Return the file path to the plugin directory."""
+
+    plugin_dir = os.path.normpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "plugin"
+        )
+    )
+
+    if not os.path.exists(plugin_dir) or not os.path.isdir(plugin_dir):
+        return None
+    return plugin_dir
+
+def get_plugin_file_path(alias_version, python_major_version, python_minor_version):
     """
-    Generates plugins.lst file used by alias in the plugins bootstrap process
+    Get the file path to the plugin file given the python and alias version.
 
-    :param alias_version: The Alias version string to run the plugin with.
-    :typye alias_version: str
+    :param alias_version: Find the plugin for this Alias version
+    :type alias_version: str
+    :param python_major_version: Find the plugin for this python major version.
+    :type python_major_version: int
+    :param python_minor_version: Find the plugin for this python minor version.
+    :type python_minor_version: int
 
-    :return: The file path to the .lst file that can be used to auto-load the plugin when
-        Alias starts up.
+    :return: The file path to the plugin file.
     :rtype: str
     """
 
-    python_major_version = sys.version_info.major
-    if python_major_version < 3:
-        raise Exception(
-            "Python version {}.{}.{} not supported. Python version must >= 3".format(
-                sys.version_info.major,
-                sys.version_info.minor,
-                sys.version_info.micro,
-            )
-        )
+    # Get the root directory for the plugins
+    plugin_dir = get_plugin_dir()
 
-    plugin_dir = os.path.join(os.path.dirname(__file__), "..", "..", "plugin")
-    if not os.path.exists(plugin_dir) or not os.path.isdir(plugin_dir):
-        return None
-
+    # Get the name of the folder based on the python version
     python_folder_name = "python{major}.{minor}".format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor,
+        major=python_major_version,
+        minor=python_minor_version,
     )
 
     # First try to get the plugin folder directly matching the running version of Alias,
@@ -131,9 +143,8 @@ def ensure_plugin_installed(alias_version):
                 )
             )
             break
-
-    if not plugin_folder_path:
-        return None
+        else:
+            return None
 
     plugin_file_path = os.path.normpath(
         os.path.join(
@@ -141,12 +152,45 @@ def ensure_plugin_installed(alias_version):
             "{}.plugin".format(PLUGIN_FILENAME),
         )
     )
+
     if not os.path.exists(plugin_file_path):
         return None
+    return plugin_file_path
 
-    # Overwrite the lst file with the plugin file path found
-    plugins_list_file = os.path.join(tempfile.gettempdir(), "plugins.lst")
-    with open(plugins_list_file, "w") as plf:
-        plf.write("{}\n".format(plugin_file_path))
+def ensure_plugin_installed(alias_version, python_major_version=None, python_minor_version=None):
+    """
+    Create the .lst file used to launch the alias_py plugin on Alias start up.
 
-    return plugins_list_file
+    The .lst file can be used, for example:
+
+        Alias.exe -a as -P "path\\to\\plugin.lst"
+
+    The .lst file will be created in a temp directory.
+
+    :param alias_version: The Alias version string to run the plugin with.
+    :type alias_version: str
+    :param python_major_version: Option to specify the python major version to install the
+        plugin for. Defaults to use the python version defined by sys.version_info.
+    :type python_major_version: int
+    :param python_minor_version: Option to specify the python minor version to install the
+        plugin for. Defaults to use the python version defined by sys.version_info.
+    :type python_minor_version: int
+
+    :return: The file path to the .lst file.
+    :rtype: str
+    """
+
+    if python_major_version is None:
+        python_major_version = sys.version_info.major
+    if python_minor_version is None:
+        python_minor_version = sys.version_info.minor
+
+    # Get the path to the .plugin file
+    plugin_file_path = get_plugin_file_path(alias_version, python_major_version, python_minor_version)
+
+    # Create or overwrite the lst file with the plugin file path found
+    lst_file = os.path.join(tempfile.gettempdir(), "plugins.lst")
+    with open(lst_file, "w") as fp:
+        fp.write("{}\n".format(plugin_file_path))
+
+    return lst_file

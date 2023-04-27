@@ -62,23 +62,20 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def encode_exception(obj):
         """Encode an exception such that is JSON serializable."""
 
-        # TODO improve this
         return {
-            "exception_class": type(obj).__name__,
-            "msg": str(obj),
-            "traceback": obj.__traceback__,
+            "__exception_class_name__": type(obj).__name__,
+            "__msg__": str(obj),
+            "__traceback__": obj.__traceback__,
         }
 
     @staticmethod
     def encode_set(obj):
         """Encode a set such that is JSON serializable."""
 
-        # FIXME what if we need to konw this should be a set?
-        return list(obj)
-        # return {
-        #     "__type__": set,
-        #     "__value__": list(obj),
-        # }
+        return {
+            "__type__": set,
+            "__value__": list(obj),
+        }
 
     @staticmethod
     def encode_property(obj):

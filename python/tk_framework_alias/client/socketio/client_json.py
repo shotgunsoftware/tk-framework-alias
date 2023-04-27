@@ -81,12 +81,12 @@ class AliasClientJSONDecoder(json.JSONDecoder):
         """Decode the JSON serialized object obj to a Python object."""
 
         if isinstance(obj, dict):
-            if "exception_class" in obj:
+            if "__exception_class_name__" in obj:
                 # Deserialize an error returned by the server
-                exception_class_name = obj["exception_class"]
+                exception_class_name = obj["__exception_class_name__"]
                 exception_class = type(exception_class_name, (Exception,), {})
                 exception_instance = exception_class(
-                    obj.get("msg", "Alias Python API error")
+                    obj.get("__msg__", "Alias Python API error")
                 )
                 return exception_instance
 
