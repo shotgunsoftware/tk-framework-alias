@@ -12,25 +12,43 @@ import socketio
 
 
 class AliasClientNamespace(socketio.ClientNamespace):
-    """Namespace for communication with Alias."""
+    """
+    Namespace for a client to communicate with Alias.
+
+    This namespace is meant to be registered to an AliasSocketIoClient.
+    """
 
     def on_disconnect(self):
-        """Disconnect event"""
+        """Disconnect event recieved."""
 
         self.client.cleanup()
 
     def on_shutdown(self):
-        """Shutdown event received from server."""
+        """Shutdown event received."""
 
         try:
+            # Disconnect from the server.
             self.disconnect()
         except:
             # Do nothing, the server may have already dropped.
             pass
 
     def trigger_event(self, event, *args):
-        """Catch all server events"""
+        """
+        Catch and handle all server events.
 
+        Look up the method for the event, if it is found, the event method is executed. An
+        event method is defined as "on_{event_name}". If an event method is not found, then
+        next check if the event is a callback event. If a callback function is found for the
+        event, the callback function is executed.
+        
+        :param event: The event received.
+        :type event: str
+        :param args: The arguments passed from the server for this event.
+        :type args: List
+        """
+
+        # Look up the method for the event
         event_method_name = f"on_{event}"
         if hasattr(self, event_method_name):
             event_method = getattr(self, event_method_name)
@@ -47,7 +65,17 @@ class AliasClientNamespace(socketio.ClientNamespace):
             return result
 
     def _handle_callback(self, callback_func, data=None):
-        """Handle callback from the Alias Python Api that was forwarded from the socket."""
+        """
+        Handle a callback event triggered by the server.
+
+        :param callback_func: The callback function to execute.
+        :type callback_func: function
+        :param data: A dictionary containing the arguments to pass to the function.
+        :type data: dict (required keys: args, kwargs)
+
+        :return: The return value of the callback function.
+        :rtype: any
+        """
 
         data = data or {}
         args = data.get("args", [])

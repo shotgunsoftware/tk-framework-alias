@@ -12,31 +12,35 @@ import inspect
 import json
 
 from .proxy_wrapper import AliasClientObjectProxyWrapper
-from .exceptions import AliasClientJSONEncoderError
+from ..utils.exceptions import AliasClientJSONEncoderError
 
 
 class AliasClientJSON:
-    """A custom json module to handle serializing Alias API objects."""
+    """A custom json module to handle serializing data for an Alias socketio client."""
 
     @staticmethod
     def encoder_class():
+        """Return the encoder class used by this JSON module."""
         return AliasClientJSONEncoder
 
     @staticmethod
     def decoder_class():
+        """Return the decoder class used by this JSON module."""
         return AliasClientJSONDecoder
 
     @staticmethod
     def dumps(obj, *args, **kwargs):
+        """Serialize obj to a JSON formatted str."""
         return json.dumps(obj, cls=AliasClientJSON.encoder_class(), *args, **kwargs)
 
     @staticmethod
     def loads(obj, *args, **kwargs):
+        """Deserialize obj instance containing a JSON document to a Python object."""
         return json.loads(obj, cls=AliasClientJSON.decoder_class(), *args, **kwargs)
 
 
 class AliasClientJSONEncoder(json.JSONEncoder):
-    """A custom class to handle encoding Alias API objects."""
+    """A custom encoder for an Alias socketio client to send data to the Alias server."""
 
     def __init__(self, *args, **kwargs):
         """Initialize the encoder."""
@@ -44,7 +48,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
         super(AliasClientJSONEncoder, self).__init__(*args, **kwargs)
 
     def default(self, obj):
-        """Encode the object."""
+        """Return a serializable object for obj."""
 
         if isinstance(obj, AliasClientObjectProxyWrapper):
             return obj.sanitize()
@@ -64,7 +68,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
 
 
 class AliasClientJSONDecoder(json.JSONDecoder):
-    """A custom class to handle decoding Alias API objects."""
+    """A custom decoder for an Alias socketio client to recieve data from the Alias server."""
 
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
@@ -74,10 +78,11 @@ class AliasClientJSONDecoder(json.JSONDecoder):
         )
 
     def object_hook(self, obj):
-        """Decode the object."""
+        """Decode the JSON serialized object obj to a Python object."""
 
         if isinstance(obj, dict):
             if "exception_class" in obj:
+                # Deserialize an error returned by the server
                 exception_class_name = obj["exception_class"]
                 exception_class = type(exception_class_name, (Exception,), {})
                 exception_instance = exception_class(
@@ -86,10 +91,13 @@ class AliasClientJSONDecoder(json.JSONDecoder):
                 return exception_instance
 
             if isinstance(obj.get("__type__"), set):
+                # Deserialize a set object
                 return set(obj.get("__value__"))
 
+        # Attempt to deserialize the object into an Alias object proxy wrapper
         proxy_obj = AliasClientObjectProxyWrapper.create_proxy(obj)
         if proxy_obj is not None:
             return proxy_obj
 
+        # Return the object as is.
         return obj

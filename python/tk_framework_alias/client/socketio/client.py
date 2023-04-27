@@ -8,7 +8,6 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-from functools import wraps
 import json
 import os
 import socketio
@@ -16,27 +15,25 @@ import threading
 import tempfile
 
 from .client_json import AliasClientJSON
+from ..utils.decorators import check_server_result
 
-# TODO move this decorator somewhere else..
-def check_result(func):
-    """Check the result returned by the server."""
-
-    @wraps(func)
-    def wrapper(client, *args, **kwargs):
-        try:
-            result = func(client, *args, **kwargs)
-        except Exception as error:
-            result = error
-        
-        if isinstance(result, Exception):
-            return client._handle_server_error(result)
-        return result
-    
-    return wrapper
-        
 
 class AliasSocketIoClient(socketio.Client):
-    """A custom socketio client to communicate with Alias."""
+    """
+    A socketio client to communicate with Alias.
+
+    The client establishes which JSON module to use for encoding the data that is sent from
+    this client to the server, and decoding the data sent from the server to this client. The
+    default JSON module used is the AliasClientJSON.
+
+    Callback functions that are passed to the Alias api, through the socketio server, require
+    special handling by the client. Function objects cannot be passed to the server, since
+    they are not JSON-serializable, so the client will create unique ids for callback
+    functions that will be sent and received from the server to trigger callback functions on
+    the client side.
+
+
+    """
 
     def __init__(self, *args, **kwargs):
         """Initialize the client."""
@@ -50,13 +47,23 @@ class AliasSocketIoClient(socketio.Client):
 
         super(AliasSocketIoClient, self).__init__(*args, **kwargs)
 
-        self.__hostname = None
-        self.__port = None
+        # The connection timeout in seconds
         self.__timeout = kwargs.get("timeout", 20)
+
+        # The callbacks registry. Callback functions passed to the server are stored in the
+        # client by their id, such that they can be looked up and executed when the server
+        # triggers the callback.
         self.__callbacks = {}
+        # A lock to ensure callbacks are accessed thread-safely
         self.__callback_lock = threading.Lock()
+
+        # A lock to ensure events are emitted thread-safely
         self.__message_queue_lock = threading.Lock()
+
+        # A list of namespaces that are registered to this client.
         self.__namespaces = []
+        # The default namespace to use for this client (e.g. if no namespace is given on
+        # emitting an event, this default namespace is used).
         self._default_namespace = None
 
 
@@ -64,19 +71,9 @@ class AliasSocketIoClient(socketio.Client):
     # Properties
 
     @property
-    def hostname(self):
-        """Get the hostname that this client is connected to."""
-        return self.__hostname
-
-    @property
-    def port(self):
-        """Get the port number that this client is connected to."""
-        return self.__port
-
-    @property
-    def json(self):
-        """Get the JSON module used to handle serializing data with the server."""
-        return self.__json
+    def default_namespace(self):
+        """Get the default namespace used to emit events to the server."""
+        return self._default_namespace
 
 
     # -------------------------------------------------------------------------------------------------------
@@ -97,20 +94,26 @@ class AliasSocketIoClient(socketio.Client):
         return None
 
     def add_namespace(self, namespace_handler):
-        """Register a namespace and add it to the list of namespaces used for connection."""
+        """Register a namespace handler and add it to the list of namespaces for this client."""
 
         self.__namespaces.append(namespace_handler.namespace)
         self.register_namespace(namespace_handler)
 
     def start(self, hostname, port):
-        """Start the socketio by connecting to the server."""
+        """
+        Start the socketio client by connecting to the server.
+
+        :param hostname: The host name to connect to.
+        :type hostname: str
+        :param port: The port number to connect to.
+        :type port: int
+        """
+
+        if self.connected:
+            self.disconnect()
 
         # TODO secure https
-        self.__hostname = hostname
-        self.__port = port
-
-        url = f"http://{self.__hostname}:{self.__port}"
-
+        url = f"http://{hostname}:{port}"
         self.connect(
             url,
             namespaces=self.__namespaces,
@@ -118,48 +121,91 @@ class AliasSocketIoClient(socketio.Client):
         )
 
     def cleanup(self):
-        """Clean up the client on disconnect."""
+        """
+        Clean up the client resources.
+
+        This may be useful to call when the client is disconnected from the server.
+
+        By default, nothing is done. Override this method to do any custom clean up.
+        """
+
+        pass
+
 
     #####################################################################################
     # Methods to handle callback functions
 
     def get_callback_id(self, callback):
-        """Return a unique identifier for the callback function."""
+        """
+        Return a unique identifier for the callback function.
 
-        if isinstance(callback, str):
-            return callback
+        :param callback: The callback function to generate an id for.
+        :type callback: function
+
+        :return: A unique id for the callback.
+        :rtype: str 
+        """
 
         # Generate a unique id for the function. Use the id() function to make the id
         # unique, but append the function name for a more human readable id.
         return f"{id(callback)}.{callback.__name__}"
 
     def has_callback(self, callback):
-        """Return True if there is a callback registered already for the id."""
+        """
+        Return True if there is a callback registered already for the given callback.
+
+        :param callback: The callback to check if registered.
+        :type callback: function
+
+        :return: True if the callback is already registered, else False.
+        :rtype: bool
+        """
 
         callback_id = self.get_callback_id(callback)
         with self.__callback_lock:
             return callback_id in self.__callbacks
 
     def get_callback(self, callback_id):
-        """Return the callback function for the id."""
+        """
+        Return the callback function for the id.
+
+        :param callback_id: The unique id to get the callback for.
+        :type callback_id: str
+        """
 
         with self.__callback_lock:
             return self.__callbacks.get(callback_id)
 
     def set_callback(self, callback):
-        """Store a callback function by id."""
+        """
+        Register the callback to the client.
+
+        :param callback: The callback to register.
+        :type callback: function
+        """
 
         callback_id = self.get_callback_id(callback)
         with self.__callback_lock:
             self.__callbacks[callback_id] = callback
         return callback_id
 
+
     #####################################################################################
     # Methods to emitting events
 
-    @check_result
+    @check_server_result
     def call_threadsafe(self, *args, **kwargs):
-        """Call the emit method in a thread-safe way."""
+        """
+        Emit an event to the server and wait for the response in a thread-safe way.
+
+        :param args: The args to pass to the socketio Client.call method.
+        :type args: List
+        :param kwargs: The key-word arguments to pass to the socketio Client.call method.
+        :type kwargs: dict
+
+        :return: The server response for the emitted event.
+        :rtype: any
+        """
 
         # Set a default namespace, if not given.
         if kwargs.get("namespace") is None and self._default_namespace:
@@ -168,19 +214,24 @@ class AliasSocketIoClient(socketio.Client):
         with self.__message_queue_lock:
             return self.call(*args, **kwargs)
 
-    def emit_threadsafe(self, *args, **kwargs):
-        """Call the emit method in a thread-safe way."""
+    @check_server_result
+    def emit_threadsafe_and_wait(self, *args, **kwargs):
+        """
+        Call the emit method in a thread-safe and non-GUI blocking way.
 
-        # Set a default namespace, if not given.
-        if kwargs.get("namespace") is None and self._default_namespace:
-            kwargs["namespace"] = self._default_namespace
+        This differs from `call_threadsafe` by using the `Client.emit` method with a callback
+        to get the server response. While waiting for the callback to be triggered, client
+        events are processed to avoid blocking the GUI. The `call_threadsafe` method will
+        block the GUI.
 
-        with self.__message_queue_lock:
-            self.emit(*args, **kwargs)
+        :param args: The args to pass to the socketio Client.emit method.
+        :type args: List
+        :param kwargs: The key-word arguments to pass to the socketio Client.emit method.
+        :type kwargs: dict
 
-    @check_result
-    def emit_threadsafe_async(self, *args, **kwargs):
-        """Call the emit method in a thread-safe and non-GUI blocking way."""
+        :return: The server response for the emitted event.
+        :rtype: any
+        """
 
         # Set up the response object that will get updated once the api request has returned
         # from the server.
@@ -200,8 +251,35 @@ class AliasSocketIoClient(socketio.Client):
         self._wait_for_response(response)
         return response.get("result")
 
+    def emit_threadsafe(self, *args, **kwargs):
+        """
+        Call the emit method in a thread-safe way.
+
+        This method does not wait for the server response.
+
+        :param args: The args to pass to the socketio Client.emit method.
+        :type args: List
+        :param kwargs: The key-word arguments to pass to the socketio Client.emit method.
+        :type kwargs: dict
+        """
+
+        # Set a default namespace, if not given.
+        if kwargs.get("namespace") is None and self._default_namespace:
+            kwargs["namespace"] = self._default_namespace
+
+        with self.__message_queue_lock:
+            self.emit(*args, **kwargs)
+
     def _handle_server_error(self, error):
-        """Handle an error returned by the server from an event."""
+        """
+        Handle the server error given.
+
+        By default, the error will be raised. Override this method to provide custom handling
+        of server errors.
+
+        :param error: The server error.
+        :type error: Exception
+        """
 
         raise(error)
 
@@ -209,11 +287,24 @@ class AliasSocketIoClient(socketio.Client):
     # Methods to emit specific events
 
     def get_alias_api(self):
-        """Return the Alias Python API module."""
+        """
+        Get the Alias Python API module.
+
+        This method will attempt to first load the module from a cache file, if it exists and
+        is not stale. Otherwise, it will make a server request to get the api module.
+
+        The actual Alias Python API module (.pyd) file lives on the server, so this method
+        will get the api module as a JSON object from the server, and create a proxy module
+        that can be used on the client side here, as if it were the actual api module itself.
+
+        :return: The Alias Python API module.
+        :rtype: module
+        """
 
         # Get information about the api module
         api_info = self.call_threadsafe("get_alias_api_info")
 
+        # Get the cache file path for the api module
         filename = os.path.basename(api_info["file_path"]).split(".")[0]
         cache_filename = "{filename}{alias}_py{python}.json".format(
             filename=filename,
@@ -224,19 +315,18 @@ class AliasSocketIoClient(socketio.Client):
 
         cache_loaded = False
         if os.path.exists(cache_filepath):
-            # Check file modified dates to see if the cache is still up to date.
+            # The cache exists. Check the cache and api file modified dates to see if the
+            # cache is stale or not.
             cache_last_modified = os.stat(cache_filepath).st_mtime
             if api_info["last_modified"] < cache_last_modified:
-                try:
-                    with open(cache_filepath, "r") as fp:
-                        module_proxy = json.load(fp, cls=self.get_json_decoder())
-                        cache_loaded = True
-                except Exception:
-                    # TODO log warning?
-                    pass
+                # The cache is still up to date, load it in.
+                with open(cache_filepath, "r") as fp:
+                    module_proxy = json.load(fp, cls=self.get_json_decoder())
+                    cache_loaded = True
 
         if not cache_loaded:
-            # Make the request to get the api, and cache it.
+            # The api was not loaded from cache, make a server request to get the api module,
+            # and cache it
             module_proxy = self.call_threadsafe("get_alias_api")
             with open(cache_filepath, "w") as fp:
                 json.dump(module_proxy, fp=fp, cls=self.get_json_encoder())
@@ -298,8 +388,8 @@ class AliasSocketIoClient(socketio.Client):
         """
         Process GUI events.
 
-        This default method does nothing. Override it to provide custom event processing.
+        By default, do nothing. Override this method to provide event processing handling
+        specific to the running application.
         """
 
-        # By default, do nothing. Override this method to provide event processing handling
-        # specific to the running application.
+        pass

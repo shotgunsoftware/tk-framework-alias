@@ -12,7 +12,7 @@ import inspect
 import threading
 import types
 
-from .exceptions import AliasClientNotConnected, AliasClientNotFound
+from ..utils.exceptions import AliasClientNotConnected, AliasClientNotFound
 
 
 class AliasClientObjectProxyWrapper:
@@ -20,8 +20,8 @@ class AliasClientObjectProxyWrapper:
     Wrapper class for Alias data received from the server.
 
     Alias data will be sent from the socketio server to the client. To handle the Alias data,
-    it will be encoded and decoded by a JSON module. This class should be used to wrap any
-    Alias data received by the server.
+    it will be encoded and decoded by a JSON module. This class is used to wrap the Alias data
+    received by the server, for the client to handle.
     """
 
     # Store any Alias modules that have been created on the client side (here) that exist on
@@ -34,9 +34,18 @@ class AliasClientObjectProxyWrapper:
     def __init__(self, data, module=None, attribute_name=None):
         """Initialize the proxy wrapper object."""
 
+        # The raw data received from the server
         self.__data = data or {}
+
+        # The module that this wrapper object belongs to
         self.__module = module
+
+        # If this wrapper represents an attribute from a module, this is the module attribute
+        # name for the wrapper object.
         self.__attribute_name = attribute_name
+
+        # If this wrapper represents a module or class object, these are the memebrs of the
+        # module or class as a JSON object.
         self.__members = data.get("__members__") or []
 
 
@@ -52,7 +61,7 @@ class AliasClientObjectProxyWrapper:
 
     @classmethod
     def store_module(cls, module_name, module):
-        """Store the module."""
+        """Store the module in the registry by the given name."""
 
         with cls.__module_lock:
             cls.__modules[module_name] = module
@@ -72,7 +81,15 @@ class AliasClientObjectProxyWrapper:
 
     @classmethod
     def needs_wrapping(cls, value):
-        """Return True if the value represents an object that needs to be wrapped by this proxy class."""
+        """
+        Check if the value represents an object that needs to be wrapped by this proxy class.
+
+        :param value: The value to check if needs wrapping.
+        :type value: any
+
+        :return: True if the value should be wrapped by this class, else False.
+        :rtype: bool
+        """
 
         return cls.required_data() == set(value.keys())
 
@@ -327,7 +344,7 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
                 request_data["__function_kwargs__"] = kwargs
 
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
-        return self.sio.emit_threadsafe_async(request_name, request_data)
+        return self.sio.emit_threadsafe_and_wait(request_name, request_data)
 
 
     # -------------------------------------------------------------------------------------------------------
