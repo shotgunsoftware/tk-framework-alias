@@ -216,7 +216,7 @@ class AliasClientObjectProxyWrapper:
         return attrs
 
 
-class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
+class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     """
     A proxy wrapper for the Alias python modules.
 
@@ -237,7 +237,7 @@ class AliasClientModuleProxy(AliasClientObjectProxyWrapper):
     def __init__(self, module_data):
         """Initialize"""
 
-        super(AliasClientModuleProxy, self).__init__(module_data, module=self)
+        super(AliasClientModuleProxyWrapper, self).__init__(module_data, module=self)
 
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
@@ -434,13 +434,13 @@ class AliasClientPropertyProxyWrapper(AliasClientObjectProxyWrapper):
         )
 
 
-class AliasClientModuleFunctionProxy(AliasClientObjectProxyWrapper):
+class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
     """A proxy wrapper for Alias api functions."""
 
     def __init__(self, data):
         """Initialize"""
 
-        super(AliasClientModuleFunctionProxy, self).__init__(data)
+        super(AliasClientFunctionProxyWrapper, self).__init__(data)
 
         self.__func_name = data.get("__function_name__")
         self.__is_instance_method = data.get("__is_method__", False)

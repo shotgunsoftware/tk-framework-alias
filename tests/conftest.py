@@ -4,36 +4,6 @@ import sys
 import datetime
 import os
 
-# # Determine the Alias Python API module to import based on the sys exe
-# if os.path.basename(sys.executable) == "Alias.exe":
-#     # OpenAlias
-#     import alias_api
-# else:
-#     # OpenModel
-
-#     # For OpenModel, we need to ensure that the Alias DLLs are in the search path.
-#     # OpenAlias does not have to worry about this because all the DLLs are in the
-#     # exe path, which is automatically added to the search path.
-#     if hasattr(os, "add_dll_directory"):
-#         # For Python versions >= 3.8
-#         alias_dll_path = os.environ.get("APA_ALIAS_DLL_DIR")
-#         if not alias_dll_path:
-#             raise Warning(
-#                 (
-#                     "Alias DLL directory path not set.\n"
-#                     "This will cause the Alias Python API fail to import because it cannot "
-#                     "find the Alias DLLs to load.\n"
-#                     "Set the APA_ALIAS_DLL_DIR=<path_to_alias_install_bin_dir> environment "
-#                     "variable to add this path to the DLL search path."
-#                 )
-#             )
-#         with os.add_dll_directory(alias_dll_path):
-#             import alias_api_om as alias_api
-#     else:
-#         # For Python version < 3.8, the PATH environment variable must have the Alias DLL path
-#         # add to it before running pytest
-#         import alias_api_om as alias_api
-
 
 ############################################################################### 
 # pytest configuration

@@ -12,6 +12,8 @@
 class AliasPythonApiImportError(Exception):
     """Exception for Alias Python API import errors."""
 
+class AliasServerJSONDecoderError(Exception):
+    """Exception for Alias Python API import errors."""
 
 class AliasApiRequestException(Exception):
     """Custom exception class..."""

@@ -17,11 +17,11 @@ import threading
 import socketio
 import eventlet
 
-from .socket_io.data_model import AliasDataModel
-from .socket_io.server_json import AliasServerJSON
-from .socket_io.namespaces.server_namespace import AliasServerNamespace
-from .socket_io.namespaces.events_namespace import AliasEventsServerNamespace
-from .socket_io.namespaces.events_client_namespace import (
+from .socketio.data_model import AliasDataModel
+from .socketio.server_json import AliasServerJSON
+from .socketio.namespaces.server_namespace import AliasServerNamespace
+from .socketio.namespaces.events_namespace import AliasEventsServerNamespace
+from .socketio.namespaces.events_client_namespace import (
     AliasEventsClientNamespace,
 )
 from .utils.singleton import Singleton
@@ -45,6 +45,12 @@ class AliasBridge(metaclass=Singleton):
 
     def __init__(self):
         """Initialize the bridge."""
+
+        # import sys
+        # sys.path.append("C:\\python_libs")
+        # import ptvsd
+        # ptvsd.enable_attach()
+        # ptvsd.wait_for_attach()
 
         # Default server socket params
         self.__default_hostname = "127.0.0.1"

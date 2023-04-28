@@ -9,13 +9,12 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
-import inspect
 import socketio
 
 from ...api import alias_api
 
 from .events_namespace import AliasEventsServerNamespace
-from ..api_request import AliasApiRequest
+from ..api_request import AliasApiRequestWrapper
 from ... import alias_bridge
 from ...utils.invoker import execute_in_main_thread
 from ...utils.exceptions import (
@@ -58,11 +57,13 @@ class AliasServerNamespace(socketio.Namespace):
     def on_connect_error(self, data):
         """The connect error event callback."""
 
+        # TODO log message
         print(f"{[self.namespace]} connection error", data)
 
     def on_disconnect(self, sid):
         """The disconnect event callback."""
 
+        # TODO log message
         print(f"[{self.namespace}] disconnected from server", sid)
 
     def on_restart(self, sid):
@@ -81,10 +82,7 @@ class AliasServerNamespace(socketio.Namespace):
     def on_get_alias_api(self, sid):
         """Get the global attributes for the Alias Python API."""
 
-        return {
-            "__module_name__": alias_api.__name__,
-            "__members__": inspect.getmembers(alias_api),
-        }
+        return alias_api
 
     def on_add_server_menu(self, sid, menu):
         """The Alias plugin menu was created. Add server menu actions to it."""
@@ -172,7 +170,7 @@ class AliasServerNamespace(socketio.Namespace):
     def _execute_request(self, request_name, request):
         """Execute the Alias Python API request."""
 
-        if not isinstance(request, AliasApiRequest):
+        if not isinstance(request, AliasApiRequestWrapper):
             # Do not raise, just return the exception to be sent back to the client(s)
             return AliasApiRequestNotSupported(f"Request not supported: {request}")
 

@@ -16,8 +16,9 @@ import importlib
 from ..api import alias_api
 
 from .. import alias_bridge
-from .api_request import AliasApiRequest
+from .api_request import AliasApiRequestWrapper
 from .namespaces.events_namespace import AliasEventsServerNamespace
+from ..utils.exceptions import AliasServerJSONDecoderError
 
 
 class AliasServerJSON:
@@ -89,7 +90,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def encode_descriptor(obj):
         """Encode a property such that is JSON serializable."""
 
-        # TODO change this key name to descriptor__
+        # NOTE descriptors are handled like properties for now. This might need to be updated
         return {
             "__property_name__": obj.__name__,
         }
@@ -146,6 +147,14 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             "__members__": class_members,
         }
 
+    def encode_module(self, obj):
+        """Encode a module object such that is JSON serializable."""
+
+        return {
+            "__module_name__": obj.__name__,
+            "__members__": inspect.getmembers(obj),
+        }
+
     @staticmethod
     def encode_al_enum(obj):
         """Encode an Alias Python API enum such that is JSON serializable."""
@@ -160,13 +169,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def encode_al_object(obj):
         """Encode an Alias Python API object such that is JSON serializable."""
 
-        # NOTE think about the unique id...
-        instance_id = id(obj)
-
         # Register the instance at encode time to ensure all encoded instances are registered
         # in the Alias Data Model.
         data_model = alias_bridge.AliasBridge().alias_data_model
-        data_model.register_instance(instance_id, obj)
+        instance_id = data_model.register_instance(obj)
 
         return {
             "__module_name__": obj.__module__,
@@ -215,6 +221,9 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             if inspect.isclass(obj):
                 return self.encode_class_type(obj)
 
+            if inspect.ismodule(obj):
+                return self.encode_module(obj)
+
             if callable(obj):
                 return self.encode_callable(obj)
 
@@ -227,14 +236,9 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             # Fall back to the default encode method.
             return super(AliasServerJSONEncoder, self).default(obj)
 
-        except Exception as err:
-            # Catch any errors and log an error message but do not fail the whole operation.
-            # The value for this object will be set to None.
-            print(f"AliasServerJSON Encoder Exception:")
-            print(f"\t{err}")
-            print(f"\t{obj}")
-            # TODO log an error/warning
-            return None
+        except Exception as encode_error:
+            # Catch any errors from encoding and return the exception encoded.
+            return self.encode_exception(encode_error)
 
 
 class AliasServerJSONDecoder(json.JSONDecoder):
@@ -277,18 +281,19 @@ class AliasServerJSONDecoder(json.JSONDecoder):
         """Decode an object."""
 
         # First, try to decode the object into an Alias API request object.
-        alias_data = AliasApiRequest.create(obj)
-        if alias_data is not None:
-            return alias_data
+        request = AliasApiRequestWrapper.create_wrapper(obj)
+        if request is not None:
+            return request
 
         if isinstance(obj, dict):
             # Next, try to decode the object as an Alias instance
             instance_id = obj.get("__instance_id__")
             if instance_id is not None:
                 data_model = alias_bridge.AliasBridge().alias_data_model
-
-                # NOTE should we have some validation that the registry had the instance id?
-                return data_model.get_instance(instance_id)
+                instance = data_model.get_instance(instance_id)
+                if instance is None:
+                    raise AliasServerJSONDecoderError("Instance not found in data model registry")
+                return instance
 
             # Next, try to decode the object as an Alias class object
             if "__class_name__" in obj:
@@ -306,8 +311,9 @@ class AliasServerJSONDecoder(json.JSONDecoder):
                 return self.create_callback(obj["__callback_function_id__"])
 
             # Next, try to decode a set
-            if "__set__" in obj:
-                return set(obj["__set__"])
+            if "__type__" in obj:
+                if obj["__type__"] is set:
+                    return set(obj["__value__"])
 
         # Just return the object as is
         return obj
