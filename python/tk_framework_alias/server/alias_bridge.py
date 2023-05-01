@@ -26,6 +26,7 @@ from .socketio.namespaces.events_client_namespace import (
 )
 from .utils.singleton import Singleton
 from .utils.wsgi_server_logger import WSGIServerLogger
+from .utils.exceptions import AliasBridgeException, ClientAlreadyRegistered, ServerAlreadyRunning, ClientNameReservered
 
 
 class AliasBridge(metaclass=Singleton):
@@ -35,12 +36,6 @@ class AliasBridge(metaclass=Singleton):
     The AliasBridge is responsible for starting a socketio server that listens for Alias
     clients to connect to, in order to communicate with a running instance of Alias. The
     server can execute Alias API requests such that external clients can interact with Alias.
-
-    In addition to the socketio server, the bridge creates a socketio client that handles
-    events Alias triggered from Alias. This Alias event client forwards the socketio events to
-    the server which then sends it to all other connected clients. This Alias event client is
-    required because the server can only execute in the thread it was created it, but Alias
-    events trigger the socketio event in the Alias main thread.
     """
 
     def __init__(self):
@@ -58,8 +53,15 @@ class AliasBridge(metaclass=Singleton):
         self.__max_retry_count = 25
         self.__server_socket = None
 
-        # Create the SocketIO server, support long-polling (default) and websocket transports.
-        # We will try to use websocket transport, if possible
+        # Track the clients registered to the socketio server
+        self.__clients = {}
+
+        # The Alias data model to store Alias api objects, to allow passing api objects back
+        # and forth between the server and its clients.
+        self.__data_model = AliasDataModel()
+
+        # Create the SocketIO server, long-polling is the default transport but websocket
+        # transport will be used if possible
         self.__server_sio = socketio.Server(
             aysnc_mode="eventlet",
             logger=True,
@@ -68,27 +70,30 @@ class AliasBridge(metaclass=Singleton):
             json=AliasServerJSON,
         )
 
-        # Register a namespace to handle Alias events specifically
+        # Create a SocketIO client to handle Alias events triggered in the main thread, which
+        # can then forward events to the server in the thread that the server is executing in.
+        # Register a server namespace to specifically handle Alias events emitted from this
+        # events client.
+        # These are special client/server namespaces, do not use the register_client_namespace
+        # for these.
+        self.__alias_events_client_sio = socketio.Client(
+            logger=True, engineio_logger=True
+        )
+        self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
 
         # Create the WSGI middleware for the SocketIO server
         self.__app = socketio.WSGIApp(self.__server_sio, static_files={})
         self.__wsgi_logger = WSGIServerLogger()
 
-        # Create the SocketIO client to handle Alias events in the main thread
-        self.__alias_events_client_sio = socketio.Client(
-            logger=True, engineio_logger=True
-        )
-        self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
-
-        # Create the Alias data model to store Alias objects to look up
-        self.__data_model = AliasDataModel()
-
-        # Track the clients registered to the socketio server
-        self.__clients = {}
 
     # Properties
     # ----------------------------------------------------------------------------------------
+
+    @property
+    def sio(self):
+        """Get the Alias socketio server."""
+        return self.__server_sio
 
     @property
     def alias_data_model(self):
@@ -102,20 +107,6 @@ class AliasBridge(metaclass=Singleton):
 
     # Public methods
     # ----------------------------------------------------------------------------------------
-
-    def get_hostname(self):
-        """Return the name of the host that this server socket is listening on."""
-
-        if not self.__server_socket:
-            return None
-        return self.__server_socket.getsockname()[0]
-
-    def get_port(self):
-        """Return the port number that this server socket is listening on."""
-
-        if not self.__server_socket:
-            return None
-        return self.__server_socket.getsockname()[1]
 
     def start_server(self, host=None, port=None, max_retries=None):
         """
@@ -131,26 +122,34 @@ class AliasBridge(metaclass=Singleton):
         :param max_retries: The number of retries to create the socket server.
         :type max_retries: int
 
+        :raises ServerAlreadyRunning: If the bridge has already started a server.
+        :raises AliasBridgeException: If the socket failed to be created.
+
         :return: True if the server started successfully, else False.
         :rtype: bool
-
-        :raises Exception: If the socket failed to be created.
         """
 
         if self.__server_socket:
             # Already started
+            host_in_use, port_in_use = self.__server_socket.getsockname()
+            if host is not None and host != host_in_use:
+                raise ServerAlreadyRunning("Server already running on {host_in_use}:{port_in_use}. Server must be stopped first.")
+            if port is not None and port != port_in_use:
+                raise ServerAlreadyRunning("Server already running on {host_in_use}:{port_in_use}. Server must be stopped first.")
             return True
 
         # First, find an open port on the host for the server socket to listen on.
-        self.__server_socket = self.__create_server_socket(host, port, max_retries)
+        self.__server_socket = self.__open_server_socket(host, port, max_retries)
         if not self.__server_socket:
-            raise Exception("Failed to create server socket.")
+            raise AliasBridgeException("Failed to open server socket.")
 
-        # Start the SocketIO server in a new thread using Python standard threds.
+        # Start the SocketIO server in a new thread using Python standard threds. Set the
+        # thread as a daemon so that the Python program will not wait for this thread to exit.
         th = threading.Thread(target=self.__serve_app)
+        th.daemon = True
         th.start()
 
-        # Connect the Alias socketio client to the server. This must be called after the server is started in a new thread.
+        # Connect the Alias socketio client to the server. This must be called after the server has started.
         server_host, server_port = self.__server_socket.getsockname()
         self.alias_events_client_sio.connect(
             f"http://{server_host}:{server_port}",
@@ -161,20 +160,44 @@ class AliasBridge(metaclass=Singleton):
         return True
 
     def stop_server(self):
-        """Stop the server."""
+        """
+        Stop the server socket.
 
-        if self.alias_events_client_sio:
-            # The shutdown must be emitted from the alias events client because we will execute
-            # this function from the main thread (not the thread that the socketio server is
-            # executing in), and the socketio server can only be accessed from the single thread
-            # it executes in.
+        The shutdown must be emitted from the alias events client because this function is
+        executed from the main thread, but the socketio server can only be accessed from the
+        single thread that it was created in. By emitting an event from the client, the server
+        will receive the shutdown event in the correct thread.
+        """
+
+        # Destroy the server scope, this will remove any event handlers registered. Do this
+        # before shutting down clients so that their shutdown does not trigger any events.
+        self.alias_data_model.destroy()
+
+        # Emit event to shut down all other clients connected to the server.
+        if self.alias_events_client_sio and self.alias_events_client_sio.connected:
             self.alias_events_client_sio.call(
                 "shutdown", namespace=AliasEventsServerNamespace.get_namespace()
             )
             self.alias_events_client_sio.disconnect()
 
+        # Clean up the server socket
+        if self.__server_socket:
+            self.__server_socket.close()
+            self.__server_socket = None
+
+        # Clean up the clients
+        self.__clients.clear()
+
     def get_client_by_namespace(self, namespace):
-        """Return the client for the given namespace."""
+        """
+        Find the client for the given namespace.
+
+        :param namespace: The namespace to find which client is registered to it.
+        :type namespace: str
+
+        :return: The client registered to the namespace.
+        :rtype: dict
+        """
 
         return next(
             (
@@ -193,12 +216,29 @@ class AliasBridge(metaclass=Singleton):
         client and registered to the server.
 
         If the client already has been registered, the client data will be returned.
+
+        :param client_name: The name of the client application being registered.
+        :type client_name: str
+        :param client_exe_path: The file path to the Python script to execute in a new process
+            that will handle bootstrapping the client being registered.
+        :type client_exe_path: str
+        :param client_info: (optional) Additional info about the client being registered.
+        :type client_info: dict
+
+        :raises ClientAlreadyRegistered: If a client is already registered for the given name.
+        :raises ClientNameReserved: If the client name is in reserve.
+
+        :return: The client that was registered.
+        :rtype: dict
         """
 
         if self.__clients.get(client_name):
-            raise Exception("Client already registered")
+            raise ClientAlreadyRegistered("Client already registered")
 
         namespace_handler = AliasServerNamespace(client_name)
+        if namespace_handler.namespace == AliasEventsServerNamespace.get_namespace():
+            raise ClientNameReservered("Client name '{client_name}' is reserved. Use a different name.")
+
         self.__server_sio.register_namespace(namespace_handler)
 
         client = {
@@ -217,9 +257,27 @@ class AliasBridge(metaclass=Singleton):
 
         This method does not start the server; if the client process needs to connect to the
         sever on bootstrap, the server should already be started to ensure it is ready for the
-        client to connect to.
+        client to connect to. If the server is not ready, False is returned.
+
+        :param client_name: The name of the client to bootstrap.
+        :type client_name: str
+        :param client_exe_path: The file path to the Python script to execute in a new process
+            that will handle bootstrapping the client application.
+        :type client_exe_path: str
+        :param client_info: (optional) Additional information about the client.
+        :type client_info: dict
+
+        :return: True if the subprocess to bootstrap the client was successfully launched,
+            else False. Note that this method cannot detect if the client successfully
+            bootstrapped, only that the process was created to bootstrap the client.
+        :rtype: bool
         """
 
+        # Check if the server is ready to have a client connect to it.
+        if not self.__server_socket:
+            return False
+
+        hostname, port = self.__server_socket.getsockname()
         client = self.__clients.get(client_name)
         if not client:
             client = self.register_client_namespace(
@@ -245,8 +303,8 @@ class AliasBridge(metaclass=Singleton):
         args = [
             python_exe,
             client["exe_path"],
-            self.get_hostname(),
-            str(self.get_port()),
+            hostname,
+            str(port),
             client["namespace"],
         ]
 
@@ -260,12 +318,17 @@ class AliasBridge(metaclass=Singleton):
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Start the client in a new a process, don't wait for it to finish.
-        result = subprocess.Popen(args, env=startup_env, startupinfo=si)
+        subprocess.Popen(args, env=startup_env, startupinfo=si)
 
         return True
 
     def restart_client(self, client_namespace):
-        """Re-bootstrap the client for the given namespace."""
+        """
+        Re-bootstrap the client for the given namespace.
+
+        :param client_namespace: Restart the client applicatino registered to the namespace.
+        :type client_namespace: str
+        """
 
         client = self.get_client_by_namespace(client_namespace)
         if not client:
@@ -277,35 +340,56 @@ class AliasBridge(metaclass=Singleton):
     # Private methods
     # ----------------------------------------------------------------------------------------
 
-    def __create_server_socket(self, host, port, max_retries):
-        """Open a server socket and return the socket."""
+    def __open_server_socket(self, hostname, port, max_retries):
+        """
+        Open a server socket and return the socket object.
 
-        host = host or self.__default_hostname
+        If `max_retries` is given, the server socket will attempted to be opened on the given
+        port number, and if it fails to open (e.g. port already in use) then it will increment
+        the given port number by one and try again, until the maximum number of retries are
+        attempted. This means that the server socket may not be opened on the specified port.
+
+        :param hostname: The server socket address host name to connect to.
+        :type hostname: str
+        :param port: The server socket address port number to conenct to.
+        :type port: int
+        :param max_retries: The number of attempts to make to open the server befor failing.
+        :type max_retries: int
+
+        :return: The listening green socket object. None if failed to open.
+        :rtype: The socket object.
+        """
+
+        hostname = hostname or self.__default_hostname
         port = port or self.__default_port
-        max_retry_count = max_retries or self.__max_retry_count
-
+        max_retry_count = max_retries if max_retries is not None else self.__max_retry_count
         server_socket = None
         retry_count = 0
-
         while server_socket is None and retry_count <= max_retry_count:
             try:
                 # Open the server socket to start listening on
-                return eventlet.listen((host, port))
-
+                return eventlet.listen((hostname, port))
             except OSError:
                 # Address is already in use, try the next port.
                 port += 1
                 retry_count += 1
 
+        # Failed to open the server socket
         return None
 
     def __serve_app(self):
-        """Using eventlet, start the WSGI server application to listen for clients connections."""
+        """
+        Using eventlet, start the WSGI server application to listen for client connections.
+
+        This will allow the server app to start handling requests from the server socket.
+
+        This call is blocking, should be started in a separate thread.
+        """
 
         # Start the WSGI server to start handling requests from the server socket
         #
         # NOTE eventlet is not compatible with Python standard threads. There are issues trying
-        # to use eventlet.monkey_patch, so we just need to ensure that the server acts as it is
-        # single threaded (e.g. can only access the socketio server from the thread it was created
-        # in).
+        # to use eventlet.monkey_patch, so we will need to ensure that the server acts as if it
+        # is single threaded (e.g. can only access the socketio server from the thread it was
+        # created in).
         eventlet.wsgi.server(self.__server_socket, self.__app, log=self.__wsgi_logger)

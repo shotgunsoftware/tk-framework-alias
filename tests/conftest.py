@@ -74,16 +74,16 @@ def pytest_unconfigure(config):
 
 
 ############################################################################### 
-# Import Global Fixtures
+# Global Fixtures
 ############################################################################### 
 
-from fixtures.globals import *
-
-
-############################################################################### 
-# OpenAlias Global Fixtures
-############################################################################### 
-
-# @pytest.fixture(scope="session")
-# def alpy(request):
-#     return alias_api
+@pytest.fixture(scope="session")
+def client_exe_path(request):
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "fixtures",
+            "scripts",
+            "bootstrap_client_test.py"
+        )
+    )

@@ -41,12 +41,18 @@ class AliasEventsServerNamespace(socketio.Namespace):
     #     print(f"[{self.namespace}] disconnected from server", sid)
 
     def on_shutdown(self, sid):
-        """Shutdown the server."""
+        """
+        Shutdown the server.
 
-        # Destroy the server scope, this will remove any event handlers registered. Do this
-        # before shutting down clients so that their shutdown does not trigger any events.
-        data_model = alias_bridge.AliasBridge().alias_data_model
-        data_model.destroy()
+        This event was received from the alias-events client (from the AliasBridge), so the
+        AliasBridge will take care of cleaning up the Alias data model. This method just needs
+        to forward the shutdown event to all other clients (than the alias-events client).
+        """
+
+        # # Destroy the server scope, this will remove any event handlers registered. Do this
+        # # before shutting down clients so that their shutdown does not trigger any events.
+        # data_model = alias_bridge.AliasBridge().alias_data_model
+        # data_model.destroy()
 
         # Emit event to shutdown all clients in namespaces other than this one.
         self._emit("shutdown")

@@ -21,7 +21,6 @@ from ...utils.exceptions import (
     AliasApiRequestException,
     AliasApiRequestNotSupported,
     AliasApiPostProcessRequestError,
-    AliasApiRequestError,
 )
 
 
@@ -33,19 +32,35 @@ class AliasServerNamespace(socketio.Namespace):
     def __init__(self, sub_namespace=None):
         """Initialize the namespace."""
 
+        # Keep a list of client session ids that are connected to this namespace.
+        self.__client_sids = []
+
+        # Construct the namespace string for this handler
         namespace = f"/{self._NAME}"
         if sub_namespace:
             namespace = f"{namespace}-{sub_namespace}"
 
+        # Call the base __init__ method
         super(AliasServerNamespace, self).__init__(namespace)
+
+
+    # ----------------------------------------------------------------------------------------
+    # Class methods
 
     @classmethod
     def get_namespace(cls):
         """Return the namespace string."""
         return f"/{cls._NAME}"
 
-    # Event callback methods for namespace
     # ----------------------------------------------------------------------------------------
+    # Public methods
+
+    def client_sids(self):
+        """Return the list of connected client session ids."""
+        return list(self.__client_sids)
+
+    # ----------------------------------------------------------------------------------------
+    # Event callback methods for namespace
 
     def on_connect(self, sid, environ):
         """The connect event callback."""
@@ -53,6 +68,8 @@ class AliasServerNamespace(socketio.Namespace):
         with self.session(sid) as session:
             session["SERVER_NAME"] = environ.get("SERVER_NAME")
             session["SERVER_PORT"] = environ.get("SERVER_PORT")
+
+        self.__client_sids.append(sid)
 
     def on_connect_error(self, data):
         """The connect error event callback."""
@@ -64,7 +81,10 @@ class AliasServerNamespace(socketio.Namespace):
         """The disconnect event callback."""
 
         # TODO log message
-        print(f"[{self.namespace}] disconnected from server", sid)
+        try:
+            self.__client_sids.remove(sid)
+        except:
+            pass
 
     def on_restart(self, sid):
         """Restart the client."""
@@ -166,6 +186,10 @@ class AliasServerNamespace(socketio.Namespace):
 
             return result
 
+
+    # ----------------------------------------------------------------------------------------
+    # Protected methods
+
     @execute_in_main_thread
     def _execute_request(self, request_name, request):
         """Execute the Alias Python API request."""
@@ -184,7 +208,7 @@ class AliasServerNamespace(socketio.Namespace):
 
         except Exception as general_error:
             # Report a general error that occurred trying to execute the api request.
-            return AliasApiRequestError(general_error)
+            return AliasApiRequestException(general_error)
 
     def _post_process_request(self, event, data, result):
         """Do any post processing to the result."""
