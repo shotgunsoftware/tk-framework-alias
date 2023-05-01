@@ -55,7 +55,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
 
         if isinstance(obj, set):
             return {
-                "__type__": set,
+                "__type__": "set",
                 "__value__": list(obj),
             }
 
@@ -93,7 +93,7 @@ class AliasClientJSONDecoder(json.JSONDecoder):
                 )
                 return exception_instance
 
-            if obj.get("__type__") is set:
+            if obj.get("__type__") == "set":
                 # Deserialize a set object
                 return set(obj.get("__value__"))
 

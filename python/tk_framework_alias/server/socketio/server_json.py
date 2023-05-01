@@ -74,7 +74,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Encode a set such that is JSON serializable."""
 
         return {
-            "__type__": set,
+            "__type__": "set",
             "__value__": list(obj),
         }
 
@@ -312,7 +312,7 @@ class AliasServerJSONDecoder(json.JSONDecoder):
 
             # Next, try to decode a set
             if "__type__" in obj:
-                if obj["__type__"] is set:
+                if obj["__type__"] == "set":
                     return set(obj["__value__"])
 
         # Just return the object as is
