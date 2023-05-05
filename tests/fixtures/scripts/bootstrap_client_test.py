@@ -38,7 +38,6 @@ def bootstrap_client(hostname, port, client_namespace):
             "..",
             "..",
             "python",
-            # "tk_framework_alias",
         )
     )
     tk_framework_alias = os.path.abspath(os.path.join(base_dir, "tk_framework_alias"))

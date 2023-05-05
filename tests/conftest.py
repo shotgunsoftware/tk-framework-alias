@@ -78,12 +78,29 @@ def pytest_unconfigure(config):
 ############################################################################### 
 
 @pytest.fixture(scope="session")
-def client_exe_path(request):
+def scripts_path(request):
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
             "fixtures",
             "scripts",
+        )
+    )
+
+@pytest.fixture(scope="session")
+def client_exe_path(scripts_path):
+    return os.path.abspath(
+        os.path.join(
+            scripts_path,
             "bootstrap_client_test.py"
+        )
+    )
+
+@pytest.fixture(scope="session")
+def start_server_script_path(scripts_path):
+    return os.path.abspath(
+        os.path.join(
+            scripts_path,
+            "start_server.py"
         )
     )

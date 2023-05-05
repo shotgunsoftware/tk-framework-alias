@@ -270,16 +270,14 @@ def test_bridge_bootstrap_client(bridge, client):
     assert isinstance(ns_handler, server_namespace.AliasServerNamespace)
 
     # There should be no clients connected yet
-    sids = ns_handler.client_sids()
-    assert not sids
+    assert ns_handler.client_sid is None
 
     # Wait for client to connect. Try up to 30 times, waiting a second each time.
     count = 0
     max_retries = 30
-    while not sids and count < max_retries:
+    while not ns_handler.client_sid and count < max_retries:
         bridge.sio.sleep(1)
-        sids = ns_handler.client_sids()
         count += 1
 
     # Now we should have a single client connected from running the bootstrap.
-    assert len(sids) == 1
+    assert ns_handler.client_sid is not None

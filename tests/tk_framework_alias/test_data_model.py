@@ -20,7 +20,7 @@ from tk_framework_alias.server.utils.exceptions import AliasApiRequestNotValid
 # fixtures
 ####################################################################################################
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def data_model():
     """Fixture to return an instance of the AliasDataModel class."""
 
