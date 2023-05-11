@@ -28,6 +28,7 @@ from .utils.singleton import Singleton
 from .utils.wsgi_server_logger import WSGIServerLogger
 from .utils.exceptions import AliasBridgeException, ClientAlreadyRegistered, ServerAlreadyRunning, ClientNameReservered
 
+from tk_framework_alias_utils import utils as framework_utils
 
 class AliasBridge(metaclass=Singleton):
     """
@@ -156,6 +157,9 @@ class AliasBridge(metaclass=Singleton):
             namespaces=[AliasEventsServerNamespace.get_namespace()],
             wait_timeout=20,
         )
+
+        if not self.alias_events_client_sio.connected:
+            raise Exception("Alias events client failed to connect")
 
         return True
 
@@ -300,9 +304,10 @@ class AliasBridge(metaclass=Singleton):
                 python_exe = sys.executable
 
         # Set up the args to start the new process
+        client_exe_path = framework_utils.decrypt_from_str(client["exe_path"])
         args = [
             python_exe,
-            client["exe_path"],
+            client_exe_path,
             hostname,
             str(port),
             client["namespace"],

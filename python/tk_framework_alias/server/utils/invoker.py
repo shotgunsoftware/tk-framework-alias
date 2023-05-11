@@ -24,10 +24,7 @@ def execute_in_main_thread(func):
         # which point the inovker is no longer safe to access from the thread executing to
         # invoke the function with the invoker
         invoker = create_invoker()
-        if invoker:
-            return invoker.invoke(func, *args, **kwargs)
-        # No invoker, just run the function normally
-        return func(*args, **kwargs)
+        return invoker.invoke(func, *args, **kwargs)
 
     return wrapper
 
@@ -35,29 +32,14 @@ def execute_in_main_thread(func):
 def create_invoker():
     """Create an object used to invoke function calls on the main thread when called from a different thread."""
 
-    # from sgtk.platform.qt import QtGui, QtCore
-    from PySide2 import QtCore, QtGui
+    from PySide2 import QtCore
 
     if not QtCore:
-        return None
+        raise Exception("Invoker requires PySide2")
 
-    # NOTE should we use QtGui.QApplication.instance()?
     instance = QtCore.QCoreApplication.instance()
     if not instance:
-        return None
-        # if not instance:
-        #     try:
-        #         # NOTE in debug mode cannot access the app instance!
-        #         # ALSO, for Alias < 2024.0 we can't do this because Alias is not running Qt
-        #         #
-        #         # We may be in debug mode in which case we need to do some fancy footwork here..
-        #         # this is due to using debug dlls in C++ but release in pyside2 python
-        #         from PySide2 import QtGui
-        #         import shiboken2
-        #         instance = shiboken2.wrapInstance(shiboken2.getCppPointer(QtGui.QGuiApplication.instance())[0], QtGui.QGuiApplication)
-        #     except Exception as e:
-        #         import PySide2
-        #         print(PySide2.__version__)
+        raise Exception("Invoker requires Qt Application instance to be running.")
 
     # Classes are defined locally since Qt might not be available.
     class Invoker(QtCore.QObject):

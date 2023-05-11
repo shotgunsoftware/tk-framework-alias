@@ -11,11 +11,17 @@
 import os
 import sys
 import tempfile
-from .utils import version_cmp
+from .utils import version_cmp, encrypt_to_str
 
 
 # Name of the compiled plugin file, e.g. alias_py.plugin
 PLUGIN_FILENAME = "alias_py"
+PLUGIN_FILENAMES = {
+    "alias2024.0": "alias_py",
+    "2023.1": "shotgrid",
+    "2023.0": "shotgrid",
+    "2022.2": "shotgrid",
+}
 
 # NOTE this is the old way to look up the plugin for the current running Alias version.
 # Starting from 2023.0 the folder naming should be one-to-one match, e.g. for Alias
@@ -62,7 +68,7 @@ def get_plugin_environment(
 
     return {
         "ALIAS_PLUGIN_CLIENT_NAME": client_name,
-        "ALIAS_PLUGIN_CLIENT_EXECPATH": client_exe_path,
+        "ALIAS_PLUGIN_CLIENT_EXECPATH": encrypt_to_str(client_exe_path),
         "ALIAS_PLUGIN_CLIENT_PYTHON": python_exe or sys.executable,
         "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
         "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
@@ -146,10 +152,11 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
         else:
             return None
 
+    plugin_filename = PLUGIN_FILENAMES.get(alias_version, "alias_py")
     plugin_file_path = os.path.normpath(
         os.path.join(
             plugin_folder_path,
-            "{}.plugin".format(PLUGIN_FILENAME),
+            "{}.plugin".format(plugin_filename),
         )
     )
 
@@ -187,6 +194,8 @@ def ensure_plugin_installed(alias_version, python_major_version=None, python_min
 
     # Get the path to the .plugin file
     plugin_file_path = get_plugin_file_path(alias_version, python_major_version, python_minor_version)
+    if plugin_file_path is None:
+        raise Exception(f"Failed to find plugin for Alias {alias_version} Python {python_major_version}.{python_minor_version}")
 
     # Create or overwrite the lst file with the plugin file path found
     lst_file = os.path.join(tempfile.gettempdir(), "plugins.lst")

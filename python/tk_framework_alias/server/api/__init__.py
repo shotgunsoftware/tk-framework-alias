@@ -149,7 +149,8 @@ def get_module_path(module_name, alias_version):
         )
     )
     if not os.path.exists(module_path):
-        raise AliasPythonApiImportError("Module does not exist {}".format(module_path))
+        # raise AliasPythonApiImportError("Module does not exist {}".format(module_path))
+        return None
 
     return module_path
 
@@ -168,7 +169,10 @@ def get_alias_api_module():
     is_open_model = os.path.basename(sys.executable) != "Alias.exe"
     module_name = OPEN_MODEL_API_NAME if is_open_model else OPEN_ALIAS_API_NAME
     alias_version = get_alias_version()
+
     module_path = get_module_path(module_name, alias_version)
+    if not module_path:
+        return None
 
     # Find and create the module spec object for the Alias Python API
     spec = importlib.util.spec_from_file_location(module_name, module_path)

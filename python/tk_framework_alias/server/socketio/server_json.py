@@ -12,6 +12,7 @@ import json
 import inspect
 import types
 import importlib
+import traceback
 
 from ..api import alias_api
 
@@ -206,6 +207,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             if isinstance(obj, importlib.machinery.ExtensionFileLoader):
                 return None
 
+            if inspect.istraceback(obj):
+                result = traceback.format_tb(obj)
+                return result
+
             if inspect.ismethod(obj):
                 return self.encode_function(obj, is_method=True)
 
@@ -253,8 +258,21 @@ class AliasServerJSONDecoder(json.JSONDecoder):
 
     @staticmethod
     def create_callback(callback_id):
+        """
+        Create a function to handle an Alias
+
+        This function can be passed to the Alias C++ API, which when triggered, will forward
+        a socketio event to the client, to execute the actual callback function (that lives on
+        the client side). This is required since functions cannot be passed directly between
+        the socketio server and client.
+
+        NOTE this assume only one client is connected to the server. To support multiple
+        clients, the client sid must be stored with the callback data to know which client
+        to send the event to.
+        """
+
         def __handle_callback(*args, **kwargs):
-            """Execute"""
+            """Execute the callback"""
 
             result = {
                 "callback_event": callback_id,

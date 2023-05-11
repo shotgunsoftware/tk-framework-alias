@@ -13,7 +13,11 @@ from .events_namespace import AliasEventsServerNamespace
 
 
 class AliasEventsClientNamespace(socketio.ClientNamespace):
-    """Namespace for the Alias Events client."""
+    """
+    Namespace for the Alias Events client.
+
+    This client namespace is meant to be used with the AliasEventsServerNamespace.
+    """
 
     def __init__(self):
         """Initialize the namespace."""

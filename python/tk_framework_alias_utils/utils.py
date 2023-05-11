@@ -8,6 +8,9 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import os
+from cryptography.fernet import Fernet
+
 
 def version_cmp(version1, version2):
     """
@@ -51,3 +54,63 @@ def version_cmp(version1, version2):
         elif arr2[i] > arr1[i]:
             return -1
     return 0
+
+
+def get_key():
+    """Return a key that can be used for encryption."""
+
+    key_location = os.path.abspath(
+        os.path.join(
+           os.path.dirname( __file__),
+            "config",
+        )
+    )
+
+    # First, try to get the existing key
+    if os.path.exists(key_location):
+        with open(key_location, "r") as fp:
+            key = fp.read()
+        if key:
+            return key.encode()
+
+    # No key found, generate a new one
+    key = Fernet.generate_key()
+    key_as_str = key.decode()
+    with open(key_location, "w+") as fp:
+        fp.write(key_as_str)
+    return key
+
+
+def encrypt_to_str(value):
+    """
+    Encrypt the value.
+
+    :param value: The value to encrypt.
+    :type value: str
+
+    :return: The value encrypted.
+    :rtype: str
+    """
+
+    key = get_key()
+    fernet = Fernet(key)
+    encrypted = fernet.encrypt(value.encode())
+    return encrypted.decode()
+
+
+def decrypt_from_str(value):
+    """
+    Decrypt the value.
+
+    :param value: The value to decrypt.
+    :type value: str
+
+    :return: The decrypted value.
+    :rtype: str
+    """
+
+    key = get_key()
+    fernet = Fernet(key)
+    value_as_bytes = value.encode()
+    decrypted = fernet.decrypt(value_as_bytes)
+    return decrypted.decode()

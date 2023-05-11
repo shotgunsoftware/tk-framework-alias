@@ -18,6 +18,15 @@ class AliasClientNamespace(socketio.ClientNamespace):
     This namespace is meant to be registered to an AliasSocketIoClient.
     """
 
+    def on_connect(self):
+        print(f"{[self.namespace]} connectioned")
+
+    def on_connect_error(self):
+        """The connect error event callback."""
+
+        # TODO log message
+        print(f"{[self.namespace]} connection error")
+
     def on_disconnect(self):
         """Disconnect event recieved."""
 

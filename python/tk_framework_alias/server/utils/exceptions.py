@@ -25,6 +25,12 @@ class ServerAlreadyRunning(AliasBridgeException):
     """Exception for AliasBridge when attempting to connect to server when it is already running."""
 
 
+# AliasServerNamespace exceptions
+# ----------------------------------------------------------------------------------------
+
+class ClientAlreadyConnected(Exception):
+    """Exception for AliasServerNamespace errors."""
+
 
 # AliasServerJSON exceptions
 # ----------------------------------------------------------------------------------------
