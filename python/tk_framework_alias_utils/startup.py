@@ -14,15 +14,6 @@ import tempfile
 from .utils import version_cmp, encrypt_to_str
 
 
-# Name of the compiled plugin file, e.g. alias_py.plugin
-PLUGIN_FILENAME = "alias_py"
-PLUGIN_FILENAMES = {
-    "alias2024.0": "alias_py",
-    "2023.1": "shotgrid",
-    "2023.0": "shotgrid",
-    "2022.2": "shotgrid",
-}
-
 # NOTE this is the old way to look up the plugin for the current running Alias version.
 # Starting from 2023.0 the folder naming should be one-to-one match, e.g. for Alias
 # 2023.0 the folder will be "alias2023.0"
@@ -75,6 +66,20 @@ def get_plugin_environment(
         "ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH": alias_exec_path,
     }
 
+
+def get_plugin_filename(alias_version):
+    """Return the name of the plugin for the Alias version."""
+
+    if version_cmp(alias_version, "2024") >= 0:
+        # Alias >= 2024.0
+        return "alias_py"
+
+    if version_cmp(alias_version, "2022.2") >= 0:
+        # Alias >= 2022.2
+        return "shotgrid"
+
+    # Alias < 2022.2
+    return "shotgun"
 
 def get_plugin_dir():
     """Return the file path to the plugin directory."""
@@ -152,7 +157,7 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
         else:
             return None
 
-    plugin_filename = PLUGIN_FILENAMES.get(alias_version, "alias_py")
+    plugin_filename = get_plugin_filename(alias_version)
     plugin_file_path = os.path.normpath(
         os.path.join(
             plugin_folder_path,
