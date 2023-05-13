@@ -212,7 +212,7 @@ class AliasBridge(metaclass=Singleton):
             {},
         )
 
-    def register_client_namespace(self, client_name, client_exe_path, client_info):
+    def register_client_namespace(self, client_name, client_info):
         """
         Register a new client.
 
@@ -247,7 +247,6 @@ class AliasBridge(metaclass=Singleton):
 
         client = {
             "name": client_name,
-            "exe_path": client_exe_path,
             "info": client_info,
             "namespace": namespace_handler.namespace,
         }
@@ -255,7 +254,7 @@ class AliasBridge(metaclass=Singleton):
 
         return client
 
-    def bootstrap_client(self, client_name, client_exe_path, client_info=None):
+    def bootstrap_client(self, client, client_info=None):
         """
         Bootstrap the Alias client.
 
@@ -282,11 +281,29 @@ class AliasBridge(metaclass=Singleton):
             return False
 
         hostname, port = self.__server_socket.getsockname()
-        client = self.__clients.get(client_name)
+
+        # Get the client info to bootstrap
+        if not isinstance(client, dict):
+            client_name = client
+            client = self.__clients.get(client_name)
+
         if not client:
-            client = self.register_client_namespace(
-                client_name, client_exe_path, client_info
-            )
+            # Get client info from environment
+            client_info = client_info or {}
+            client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
+            if client_exec_path:
+                client_info["exec_path"] = client_exec_path
+
+            pipeline_config_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID")
+            entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
+            entity_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID")
+            if pipeline_config_id and entity_type and entity_id:
+                client_info["shotgrid"] = {
+                    "pipeline_config_id": pipeline_config_id,
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                }
+            client = self.register_client_namespace(client_name, client_info)
 
         # Get the python interpreter to use from the environment, fallback to checking the
         # current interpreter if not set.
@@ -303,15 +320,43 @@ class AliasBridge(metaclass=Singleton):
             else:
                 python_exe = sys.executable
 
-        # Set up the args to start the new process
-        client_exe_path = framework_utils.decrypt_from_str(client["exe_path"])
-        args = [
-            python_exe,
-            client_exe_path,
-            hostname,
-            str(port),
-            client["namespace"],
-        ]
+        # Get the client executable and args
+        shotgrid_info = client["info"].get("shotgrid") 
+        if shotgrid_info:
+            # Bootstrap using ShotGrid toolkit manager
+            pipeline_config_id = shotgrid_info["pipeline_config_id"]
+            entity_type = shotgrid_info["entity_type"]
+            entity_id = shotgrid_info["entity_id"]
+            plugin_bootstrap_path = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    os.path.pardir,
+                    os.path.pardir,
+                    "tk_framework_alias_utils",
+                    "plugin_bootstrap.py",
+                )
+            )
+            args = [
+                python_exe,
+                plugin_bootstrap_path,
+                pipeline_config_id,
+                entity_type,
+                entity_id,
+                hostname,
+                str(port),
+                client["namespace"],
+            ]
+        else:
+            # Bootstrap by running the client executable
+            client_exe_path = framework_utils.decrypt_from_str(client["info"].get("exec_path"))
+            args = [
+                python_exe,
+                client_exe_path,
+                hostname,
+                str(port),
+                client["namespace"],
+                pipeline_config_id,
+            ]
 
         # Copy the env variables to start the new process with
         startup_env = os.environ.copy()
@@ -337,10 +382,9 @@ class AliasBridge(metaclass=Singleton):
 
         client = self.get_client_by_namespace(client_namespace)
         if not client:
-            # TODO log warning
             return
 
-        return self.bootstrap_client(client["name"], client["exe_path"], client["info"])
+        return self.bootstrap_client(client)
 
     # Private methods
     # ----------------------------------------------------------------------------------------
