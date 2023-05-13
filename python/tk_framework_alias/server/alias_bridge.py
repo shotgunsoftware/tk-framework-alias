@@ -373,6 +373,8 @@ class AliasBridge(metaclass=Singleton):
         while server_socket is None and retry_count <= max_retry_count:
             try:
                 # Open the server socket to start listening on
+                # TODO use eventlet.wrap_ssl to create a secure socket layer. For now this is
+                # ok since the socket connections will only be on localhost (is this true?)
                 return eventlet.listen((hostname, port))
             except OSError:
                 # Address is already in use, try the next port.
