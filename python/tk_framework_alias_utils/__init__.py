@@ -8,5 +8,6 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from . import environment_utils
 from . import startup
 from . import utils

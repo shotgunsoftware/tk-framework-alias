@@ -27,7 +27,7 @@ def toolkit_plugin_bootstrap(
     """
 
     from environment_utils import get_plugin_install_directory
-    # import log
+    import log
 
     # Set env var for ToolkitManager
     os.environ["SHOTGUN_ENTITY_TYPE"] = entity_type
@@ -53,7 +53,7 @@ def toolkit_plugin_bootstrap(
     logger.debug("Imported sgtk core from '%s'" % tk_core_python_path)
 
     # ---- setup logging
-    # log_handler = log.get_sgtk_logger(sgtk)
+    log_handler = log.get_sgtk_logger(sgtk)
     logger.debug("Added bootstrap log hander to root logger...")
 
     # set up the toolkit bootstrap manager
@@ -86,7 +86,7 @@ def toolkit_plugin_bootstrap(
     toolkit_mgr.bootstrap_engine("tk-alias", entity=entity)
 
     # ---- tear down logging
-    # sgtk.LogManager().root_logger.removeHandler(log_handler)
+    sgtk.LogManager().root_logger.removeHandler(log_handler)
     logger.debug("Removed bootstrap log handler from root logger...")
 
     logger.info("Toolkit Bootstrapped!")
