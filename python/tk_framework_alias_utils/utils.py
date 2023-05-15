@@ -9,7 +9,6 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
-from cryptography.fernet import Fernet
 
 
 def version_cmp(version1, version2):
@@ -59,6 +58,8 @@ def version_cmp(version1, version2):
 def get_key():
     """Return a key that can be used for encryption."""
 
+    from cryptography.fernet import Fernet
+
     key_location = os.path.abspath(
         os.path.join(
            os.path.dirname( __file__),
@@ -71,14 +72,18 @@ def get_key():
         with open(key_location, "r") as fp:
             key = fp.read()
         if key:
-            return key.encode()
+            key = key.encode()
 
-    # No key found, generate a new one
-    key = Fernet.generate_key()
-    key_as_str = key.decode()
-    with open(key_location, "w+") as fp:
-        fp.write(key_as_str)
-    return key
+    if not key:
+        # No key found, generate a new one.
+        # NOTE this requires write access to the config file location. This will fail if the user
+        # does not have permission. TODO the key should be stored in a database or key vault.
+        key = Fernet.generate_key()
+        key_as_str = key.decode()
+        with open(key_location, "w+") as fp:
+            fp.write(key_as_str)
+
+    return Fernet(key)
 
 
 def encrypt_to_str(value):
@@ -92,8 +97,7 @@ def encrypt_to_str(value):
     :rtype: str
     """
 
-    key = get_key()
-    fernet = Fernet(key)
+    fernet = get_key()
     encrypted = fernet.encrypt(value.encode())
     return encrypted.decode()
 
@@ -109,8 +113,7 @@ def decrypt_from_str(value):
     :rtype: str
     """
 
-    key = get_key()
-    fernet = Fernet(key)
+    fernet = get_key()
     value_as_bytes = value.encode()
     decrypted = fernet.decrypt(value_as_bytes)
     return decrypted.decode()

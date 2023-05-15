@@ -38,6 +38,8 @@ def get_plugin_environment(
     pipeline_config_id=None,
     entity_type=None,
     entity_id=None,
+    hostname=None,
+    port=None,
     debug="0"
 ):
     """
@@ -69,17 +71,33 @@ def get_plugin_environment(
     :rtype: dict
     """
 
-    return {
+    env = {
         "ALIAS_PLUGIN_CLIENT_NAME": client_name,
-        "ALIAS_PLUGIN_CLIENT_EXECPATH": "" if client_exe_path is None else encrypt_to_str(client_exe_path),
         "ALIAS_PLUGIN_CLIENT_PYTHON": python_exe or sys.executable,
         "ALIAS_PLUGIN_CLIENT_DEBUG": debug,
         "ALIAS_PLUGIN_CLIENT_ALIAS_VERSION": alias_version,
         "ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH": alias_exec_path,
-        "ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID": "" if pipeline_config_id is None else str(pipeline_config_id),
-        "ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE": "" if entity_type is None else entity_type,
-        "ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID": "" if entity_id is None else str(entity_id),
     }
+
+    if client_exe_path is not None:
+        env["ALIAS_PLUGIN_CLIENT_EXECPATH"] = encrypt_to_str(client_exe_path)
+
+    if pipeline_config_id is not None:
+        env["ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID"] = str(pipeline_config_id)
+
+    if entity_type is not None:
+        env["ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE"] = str(entity_type)
+    
+    if entity_id is not None:
+        env["ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID"] = str(entity_id)
+
+    if hostname is not None:
+        env["ALIAS_PLUGIN_CLIENT_SIO_HOSTNAME"] = str(hostname)
+
+    if port is not None:
+        env["ALIAS_PLUGIN_CLIENT_SIO_PORT"] = str(port)
+
+    return env
 
 
 def get_plugin_filename(alias_version):
@@ -185,107 +203,91 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
     return plugin_file_path
 
 
-def __ensure_extension_up_to_date(logger):
+def __ensure_plugin_up_to_date(logger):
     """
-    Ensure the basic Alias plugin is installed in the OS-specific location
-    and that it matches the extension bundled with the installed engine.
+    Ensure the basic Alias plugin is up to date.
+
+    Install the plugin to the OS-specific location defined by the environtment utils, if it
+    does not exist. If it does exist, check that the installed plugin version is up to date
+    with the pre-built plugin in the framework. This requires the framework itself to build
+    the plugin bundle and ensure itself reflects the latest version.
     """
 
     import sgtk
     from sgtk.util.filesystem import ensure_folder_exists
 
-    extension_name = environment_utils.EXTENSION_NAME
-
-    # the Alias plugin install directory. This is where the plugin is stored.
+    # Get the directory where the Alias plugin is installed. This directory must exist before
+    # attempting to install the plugin
     alias_plugin_dir = environment_utils.get_alias_plugin_dir()
-    logger.debug(f"Alias plugin dir: {alias_plugin_dir}")
-
-    installed_ext_dir = environment_utils.get_plugin_install_directory()
-
-    # make sure the directory exists. create it if not.
+    logger.debug(f"Alias plugin directory: {alias_plugin_dir}")
     if not os.path.exists(alias_plugin_dir):
-        logger.debug("Plugin folder does not exist. Creating it.")
+        logger.debug(f"Alias plugin directory does not exist - creating it.")
         ensure_folder_exists(alias_plugin_dir)
 
-    # get the path to the installed engine's .zxp file.
-    bundled_ext_path = os.path.abspath(
+    # Get the path to the pre-built plugin from the framework
+    plugin_name = environment_utils.PLUGIN_NAME
+    bundled_plugin_path = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
             os.path.pardir,
             os.path.pardir,
             "plugin",
             "build",
-            # "%s.zxp" % (extension_name,),
-            extension_name,
+            plugin_name,
         )
     )
+    if not os.path.exists(bundled_plugin_path):
+        raise sgtk.TankError(f"Could not find bundled plugin: {bundled_plugin_path}")
 
-    if not os.path.exists(bundled_ext_path):
-        raise sgtk.TankError(
-            "Could not find bundled extension. Expected: '%s'" % (bundled_ext_path,)
-        )
+    # Ensure that the plugin is installed in the specified directory
+    installed_plugin_dir = environment_utils.get_plugin_install_directory()
+    if not os.path.exists(installed_plugin_dir):
+        logger.debug(f"Installing Alias plugin: {installed_plugin_dir}")
+        __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
+        return
 
-    # now get the version of the bundled extension
-    version_file = "%s.version" % (extension_name,)
+    # ---- already installed, check for update
 
+    version_file = f"{plugin_name}.version"
+
+    # Get the version from the installed plugin's build_version.txt file
+    installed_version_file_path = os.path.join(installed_plugin_dir, version_file)
+    if not os.path.exists(installed_version_file_path):
+        logger.debug(f"Could not find installed version file {installed_version_file_path}. Reinstalling")
+        __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
+        return
+
+    # ---- found installation, get plugin versions
+
+    # Get the version of the bundled plugin from the framework
     bundled_version_file_path = os.path.abspath(
         os.path.join(
-            bundled_ext_path, version_file
+            bundled_plugin_path, version_file
         )
     )
-
     if not os.path.exists(bundled_version_file_path):
-        raise sgtk.TankError(
-            "Could not find bundled version file. Expected: '%s'"
-            % (bundled_version_file_path,)
-        )
+        raise sgtk.TankError(f"Could not find bundled version file: {bundled_version_file_path}")
 
-    # get the bundled version from the version file
+    # Get the bundled version from the version file
     with open(bundled_version_file_path, "r") as bundled_version_file:
         bundled_version = bundled_version_file.read().strip()
+    logger.debug(f"Bundled plugin version: {bundled_version}")
 
-    # check to see if the extension is installed in the CEP extensions directory
-    # if not installed, install it
-    if not os.path.exists(installed_ext_dir):
-        logger.debug("Extension not installed. Installing it!")
-        __install_extension(bundled_ext_path, installed_ext_dir, logger)
-        return
-
-    # ---- already installed, check for udpate
-
-    logger.debug("Bundled extension's version is: %s" % (bundled_version,))
-
-    # get the version from the installed extension's build_version.txt file
-    installed_version_file_path = os.path.join(installed_ext_dir, version_file)
-
-    logger.debug(
-        "The installed version file path is: %s" % (installed_version_file_path,)
-    )
-
-    if not os.path.exists(installed_version_file_path):
-        logger.debug(
-            "Could not find installed version file '%s'. Reinstalling"
-            % (installed_version_file_path,)
-        )
-        __install_extension(bundled_ext_path, installed_ext_dir, logger)
-        return
-
-    # the version of the installed extension
+    # Get the installed version from the installed version info file
+    logger.debug(f"The installed version file path: {installed_version_file_path}")
     installed_version = None
-
-    # get the installed version from the installed version info file
     with open(installed_version_file_path, "r") as installed_version_file:
-        logger.debug("Extracting the version from the installed extension.")
+        logger.debug("Extracting the version from the installed plugin")
         installed_version = installed_version_file.read().strip()
 
     if installed_version is None:
-        logger.debug(
-            "Could not determine version for the installed extension. Reinstalling"
-        )
-        __install_extension(bundled_ext_path, installed_ext_dir, logger)
+        logger.debug("Could not determine version of the installed plugin. Reinstalling")
+        __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
         return
 
-    logger.debug("Installed extension's version is: %s" % (installed_version,))
+    logger.debug(f"Installed plugin version: {installed_version}")
+
+    # ---- comparing plugin versions
 
     from sgtk.util.version import is_version_older
 
@@ -293,39 +295,35 @@ def __ensure_extension_up_to_date(logger):
         if bundled_version == installed_version or is_version_older(
             bundled_version, installed_version
         ):
-
-            # the bundled version is the same or older. or it is a 'dev' build
+            # The bundled version is the same or older. or it is a 'dev' build
             # which means always install that one.
-            logger.debug(
-                "Installed extension is equal to or newer than the bundled "
-                "build. Nothing to do!"
-            )
+            logger.debug("Installed plugin is up to date with the bundled build.")
             return
 
-    # ---- extension in engine is newer. update!
+    # ---- plugin in framework is newer, update the installation
 
     if bundled_version == "dev":
-        logger.debug("Installing the bundled 'dev' version of the extension.")
+        logger.debug("Installing the bundled 'dev' version of the plugin.")
     else:
-        logger.debug(
-            (
-                "Bundled extension build is newer than the installed extension "
-                "build! Updating..."
-            )
-        )
+        logger.debug("Bundled plugin is newer than the installed plugin. Updating...")
 
-    # install the bundle
-    __install_extension(bundled_ext_path, installed_ext_dir, logger)
+    __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
 
 
-def __install_extension(ext_path, dest_dir, logger):
+def __install_plugin(plugin_path, install_dir, logger):
     """
-    Installs the supplied extension path by unzipping it directly into the
-    supplied destination directory.
+    Install the plugin.
 
-    :param ext_path: The path to the .zxp extension.
-    :param dest_dir: The CEP extension's destination
-    :return:
+    Steps to install:
+        1. First, back up the existing installation before removing it, if it exists.
+        2. Ensure the bundled plugin to install exists.
+        3. Copy the bundled plugin to the installation directory.
+        4. If the install fails at any point, restore the back up, if created.
+
+    :param plugin_path: The path to the framework pre-built plugin bundle.
+    :type plugin_path: str
+    :param install_dir: The plugin installation directory.
+    :type install_dir: str
     """
 
     import sgtk
@@ -335,48 +333,78 @@ def __install_extension(ext_path, dest_dir, logger):
         move_folder,
     )
 
-    # move the installed extension to the backup directory
-    if os.path.exists(dest_dir):
-        backup_ext_dir = tempfile.mkdtemp()
-        logger.debug("Backing up the installed extension to: %s" % (backup_ext_dir,))
+    # Move the installed plugin bundle to the backup directory
+    if os.path.exists(install_dir):
+        backup_plugin_dir = tempfile.mkdtemp()
+        logger.debug(f"Backing up installed plugin to: {backup_plugin_dir}")
         try:
-            backup_folder(dest_dir, backup_ext_dir)
+            backup_folder(install_dir, backup_plugin_dir)
         except Exception:
-            shutil.rmtree(backup_ext_dir)
-            raise sgtk.TankError("Unable to create backup during extension update.")
+            shutil.rmtree(backup_plugin_dir)
+            raise sgtk.TankError("Unable to create backup during plugin update.")
 
-        # now remove the installed extension
-        logger.debug("Removing the installed extension directory...")
+        # Now remove the installed plugin
+        logger.debug("Removing the installed plugin bundle...")
         try:
-            shutil.rmtree(dest_dir)
+            shutil.rmtree(install_dir)
         except Exception:
-            # try to restore the backup
-            move_folder(backup_ext_dir, dest_dir)
-            raise sgtk.TankError("Unable to remove the old extension during update.")
+            # Error occured during install - try to restore the backup
+            move_folder(backup_plugin_dir, install_dir)
+            raise sgtk.TankError("Unable to remove the old plugin during update.")
 
-    logger.debug("Installing bundled extension: '%s' to '%s'" % (ext_path, dest_dir))
+    logger.debug(f"Installing bundled plugin: {plugin_path} to {install_dir}")
 
-    # make sure the bundled extension exists
-    if not os.path.exists(ext_path):
-        # retrieve backup before aborting install
-        move_folder(backup_ext_dir, dest_dir)
-        raise sgtk.TankError(
-            "Expected CEP extension does not exist. Looking for %s" % (ext_path,)
-        )
+    # Ensure the bundled plugin exists
+    if not os.path.exists(plugin_path):
+        # Error occured during install - try to restore the backup
+        move_folder(backup_plugin_dir, install_dir)
+        raise sgtk.TankError(f"Expected plugin bundle does not exist: {plugin_path}")
 
-    # copy the plugin bundle to the destination dir
-    copy_folder(ext_path, dest_dir)
+    # Install the plugin bundle by copying the pre-built plugin to the installation directory
+    copy_folder(plugin_path, install_dir)
 
-    # if we're here, the install was successful. remove the backup
+    # Install was successful, remove the backup
     try:
-        logger.debug("Install success. Removing the backed up extension.")
-        shutil.rmtree(backup_ext_dir)
+        logger.debug("Install success. Removing the backed up plugin bundle.")
+        shutil.rmtree(backup_plugin_dir)
     except Exception:
-        # can't remove temp dir. no biggie.
         pass
 
 
-def ensure_plugin_up_to_date(logger, alias_version, python_major_version=None, python_minor_version=None):
+def ensure_plugin_up_to_date(logger):
+    """
+    Ensure that the Alias plugin is installed and up to date.
+
+    The basic.alias plugin needs to be installed in order to launch the Alias engine. The
+    framework will provide a pre-built plugin bundle in the repo plugin/build folder. This
+    plugin bundle will be installed for the user at runtime by copying the bundle from the
+    framework to the users's Alias AppData folder. The framework will pre-build the plugin
+    using the build_extension.py script from the repo dev folder.
+    """
+
+    import sgtk
+
+    if "SHOTGRID_ALIAS_DISABLE_AUTO_INSTALL" in os.environ:
+        # Skip plugin installation altogether
+        return
+
+    logger.debug("Ensuring Alias plugin is up-to-date...")
+    try:
+        __ensure_plugin_up_to_date(logger)
+    except Exception:
+        exc = traceback.format_exc()
+        raise sgtk.TankError(
+            "There was a problem ensuring the Alias integration plugin "
+            "was up-to-date with your toolkit engine. If this is a "
+            "recurring issue please contact us via %s. "
+            "The specific error message encountered was:\n'%s'."
+            % (
+                sgtk.support_url,
+                exc,
+            )
+        ) 
+
+def get_plugin_lst(alias_version, python_major_version=None, python_minor_version=None):
     """
     Create the .lst file used to launch the alias_py plugin on Alias start up.
 
@@ -399,39 +427,6 @@ def ensure_plugin_up_to_date(logger, alias_version, python_major_version=None, p
     :rtype: str
     """
 
-    """
-    Carry out the necessary operations needed in order for the
-    Adobe extension to be recognized.
-
-    This inlcudes copying the extension from the engine location
-    to a OS-specific location.
-    """
-
-    import sgtk
-
-    # the basic plugin needs to be installed in order to launch the Alias
-    # engine. we need to make sure the plugin is installed and up-to-date.
-    # will only run if SHOTGRID_ALIAS_DISABLE_AUTO_INSTALL is not set.
-    if "SHOTGRID_ALIAS_DISABLE_AUTO_INSTALL" not in os.environ:
-        logger.debug("Ensuring Alias plugin is up-to-date...")
-        try:
-            __ensure_extension_up_to_date(logger)
-        except Exception:
-            exc = traceback.format_exc()
-            raise sgtk.TankError(
-                "There was a problem ensuring the Alias integration plugin "
-                "was up-to-date with your toolkit engine. If this is a "
-                "recurring issue please contact us via %s. "
-                "The specific error message encountered was:\n'%s'."
-                % (
-                    sgtk.support_url,
-                    exc,
-                )
-            ) 
-
-    # 
-    # Creating the .lst file for the Alias plugin
-    # 
     if python_major_version is None:
         python_major_version = sys.version_info.major
     if python_minor_version is None:
@@ -443,7 +438,7 @@ def ensure_plugin_up_to_date(logger, alias_version, python_major_version=None, p
         raise Exception(f"Failed to find plugin for Alias {alias_version} Python {python_major_version}.{python_minor_version}")
 
     # Create or overwrite the lst file with the plugin file path found
-    lst_file = os.path.join(tempfile.gettempdir(), "plugins.lst")
+    lst_file = os.path.join(tempfile.gettempdir(), "alias_plugins.lst")
     with open(lst_file, "w") as fp:
         fp.write("{}\n".format(plugin_file_path))
 

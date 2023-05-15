@@ -64,9 +64,6 @@ def toolkit_plugin_bootstrap(
     #       Also, need to check that the SHOTGUN_SITE env var matches
     #       the currently logged in site.
 
-    # if pipeline_config_id is not None:
-    #     os.environ["SHOTGUN_PIPELINE_CONFIGURATION_ID"] = pipeline_config_id
-
     toolkit_mgr = sgtk.bootstrap.ToolkitManager()
     # run the default init which sets plugin id, base config and bundle cache path
     manifest.initialize_manager(toolkit_mgr, plugin_root_path)

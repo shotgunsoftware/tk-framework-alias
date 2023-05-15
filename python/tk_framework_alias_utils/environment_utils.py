@@ -1,11 +1,16 @@
 import os
 
-
-EXTENSION_NAME = "com.sg.basic.alias"
+PLUGIN_NAME = "com.sg.basic.alias"
 
 
 def get_alias_plugin_dir():
-    """Get the file path to install the Alias plugin."""
+    """
+    Get the root directory for the Alias plugin installation.
+
+    This is for Windows only.
+
+    The plugin will be installed inside the user's Alias AppData folder.
+    """
 
     from sgtk import util
 
@@ -13,12 +18,11 @@ def get_alias_plugin_dir():
     if util.is_windows():
         app_data = os.getenv("APPDATA")
     else:
-        raise Exception("This engine only runs on Windows.")
+        raise Exception("This plugin only runs on Windows.")
 
     return os.path.join(app_data, "Autodesk", "Alias", "ShotGrid", "plugin")
 
 def get_plugin_install_directory():
-    """
-    """
+    """Return the file path to the Alias plugin installation for the user."""
 
-    return os.path.join(get_alias_plugin_dir(), EXTENSION_NAME)
+    return os.path.join(get_alias_plugin_dir(), PLUGIN_NAME)
