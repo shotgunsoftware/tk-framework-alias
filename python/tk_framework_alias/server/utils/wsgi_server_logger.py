@@ -8,8 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+import logging
 
-class WSGIServerLogger:
+class WSGIServerLogger(logging.Logger):
     """
     Logger object to pass to the wsgi server.
 
@@ -17,14 +18,15 @@ class WSGIServerLogger:
     that brings down the wsgi server, and so the clients cannot connect.
     """
 
-    def info(self, msg, *args, **kwargs):
-        """Log info message."""
+    # def info(self, msg, *args, **kwargs):
+    #     """Log info message."""
 
-        # TODO write this to file?
-        print(msg)
+    #     # TODO write this to file?
+    #     print(msg)
+    #     super(WSGIServerLogger, self).info(msg, *args, **kwargs)
 
-    def debug(self, msg, *args, **kwargs):
-        """Log debug message."""
+    # def debug(self, msg, *args, **kwargs):
+    #     """Log debug message."""
 
-        # TODO write this to file?
-        print(msg)
+    #     # TODO write this to file?
+    #     print(msg)

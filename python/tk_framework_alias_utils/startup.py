@@ -380,6 +380,8 @@ def ensure_plugin_up_to_date(logger):
     plugin bundle will be installed for the user at runtime by copying the bundle from the
     framework to the users's Alias AppData folder. The framework will pre-build the plugin
     using the build_extension.py script from the repo dev folder.
+
+    :param logger:
     """
 
     import sgtk

@@ -58,7 +58,7 @@ def toolkit_plugin_bootstrap(
 
     # set up the toolkit bootstrap manager
 
-    # todo: For standalone workflows, need to handle authentication here
+    # TODO  For standalone workflows, need to handle authentication here
     #       this includes workflows for logging in and out (see maya plugin).
     #       For now, assume that we are correctly authenticated.
     #       Also, need to check that the SHOTGUN_SITE env var matches
@@ -156,11 +156,11 @@ if __name__ == "__main__":
     connect to the running server.
     """
 
-    import sys
-    sys.path.append("C:\\python_libs")
-    import ptvsd
-    ptvsd.enable_attach()
-    ptvsd.wait_for_attach()
+    # import sys
+    # sys.path.append("C:\\python_libs")
+    # import ptvsd
+    # ptvsd.enable_attach()
+    # ptvsd.wait_for_attach()
 
     args = sys.argv[1:]
     ret = toolkit_plugin_bootstrap(*args)

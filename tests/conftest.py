@@ -18,10 +18,10 @@ def pytest_configure(config):
 
     print("Configuring...")
 
-    import debugpy
-    debugpy.listen(5678)
-    debugpy.wait_for_client()
-    # debugpy.breakpoint()
+    # import debugpy
+    # debugpy.listen(5678)
+    # debugpy.wait_for_client()
+    # # debugpy.breakpoint()
 
     # Add the python modules to the sys.path for import
     base_dir = os.path.abspath(

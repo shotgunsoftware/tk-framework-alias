@@ -86,7 +86,7 @@ class AliasBridge(metaclass=Singleton):
 
         # Create the WSGI middleware for the SocketIO server
         self.__app = socketio.WSGIApp(self.__server_sio, static_files={})
-        self.__wsgi_logger = WSGIServerLogger()
+        self.__wsgi_logger = WSGIServerLogger(self.__class__.__name__)
 
 
     # Properties

@@ -30,7 +30,6 @@ class BootstrapLogHandler(logging.StreamHandler):
         # always flush to ensure its seen by the js process
         self.flush()
 
-
 def get_sgtk_logger(sgtk):
     """
     Sets up a std log handler for toolkit
@@ -56,7 +55,8 @@ def get_sgtk_logger(sgtk):
     # the log should go to a file named like the engine, which is to be started
     # if the engine is unknown to the current environment, it will just log
     # into the frameworks own log-file
-    log_name = os.getenv("SHOTGUN_ENGINE", "tk-framework-alias")
+    log_name = os.getenv("SGTK_ENGINE", "tk-framework-alias")
+    # log_name = "tk-alias"
 
     # initializes the file where logging output will go
     sgtk.LogManager().initialize_base_file_handler(log_name)
