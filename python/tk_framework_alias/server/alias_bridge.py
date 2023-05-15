@@ -30,6 +30,7 @@ from .utils.exceptions import AliasBridgeException, ClientAlreadyRegistered, Ser
 
 from tk_framework_alias_utils import utils as framework_utils
 
+
 class AliasBridge(metaclass=Singleton):
     """
     A class to handle communication with Alias.
@@ -289,10 +290,18 @@ class AliasBridge(metaclass=Singleton):
 
         if not client:
             # Get client info from environment
-            client_info = client_info or {}
-            client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
-            if client_exec_path:
-                client_info["exec_path"] = client_exec_path
+
+            # NOTE uncomment to not allow client to run from python script.
+            # Warning that the framework attempts to encrypt and decrypt the executable path
+            # for security, however it does not have a secure place to store the key, so for
+            # this reason it is currently turned off. Ideally we can store an encryption key
+            # in the ShotGrid database or a key vault. For ShotGrid clients, this is not an
+            # issue because the toolkit manager should be used to start the ShotGrid engine.
+            # 
+            # client_info = client_info or {}
+            # client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
+            # if client_exec_path:
+            #     client_info["exec_path"] = client_exec_path
 
             pipeline_config_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID")
             entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
@@ -349,6 +358,9 @@ class AliasBridge(metaclass=Singleton):
         else:
             # Bootstrap by running the client executable
             client_exe_path = framework_utils.decrypt_from_str(client["info"].get("exec_path"))
+            if not client_exe_path:
+                return False
+
             args = [
                 python_exe,
                 client_exe_path,
