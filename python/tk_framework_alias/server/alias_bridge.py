@@ -422,8 +422,8 @@ class AliasBridge(metaclass=Singleton):
         """
 
         hostname = hostname or self.__default_hostname
-        port = port or self.__default_port
-        max_retry_count = max_retries if max_retries is not None else self.__max_retry_count
+        port = port if port is not None and port >= 0 else self.__default_port
+        max_retry_count = max_retries if max_retries is not None and max_retries >= 0 else self.__max_retry_count
         server_socket = None
         retry_count = 0
         while server_socket is None and retry_count <= max_retry_count:
