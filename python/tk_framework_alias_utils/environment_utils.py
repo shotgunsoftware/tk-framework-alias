@@ -1,4 +1,5 @@
 import os
+import sys
 
 PLUGIN_NAME = "com.sg.basic.alias"
 
@@ -12,10 +13,8 @@ def get_alias_plugin_dir():
     The plugin will be installed inside the user's Alias AppData folder.
     """
 
-    from sgtk import util
-
     # The plugin install directory is OS-specific
-    if util.is_windows():
+    if sys.platform == "win32":
         app_data = os.getenv("APPDATA")
     else:
         raise Exception("This plugin only runs on Windows.")
