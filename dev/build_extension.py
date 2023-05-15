@@ -31,11 +31,6 @@ BUNDLE_CACHE_DIR = "bundle_cache"
 # the build script located in the core repo
 CORE_BUILD_SCRIPT = os.path.join("developer", "build_plugin.py")
 
-# timestamp url for signing the extension.
-# see: http://www.davidebarranca.com/2014/05/html-panels-tips-10-packaging-zxp-installers/
-# TIMESTAMP_URL = "https://timestamp.geotrust.com/tsa"
-# TIMESTAMP_URL = "http://timestamp.comodoca.com"
-
 
 def main():
     """
@@ -57,12 +52,6 @@ def main():
 
     # do a final pass on the plugin directory before bundling it up
     _clean_plugin_dir(args)
-
-    # # sign the newly built plugin and create the .ZXP file
-    # if args["sign"]:
-    #     _sign_plugin(args)
-    # else:
-    #     logger.warning("Not signing the built plugin. This build can not be released!")
 
     logger.info("Build successful.")
 
@@ -127,13 +116,7 @@ def _parse_args():
     """
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Build and package an Adobe extension for the "
-            "engine. This includes signing the extension with the "
-            "supplied certificate. The extension will be built "
-            "in the engine repo unless an output directory is "
-            "specified."
-        )
+        description="Build and package an Alias plugin for the framework."
     )
 
     parser.add_argument(
@@ -148,7 +131,7 @@ def _parse_args():
         "--plugin_name",
         "-p",
         metavar="name",
-        help="The name of the engine plugin to build. Ex: 'basic'.",
+        help="The name of the framework plugin to build. Ex: 'basic'.",
         required=True,
     )
 
@@ -156,21 +139,8 @@ def _parse_args():
         "--extension_name",
         "-e",
         metavar="name",
-        help="The name of the output extension. Ex: 'com.sg.basic.ps'",
+        help="The name of the output plugin bundle. Ex: 'com.sg.basic.alias'",
         required=True,
-    )
-
-    parser.add_argument(
-        "--sign",
-        "-s",
-        nargs=3,
-        metavar=("/path/to/ZXPSignCmd", "/path/to/certificate", "password"),
-        help=(
-            "If supplied, sign the build extension. Requires 3 arguments: "
-            "the path to the 'ZXPSignCmd', the certificate and the password."
-            "Note, the ZXPSignCmd can be downloaded here: "
-            "http://labs.adobe.com/downloads/extensionbuilder3.html"
-        ),
     )
 
     parser.add_argument(
@@ -190,19 +160,19 @@ def _parse_args():
         help=(
             "The version to attached to the built plugin. If not specified, "
             "the version will be set to 'dev' and will override any version "
-            "of the extension at launch/install time. The current version "
+            "of the plugin at launch/install time. The current version "
             "can be found in the .version file that lives next to the "
-            "existing .zxp file."
+            "existing plugin bundle."
         ),
     )
 
     parser.add_argument(
         "--output_dir",
         "-o",
-        metavar="/path/to/output/extension",
+        metavar="/path/to/output/plugin",
         help=(
-            "If supplied, output the built extension here. If not supplied, "
-            "the extension will be built in the engine directory at the top "
+            "If supplied, output the built plugin bundle here. If not supplied, "
+            "the plugin will be built in the framework directory at the top "
             "level."
         ),
     )
@@ -211,65 +181,14 @@ def _parse_args():
 
 
 def _remove_bundle_cache(args):
-    """
-    Remove the built extensions bundle cache.
-    """
+    """Remove the built plugin bundle cache."""
 
-    logger.info("Removing bundle cache from built extension...")
+    logger.info("Removing bundle cache from built plugin...")
     bundle_cache_dir = os.path.join(args["plugin_build_dir"], BUNDLE_CACHE_DIR)
     try:
         shutil.rmtree(bundle_cache_dir)
     except Exception:
-        logger.warning("Failed to remove bundle cache from extension.")
-
-
-def _sign_plugin(args):
-    """
-    Sign the built plugin (creates .zxp) and cleanup the build directory.
-    """
-
-    # extension_path is same as the plugin build dir with the .zxp extension
-    extension_path = "%s.zxp" % (args["plugin_build_dir"],)
-
-    # remove the existing build file
-    if os.path.exists(extension_path):
-        from sgtk.util.filesystem import safe_delete_file
-
-        safe_delete_file(extension_path)
-
-    (sign_command, certificate_path, certificate_pwd) = args["sign"]
-
-    command = [
-        sign_command,
-        "-sign",
-        args["plugin_build_dir"],
-        extension_path,
-        certificate_path,
-        certificate_pwd,
-        # The timestamp is not working at the moment and is not required so it's commented out for now
-        # "-tsa",
-        # TIMESTAMP_URL,
-    ]
-
-    # execute the build script
-    logger.info("Signing extension command: %s" % (command,))
-    logger.info("Signing the extension...")
-    status = subprocess.call(command)
-
-    # check the return status
-    if status:
-        logger.error("Error signing the extension.")
-        raise Exception("There was a problem signing the extension.")
-
-    # clean up the plugin build directory
-    try:
-        shutil.rmtree(args["plugin_build_dir"])
-    except Exception:
-        logger.warning("Failed to remove plugin build dir.")
-
-    # add the signed extension path to the args
-    args["extension_path"] = extension_path
-    logger.info("Signed extension: %s" % (args["extension_path"],))
+        logger.warning("Failed to remove bundle cache from plugin bundle.")
 
 
 def _validate_args(args):
@@ -288,7 +207,6 @@ def _validate_args(args):
             'extension_name': 'extesion.name.here',
             'bundle_cache': True,
             'plugin_name': 'plugin_name',
-            'sign': ['/path/to/ZXPSignCmd', '/path/to/cert', 'cert_password'],
             'version': 'v1.0.0',
             'output_dir': '/path/to/output/dir',
             'engine_dir': '/path/to/the/engine/repo',
@@ -360,23 +278,6 @@ def _validate_args(args):
             )
     else:
         args["version"] = "dev"
-
-    # if signing requested, validate those args
-    if args["sign"]:
-
-        logger.info("Verifying 'ZXPSignCmd` path...")
-        if not os.path.exists(args["sign"][0]):
-            raise Exception(
-                "The supplied 'ZXPSignCmd' does not exist. Supplied path: %s "
-                % (args["sign"][0],)
-            )
-
-        logger.info("Verifying certificate path...")
-        if not os.path.exists(args["sign"][1]):
-            raise Exception(
-                "The supplied certificate does not exist. Supplied path: %s "
-                % (args["sign"][1],)
-            )
 
     # get the full path to the engine repo
     logger.info("Populating the engine directory...")
