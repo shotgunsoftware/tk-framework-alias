@@ -9,6 +9,9 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
+import logging
+
+from . import environment_utils
 
 
 def version_cmp(version1, version2):
@@ -117,3 +120,31 @@ def decrypt_from_str(value):
     value_as_bytes = value.encode()
     decrypted = fernet.decrypt(value_as_bytes)
     return decrypted.decode()
+
+
+def get_logger(log_module, log_name, log_level=logging.DEBUG):
+    """
+    Return a Logger.
+    """
+
+    # TODO rotating logs
+
+    name = f"{log_module}.{log_name}"
+
+    logger = logging.getLogger(name)
+    logger.setLevel(log_level)
+
+
+    log_dir = os.path.join(
+        environment_utils.get_alias_plugin_dir(),
+        "log",
+    )
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    log_file_path = os.path.join(log_dir, f"{log_name}.log")
+    fh = logging.FileHandler(log_file_path)
+    fh.setLevel(log_level)
+    logger.addHandler(fh)
+
+    return logger

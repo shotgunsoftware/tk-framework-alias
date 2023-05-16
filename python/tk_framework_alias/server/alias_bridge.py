@@ -12,7 +12,6 @@ import os
 import subprocess
 import sys
 import threading
-import logging
 
 # Third party pacakges included in dist/pkgs.zip
 import socketio
@@ -29,7 +28,6 @@ from .utils.singleton import Singleton
 from .utils.exceptions import AliasBridgeException, ClientAlreadyRegistered, ServerAlreadyRunning, ClientNameReservered
 
 from tk_framework_alias_utils import utils as framework_utils
-from tk_framework_alias_utils import environment_utils as framework_env_utils
 
 
 class AliasBridge(metaclass=Singleton):
@@ -65,7 +63,7 @@ class AliasBridge(metaclass=Singleton):
 
         # Create the SocketIO server, long-polling is the default transport but websocket
         # transport will be used if possible
-        sio_logger = self.__get_logger("sio_server")
+        sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_server")
         self.__server_sio = socketio.Server(
             aysnc_mode="eventlet",
             logger=sio_logger,
@@ -90,7 +88,7 @@ class AliasBridge(metaclass=Singleton):
         self.__app = socketio.WSGIApp(self.__server_sio, static_files={})
 
         # Create the server logger
-        self.__wsgi_logger = self.__get_logger("wsgi")
+        self.__wsgi_logger = framework_utils.get_logger(self.__class__.__name__, "wsgi")
 
     # Properties
     # ----------------------------------------------------------------------------------------
@@ -459,29 +457,3 @@ class AliasBridge(metaclass=Singleton):
         # is single threaded (e.g. can only access the socketio server from the thread it was
         # created in).
         eventlet.wsgi.server(self.__server_socket, self.__app, log=self.__wsgi_logger)
-
-    def __get_logger(self, log_name):
-        """
-        Return a Logger.
-        """
-
-        name = f"{self.__class__.__module__}.{log_name}"
-
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.DEBUG)
-
-        # TODO rotating logs
-
-        log_dir = os.path.join(
-            framework_env_utils.get_alias_plugin_dir(),
-            "log",
-        )
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-
-        log_file_path = os.path.join(log_dir, f"{log_name}.log")
-        fh = logging.FileHandler(log_file_path)
-        fh.setLevel(logging.DEBUG)
-        logger.addHandler(fh)
-
-        return logger

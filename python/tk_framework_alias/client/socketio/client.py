@@ -16,7 +16,7 @@ import tempfile
 
 from .client_json import AliasClientJSON
 from ..utils.decorators import check_server_result
-
+from tk_framework_alias_utils import utils as framework_utils
 
 class AliasSocketIoClient(socketio.Client):
     """
@@ -31,8 +31,6 @@ class AliasSocketIoClient(socketio.Client):
     they are not JSON-serializable, so the client will create unique ids for callback
     functions that will be sent and received from the server to trigger callback functions on
     the client side.
-
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -44,6 +42,16 @@ class AliasSocketIoClient(socketio.Client):
             kwargs["json"] = self.__json
         else:
             self.__json = None
+
+        # If no logger specified, provide a default logger that will write to the Alisa plugin
+        # install directory (as specified n the environment utils). 
+        logger = None 
+        if kwargs.get("logger") is None:
+            logger = framework_utils.get_logger(self.__class__.__name__, "sio_client")
+            kwargs["logger"] = logger
+        
+        if kwargs.get("engineio_logger") is None:
+            kwargs["engineio_logger"] = logger or framework_utils.get_logger(self.__class__.__name__, "sio_client")
 
         super(AliasSocketIoClient, self).__init__(*args, **kwargs)
 
