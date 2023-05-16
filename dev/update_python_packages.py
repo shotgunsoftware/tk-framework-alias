@@ -25,8 +25,10 @@ def zip_recursively(zip_file, root_dir, folder_name):
 
 
 with TemporaryDirectory() as temp_dir:
-
-    # FIXME what about different python versions?
+    py_major = sys.version_info.major
+    py_minor = sys.version_info.minor
+    requirements_txt = f"requirements_{py_major}{py_minor}.txt"
+    frozen_requirements_txt = f"frozen_{requirements_txt}"
     # Pip install everything and capture everything that was installed.
     subprocess.run(
         [
@@ -35,7 +37,7 @@ with TemporaryDirectory() as temp_dir:
             "pip",
             "install",
             "-r",
-            "requirements.txt",
+            requirements_txt,
             "--no-compile",
             # The combination of --target and --upgrade forces pip to install
             # all packages to the temporary directory, even if an already existing
@@ -47,11 +49,11 @@ with TemporaryDirectory() as temp_dir:
     )
     subprocess.run(
         ["python", "-m", "pip", "freeze", "--path", temp_dir],
-        stdout=open("frozen_requirements.txt", "w"),
+        stdout=open(frozen_requirements_txt, "w"),
     )
 
     # Quickly compute the number of requirements we have.
-    nb_dependencies = len([_ for _ in open("frozen_requirements.txt", "rt")])
+    nb_dependencies = len([_ for _ in open(frozen_requirements_txt, "rt")])
 
     # Get installed packages, separate out C extension packages since these
     # cannot be zipped up (dynamic libraries .pyd, .dll, .so)
@@ -77,27 +79,33 @@ with TemporaryDirectory() as temp_dir:
             else:
                 package_names.append(entry.name)
 
-    # Make sure we found as many Python packages as there are packages listed inside frozen_requirements.txt
+    # Make sure we found as many Python packages as there are packages listed inside frozen requirements file
     assert len(package_names) + len(c_extension_packages) == nb_dependencies
 
     # Create the distribution directory
-    major = sys.version_info.major
-    minor = sys.version_info.minor
-    python_dir = f"python{major}.{minor}"
-    dist_dir = os.path.join(
-        os.path.dirname(__file__),
-        "dist",
-        python_dir,
+    dist_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            "dist",
+        )
     )
     if not os.path.exists(dist_dir):
         os.mkdir(dist_dir)
 
+    python_dist_dir = os.path.join(
+        dist_dir,
+        f"python{py_major}.{py_minor}",
+    )
+    if not os.path.exists(python_dist_dir):
+        os.mkdir(python_dist_dir)
+
     # Copy the include directory to the dist dir
     include_dir = os.path.join(temp_dir, "include", "python")
     if os.path.exists(include_dir):
-        copy_tree(include_dir, os.path.join(dist_dir, "include"))
+        copy_tree(include_dir, os.path.join(python_dist_dir, "include"))
 
-    pkgs_zip = ZipFile(Path(dist_dir) / "pkgs.zip", "w")
+    pkgs_zip = ZipFile(Path(python_dist_dir) / "pkgs.zip", "w")
     for package_name in package_names:
         print(f"Zipping {package_name}...")
         temp_dir_path = Path(temp_dir)
@@ -113,7 +121,7 @@ with TemporaryDirectory() as temp_dir:
     # the limitation of ZipFile with dynamic libraries
     if c_extension_packages:
         # Create the library directory to copy dynamic lib packages
-        lib_dir = os.path.join(dist_dir, "lib")
+        lib_dir = os.path.join(python_dist_dir, "lib")
         if not os.path.exists(lib_dir):
             os.mkdir(lib_dir)
 

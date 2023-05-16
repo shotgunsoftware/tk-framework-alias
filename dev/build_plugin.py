@@ -33,9 +33,7 @@ CORE_BUILD_SCRIPT = os.path.join("developer", "build_plugin.py")
 
 
 def main():
-    """
-    Wraps all the steps to build and sign the extension
-    """
+    """Wraps all the steps to build the Alias plugin."""
 
     # parse and validate the command line args
     args = _validate_args(_parse_args())
@@ -60,10 +58,10 @@ def _build_plugin(args):
     """
     First step is to build the plugin itself.
 
-    Adds the extension output dir to the args dict.
+    Adds the plugin output dir to the args dict.
     """
 
-    # construct the full extension output directory
+    # construct the full plugin output directory
     plugin_build_dir = os.path.abspath(
         os.path.join(args["output_dir"], args["extension_name"])
     )
