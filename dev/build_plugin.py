@@ -195,7 +195,7 @@ def _validate_args(args):
 
     Sets up the logger if core can be imported.
 
-    Adds some additional values based on supplied args including the engine
+    Adds some additional values based on supplied args including the framework
     directory, plugin path, etc.
 
     Returns a dictionary of the parsed arguments of the following form:
@@ -207,8 +207,8 @@ def _validate_args(args):
             'plugin_name': 'plugin_name',
             'version': 'v1.0.0',
             'output_dir': '/path/to/output/dir',
-            'engine_dir': '/path/to/the/engine/repo',
-            'plugin_dir': '/path/to/the/engine/plugin',
+            'framework_dir': '/path/to/the/framework/repo',
+            'plugin_dir': '/path/to/the/framework/plugin',
         }
     """
 
@@ -244,7 +244,7 @@ def _validate_args(args):
         sgtk.LogManager().initialize_custom_handler()
 
         global logger
-        logger = sgtk.LogManager.get_logger("build_extension")
+        logger = sgtk.LogManager.get_logger("build_plugin")
 
     except Exception as e:
         raise Exception("Error creating toolkit logger: %s" % (e,))
@@ -259,8 +259,8 @@ def _validate_args(args):
             "Could not find plugin build script in supplied core: %s" % (build_script,)
         )
 
-    # ensure the extension name is valid
-    logger.info("Ensuring valid plugin & extension build names...")
+    # ensure the plugin name is valid
+    logger.info("Ensuring valid plugin build names...")
     from sgtk.util.filesystem import create_valid_filename
 
     args["extension_name"] = create_valid_filename(args["extension_name"])
@@ -277,22 +277,22 @@ def _validate_args(args):
     else:
         args["version"] = "dev"
 
-    # get the full path to the engine repo
-    logger.info("Populating the engine directory...")
-    args["engine_dir"] = os.path.abspath(
+    # get the full path to the framework repo
+    logger.info("Populating the framework directory...")
+    args["framework_dir"] = os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.pardir)
     )
 
-    # ensure the plugin can be found in the engine
+    # ensure the plugin can be found in the framework
     logger.info("Validating plugin name...")
-    plugin_dir = os.path.join(args["engine_dir"], "plugin", "basic")
+    plugin_dir = os.path.join(args["framework_dir"], "plugin", "basic")
     if not os.path.exists(plugin_dir):
         raise Exception(
-            "Could not find plugin '%s' in engine." % (args["plugin_name"],)
+            "Could not find plugin '%s' in framework." % (args["plugin_name"],)
         )
     args["plugin_dir"] = plugin_dir
 
-    # if output dir defined, ensure it exists. populate args with engine dir
+    # if output dir defined, ensure it exists. populate args with framework dir
     # if not.
     logger.info("Determining output directory...")
     if args["output_dir"]:
@@ -301,7 +301,7 @@ def _validate_args(args):
 
             ensure_folder_exists(args["output_dir"])
     else:
-        args["output_dir"] = args["engine_dir"]
+        args["output_dir"] = args["framework_dir"]
 
     # return the validate args
     logger.info("Command line arguments validated.")
@@ -312,7 +312,7 @@ def _write_version_file(args):
     """
     Write a file to the built plugin directory containing the specified version.
 
-    Also write the file to the top-level of the engine repo to make it possible
+    Also write the file to the top-level of the framework repo to make it possible
     to easily compare during install.
     """
 
@@ -326,15 +326,15 @@ def _write_version_file(args):
     with open(bundle_version_file_path, "w") as bundle_version_file:
         bundle_version_file.write(args["version"])
 
-    engine_file_path = os.path.join(
-        args["engine_dir"],
+    framework_file_path = os.path.join(
+        args["framework_dir"],
         "%s.%s" % (args["extension_name"], "version"),
     )
 
     # write the file
     logger.info("Writing build version info file...")
-    with open(engine_file_path, "w") as engine_version_file:
-        engine_version_file.write(args["version"])
+    with open(framework_file_path, "w") as framework_version_file:
+        framework_version_file.write(args["version"])
 
 
 if __name__ == "__main__":
@@ -345,6 +345,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("ERROR: %s" % (e,))
     else:
-        logger.info("Extension successfully built!")
+        logger.info("Plugin successfully built!")
 
     sys.exit(exit_code)
