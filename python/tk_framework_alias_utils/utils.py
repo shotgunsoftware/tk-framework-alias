@@ -10,6 +10,7 @@
 
 import os
 import logging
+import logging.handlers
 
 from . import environment_utils
 
@@ -122,19 +123,45 @@ def decrypt_from_str(value):
     return decrypted.decode()
 
 
-def get_logger(log_module, log_name, log_level=logging.DEBUG):
+def get_logger(
+        log_module,
+        log_name,
+        log_level=logging.DEBUG,
+        rotate_when="D",
+        rotate_interval=1,
+        rotate_backups=7,
+    ):
     """
-    Return a Logger.
-    """
+    Return a rotating event logger.
 
-    # TODO rotating logs
+    The default log rotation is set to rotate each day, and a full week (7 days) of logs will
+    be kept on disk.
+
+    :param log_module: The module that this logger will be used for. This is used to create
+        the logger name identifier.
+    :param log_module: str
+    :param log_name: The name used to create the logger name identifier, as well as the log
+        file, e.g. {log_name}.log
+    :param log_name: str
+    :param log_level: The lowest logging level that this logger will handle. Default is debug.
+    :param log_level: int (e.g. logging.INFO)
+    :param rotate_when: When the log file will be rotated (see
+        logging.handlers.TimedRotatingFileHandler for possible values). Default is days.
+    :param rotate_when: str
+    :param rotate_interval: The interval at which files are rotated. Default is 1.
+    :param rotate_interval: int
+    :param rotate_backups: The number of backup log files kept. Default is 7.
+    :param rotate_backups: int
+
+    :return: The logger object.
+    :rtype: Logger
+    """
 
     name = f"{log_module}.{log_name}"
-
     logger = logging.getLogger(name)
     logger.setLevel(log_level)
 
-
+    # Ensure that the log file directory exists on local disk
     log_dir = os.path.join(
         environment_utils.get_alias_plugin_dir(),
         "log",
@@ -142,8 +169,14 @@ def get_logger(log_module, log_name, log_level=logging.DEBUG):
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
 
+    # Add a rotating file handler to write log messages to file on disk
     log_file_path = os.path.join(log_dir, f"{log_name}.log")
-    fh = logging.FileHandler(log_file_path)
+    fh = logging.handlers.TimedRotatingFileHandler(
+        log_file_path,
+        when=rotate_when,
+        interval=rotate_interval,
+        backupCount=rotate_backups,
+    )
     fh.setLevel(log_level)
     logger.addHandler(fh)
 
