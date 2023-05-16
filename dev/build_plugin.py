@@ -238,7 +238,7 @@ def _validate_args(args):
     # setup the logger for use from here on out
     try:
         # set up std toolkit logging to file
-        sgtk.LogManager().initialize_base_file_handler("build_plugin")
+        sgtk.LogManager().initialize_base_file_handler("tk-framework-alias_build_plugin")
 
         # set up output of all sgtk log messages to stdout
         sgtk.LogManager().initialize_custom_handler()
