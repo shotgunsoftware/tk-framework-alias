@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import logging
+import pprint
 import os
 import socketio
 
@@ -112,11 +114,12 @@ class AliasServerNamespace(socketio.Namespace):
         """
 
         if self.client_sid is not None:
-            raise ClientAlreadyConnected(
-                "Client already connected to this name namespace '{self.namespace}'. Use a different namespace"
-            )
+            msg = "Client already connected to this name namespace '{self.namespace}'. Use a different namespace"
+            self._log_message(sid, msg, logging.ERROR)
+            raise ClientAlreadyConnected(msg)
 
         self.__client_sid = sid
+        self._log_message(sid, f"Client connected\n{pprint.pformat(environ)}")
 
     def on_connect_error(self, data):
         """
@@ -126,8 +129,7 @@ class AliasServerNamespace(socketio.Namespace):
         :type data: any
         """
 
-        # TODO log message
-        print(f"{[self.namespace]} connection error", data)
+        self._log_message(None, f"Client connection failed\n{data}")
 
     def on_disconnect(self, sid):
         """
@@ -141,6 +143,7 @@ class AliasServerNamespace(socketio.Namespace):
             return
 
         self.__client_sid = None
+        self._log_message(sid, "Client disconnected")
 
     def on_restart(self, sid):
         """
@@ -152,6 +155,7 @@ class AliasServerNamespace(socketio.Namespace):
 
         if self.client_sid is None or sid != self.client_sid:
             return
+
 
         # Reset the client id, since it will be disconnected and re-connected again.
         self.__client_sid = None
@@ -258,6 +262,12 @@ class AliasServerNamespace(socketio.Namespace):
     # ----------------------------------------------------------------------------------------
     # Protected methods
 
+    def _log_message(self, sid, msg, level=logging.INFO):
+        """Convenience function to log a message."""
+
+        log_msg = f"Server [client={sid}, namespace={self.namespace}] {msg}"
+        self.server.logger.log(level, log_msg)
+
     def _handle_api_event(self, event, sid, *args):
         """
         An Alias API event was triggered by the client.
@@ -282,13 +292,15 @@ class AliasServerNamespace(socketio.Namespace):
             return
 
         # Make the Alias API call
-        data = args[0] if args else None
-        result = self._execute_request(event, data)
+        request = args[0] if args else None
+        self._log_message(None, f"Excuting Alias API request: {request}", logging.DEBUG)
+        result = self._execute_request(event, request)
 
         try:
             # Do any post processing after the request has been made.
-            self._post_process_request(event, data, result)
+            self._post_process_request(event, request, result)
         except Exception as post_process_error:
+            self._log_message(sid, "Alias API request post process error\n{post_process_error}", logging.ERROR)
             return AliasApiPostProcessRequestError(post_process_error)
 
         return result
@@ -312,16 +324,20 @@ class AliasServerNamespace(socketio.Namespace):
 
         if not isinstance(request, AliasApiRequestWrapper):
             # Do not raise, just return the exception to be sent back to the client
-            return AliasApiRequestNotSupported(f"Request not supported: {request}")
+            msg = f"Alias API request not supported: {request}"
+            self._log_message(None, msg, logging.ERROR)
+            return AliasApiRequestNotSupported(msg)
 
         try:
             # Execute and return the api result
             return request.execute(request_name)
         except AliasApiRequestException as api_error:
             # Return an api request error
+            self._log_message(None, f"Alias API request error\n{api_error}", logging.ERROR)
             return api_error
         except Exception as general_error:
             # Report a general error that occurred trying to execute the api request.
+            self._log_message(None, f"Error occurred attempting to execute request {request_name}\n{general_error}", logging.ERROR)
             return AliasApiRequestException(general_error)
 
     def _post_process_request(self, event, data, result):

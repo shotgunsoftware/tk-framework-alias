@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import logging
+import pprint
 import socketio
 from ... import alias_bridge
 from ...utils.exceptions import ClientAlreadyConnected
@@ -92,11 +94,12 @@ class AliasEventsServerNamespace(socketio.Namespace):
         """
 
         if self.client_sid is not None:
-            raise ClientAlreadyConnected(
-                "Client already connected to this name namespace '{self.namespace}'. Use a different namespace"
-            )
+            msg = "Client already connected to this name namespace '{self.namespace}'. Use a different namespace"
+            self._log_message(sid, msg, logging.ERROR)
+            raise ClientAlreadyConnected(msg)
 
         self.__client_sid = sid
+        self._log_message(sid, f"Client connected\n{pprint.pformat(environ)}")
 
     def on_connect_error(self, data):
         """
@@ -106,8 +109,7 @@ class AliasEventsServerNamespace(socketio.Namespace):
         :type data: any
         """
 
-        # TODO log message
-        print(f"{[self.namespace]} connection error", data)
+        self._log_message(None, f"Client connection failed\n{data}")
 
     def on_disconnect(self, sid):
         """
@@ -121,6 +123,7 @@ class AliasEventsServerNamespace(socketio.Namespace):
             return
 
         self.__client_sid = None
+        self._log_message(sid, "Client disconnected")
 
     def on_shutdown(self, sid):
         """
@@ -177,6 +180,8 @@ class AliasEventsServerNamespace(socketio.Namespace):
         if self.client_sid is None or sid != self.client_sid:
             return
 
+        self._log_message(sid, f"Alias Event Callback {data}")
+
         # Emit event to forward the Alias callback event to all other clients connected to the
         # server (on different namespaces).
         callback_event = data.pop("callback_event")
@@ -186,10 +191,17 @@ class AliasEventsServerNamespace(socketio.Namespace):
     # ----------------------------------------------------------------------------------------
     # Protected methods
 
+    def _log_message(self, sid, msg, level=logging.INFO):
+        """Convenience function to log a message."""
+
+        log_msg = f"Server [client={sid}, namespace={self.namespace}] {msg}"
+        self.server.logger.log(level, log_msg)
+
     def _emit(self, *args, **kwargs):
         """Emit event to all other namespaces, except this one."""
 
         for namespace in self.server.namespace_handlers:
             if namespace != self.namespace:
                 kwargs["namespace"] = namespace
+                self._log_message(None, f"Forwarding event {args[0]} to namespace {namespace}")
                 self.emit(*args, **kwargs)

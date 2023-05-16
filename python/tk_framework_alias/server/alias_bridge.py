@@ -42,12 +42,6 @@ class AliasBridge(metaclass=Singleton):
     def __init__(self):
         """Initialize the bridge."""
 
-        # import sys
-        # sys.path.append("C:\\python_libs")
-        # import ptvsd
-        # ptvsd.enable_attach()
-        # ptvsd.wait_for_attach()
-
         # Default server socket params
         self.__default_hostname = "127.0.0.1"
         self.__default_port = 8000
@@ -63,11 +57,11 @@ class AliasBridge(metaclass=Singleton):
 
         # Create the SocketIO server, long-polling is the default transport but websocket
         # transport will be used if possible
-        sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_server")
+        server_sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_server")
         self.__server_sio = socketio.Server(
             aysnc_mode="eventlet",
-            logger=sio_logger,
-            engineio_logger=sio_logger,
+            logger=server_sio_logger,
+            engineio_logger=server_sio_logger,
             ping_interval=120,
             json=AliasServerJSON,
         )
@@ -78,8 +72,9 @@ class AliasBridge(metaclass=Singleton):
         # events client.
         # These are special client/server namespaces, do not use the register_client_namespace
         # for these.
+        client_sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_client")
         self.__alias_events_client_sio = socketio.Client(
-            logger=True, engineio_logger=True
+            logger=client_sio_logger, engineio_logger=client_sio_logger
         )
         self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
@@ -87,8 +82,6 @@ class AliasBridge(metaclass=Singleton):
         # Create the WSGI middleware for the SocketIO server
         self.__app = socketio.WSGIApp(self.__server_sio, static_files={})
 
-        # Create the server logger
-        self.__wsgi_logger = framework_utils.get_logger(self.__class__.__name__, "wsgi")
 
     # Properties
     # ----------------------------------------------------------------------------------------
@@ -456,4 +449,5 @@ class AliasBridge(metaclass=Singleton):
         # to use eventlet.monkey_patch, so we will need to ensure that the server acts as if it
         # is single threaded (e.g. can only access the socketio server from the thread it was
         # created in).
-        eventlet.wsgi.server(self.__server_socket, self.__app, log=self.__wsgi_logger)
+        wsgi_logger = framework_utils.get_logger(self.__class__.__name__, "wsgi")
+        eventlet.wsgi.server(self.__server_socket, self.__app, log=wsgi_logger)

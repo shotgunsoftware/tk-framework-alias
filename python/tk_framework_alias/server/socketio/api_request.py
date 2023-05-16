@@ -28,6 +28,9 @@ class AliasApiRequestWrapper:
         4. instance property setter (e.g. layer.symmetric = True)
      """
 
+    # ----------------------------------------------------------------------------------------
+    # Class methods
+
     @classmethod
     def create_wrapper(cls, data):
         """Create and return a new object of this type from the given data, if possible."""
@@ -82,6 +85,10 @@ class AliasApiRequestWrapper:
 
         raise NotImplementedError("Subclass must implement")
 
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
+
     def validate(self, request_name):
         """
         Validate the request against this wrapper.
@@ -128,6 +135,38 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             # This is a module-level function
             self.__instance = alias_api
 
+    def __str__(self) -> str:
+        """Return a string representation for the Alias Api request object."""
+
+        try:
+            arg_list = []
+            if self.func_args:
+                args_str = ", ".join([str(a) for a in self.func_args])
+                arg_list.append(args_str)
+
+            if self.func_kwargs:
+                kwarg_list = ", ".join(
+                    [f"{k}={v}" for k, v in self.func_kwargs.items()]
+                )
+                arg_list.append(kwarg_list)
+
+            full_args_str = ", ".join(arg_list)
+
+            func_str = f"{self.func_name}({full_args_str})"
+            if not self.instance:
+                return func_str
+            if hasattr(self.instance, "__name__"):
+                return f"{self.instance.__name__}.{func_str}"
+            if hasattr(self.instance, "__class__"):
+                return f"{self.instance.__class__.__name__}.{func_str}"
+            return f"{self.instance}.{func_str}"
+        except:
+            # Do not fail on trying to return a string representation.
+            return super(AliasApiRequestFunctionWrapper, self).__str__()
+        
+    # ----------------------------------------------------------------------------------------
+    # Class methods
+
     @classmethod
     def required_data(cls):
         """
@@ -159,6 +198,10 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
 
         return cls.required_data().issubset(set(value.keys()))
 
+
+    # ----------------------------------------------------------------------------------------
+    # Properties
+
     @property
     def instance(self):
         """
@@ -183,6 +226,10 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
     def func_kwargs(self):
         """Get the key-word arguments to be passed to the function."""
         return self.__func_kwargs
+
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
 
     def validate(self, request_name):
         """
@@ -242,15 +289,20 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
         self.__instance = data_model.get_instance(instance_id)
         self.__property_name = data["__property_name__"]
 
-    @property
-    def instance(self):
-        """Get the id of the instance that this class corresponds to."""
-        return self.__instance
+    def __str__(self) -> str:
+        """Return a string representation for the Alias Api request object."""
 
-    @property
-    def property_name(self):
-        """Get the id of the instance that this class corresponds to."""
-        return self.__property_name
+        if hasattr(self.instance, "__name__"):
+            return f"{self.instance.__name__}.{self.property_name}"
+            
+        if hasattr(self.instance, "__class__"):
+            return f"{self.instance.__class__.__name__}.{self.property_name}"
+
+        return f"{self.instance}.{self.property_name}"
+
+
+    # ----------------------------------------------------------------------------------------
+    # Class methods
 
     @classmethod
     def required_data(cls):
@@ -281,6 +333,22 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
         """
 
         return cls.required_data() == set(value.keys())
+
+    # ----------------------------------------------------------------------------------------
+    # Properties
+
+    @property
+    def instance(self):
+        """Get the id of the instance that this class corresponds to."""
+        return self.__instance
+
+    @property
+    def property_name(self):
+        """Get the id of the instance that this class corresponds to."""
+        return self.__property_name
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
 
     def validate(self, request_name):
         """
@@ -329,20 +397,20 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
         self.__property_name = data["__property_name__"]
         self.__property_value = data["__property_value__"]
 
-    @property
-    def instance(self):
-        """Get the instance that this property belongs to."""
-        return self.__instance
+    def __str__(self) -> str:
+        """Return a string representation for the Alias Api request object."""
 
-    @property
-    def property_name(self):
-        """Get the name of this property."""
-        return self.__property_name
+        if hasattr(self.instance, "__name__"):
+            return f"{self.instance.__name__}.{self.property_name} = {self.property_value}"
 
-    @property
-    def property_value(self):
-        """Get the value to set on this property."""
-        return self.__property_value
+        if hasattr(self.instance, "__class__"):
+            return f"{self.instance.__class__.__name__}.{self.property_name} = {self.property_value}"
+
+        return f"{self.instance}.{self.property_name} = {self.property_value}"
+
+
+    # ----------------------------------------------------------------------------------------
+    # Class methods
 
     @classmethod
     def required_data(cls):
@@ -374,6 +442,29 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
         """
 
         return cls.required_data() == set(value.keys())
+
+
+    # ----------------------------------------------------------------------------------------
+    # Properties
+
+    @property
+    def instance(self):
+        """Get the instance that this property belongs to."""
+        return self.__instance
+
+    @property
+    def property_name(self):
+        """Get the name of this property."""
+        return self.__property_name
+
+    @property
+    def property_value(self):
+        """Get the value to set on this property."""
+        return self.__property_value
+
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
 
     def validate(self, request_name):
         """
