@@ -469,8 +469,10 @@ def ensure_python_installed(major_version, minor_version, logger):
     )
     version_txt = os.path.join(python_dist_dir, "embed_version.txt")
     installed_version_txt = os.path.join(python_dir, "embed_version.txt")
+    pth_filename = f"python{major_version}{minor_version}._pth"
+    pth_filepath = os.path.join(python_install_dir, pth_filename)
     
-    if not os.path.exists(python_install_dir):
+    if not os.path.exists(pth_filepath):
         update = True
     else:
         if not os.path.exists(version_txt):
@@ -519,8 +521,6 @@ def ensure_python_installed(major_version, minor_version, logger):
         shutil.copyfile(version_txt, installed_version_txt)
     
     # Ensure the framework python path is added to the ._pth file
-    pth_filename = f"python{major_version}{minor_version}._pth"
-    pth_filepath = os.path.join(python_install_dir, pth_filename)
     original_pth_filepath = os.path.join(python_install_dir, f"{pth_filename}.original")
     if os.path.exists(original_pth_filepath):
         logger.debug(f"Re-creating _pth file {pth_filepath}")
