@@ -36,7 +36,6 @@ class AliasClientObjectProxyWrapper:
     __types_by_module = {}
     __types_by_module_lock = threading.Lock()
 
-
     def __init__(self, data, module=None, attribute_name=None):
         """Initialize the proxy wrapper object."""
 
@@ -653,6 +652,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
     def value(self):
         """Get the value of the enum."""
         return self.__value
+
 
 class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     """A proxy wrapper for intances of Alias objects."""

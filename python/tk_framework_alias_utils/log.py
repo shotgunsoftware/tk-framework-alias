@@ -30,6 +30,7 @@ class BootstrapLogHandler(logging.StreamHandler):
         # always flush to ensure its seen by the js process
         self.flush()
 
+
 def get_sgtk_logger(sgtk):
     """
     Sets up a std log handler for toolkit

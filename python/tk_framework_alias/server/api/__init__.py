@@ -16,6 +16,7 @@ from tk_framework_alias_utils import environment_utils
 OPEN_ALIAS_API_NAME = "alias_api"
 OPEN_MODEL_API_NAME = "alias_api_om"
 
+
 def get_alias_version():
     """Return the Alias version."""
 
@@ -31,7 +32,9 @@ def get_alias_version():
 def get_module_path(module_name, alias_version):
     """Return the file path to the Alias Python API module to use."""
 
-    api_folder_path = environment_utils.get_alias_distribution_directory(alias_version, sys.version_info.major, sys.version_info.minor)
+    api_folder_path = environment_utils.get_alias_distribution_directory(
+        alias_version, sys.version_info.major, sys.version_info.minor
+    )
     if not api_folder_path or not os.path.exists(api_folder_path):
         raise AliasPythonApiImportError(
             "Failed to get Alias Python API module path for Alias {alias_version} and Python {py_version}".format(

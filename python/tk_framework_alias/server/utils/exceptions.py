@@ -12,17 +12,22 @@
 # AliasBridge exceptions
 # ----------------------------------------------------------------------------------------
 
+
 class AliasBridgeException(Exception):
     """Exception for AliasBridge errors."""
+
 
 class ClientAlreadyRegistered(AliasBridgeException):
     """Exception for AliasBridge when attempting to register a client that is already registered."""
 
+
 class ClientNameReservered(AliasBridgeException):
     """Exception for AliasBridge when attempting to register a client whose name is in the reserved list."""
 
+
 class ServerAlreadyRunning(AliasBridgeException):
     """Exception for AliasBridge when attempting to connect to server when it is already running."""
+
 
 class QtImportError(AliasBridgeException):
     """Exception for AliasBridge when attempting to import Qt."""
@@ -31,12 +36,14 @@ class QtImportError(AliasBridgeException):
 # AliasServerNamespace exceptions
 # ----------------------------------------------------------------------------------------
 
+
 class ClientAlreadyConnected(Exception):
     """Exception for AliasServerNamespace errors."""
 
 
 # AliasServerJSON exceptions
 # ----------------------------------------------------------------------------------------
+
 
 class AliasServerJSONDecoderError(Exception):
     """Exception for Alias server JSON decoder errors."""
@@ -45,6 +52,7 @@ class AliasServerJSONDecoderError(Exception):
 # AliasPythonApi exceptions
 # ----------------------------------------------------------------------------------------
 
+
 class AliasPythonApiImportError(Exception):
     """Exception for Alias Python API import errors."""
 
@@ -52,14 +60,18 @@ class AliasPythonApiImportError(Exception):
 # AliasApiRequest exceptions
 # ----------------------------------------------------------------------------------------
 
+
 class AliasApiRequestException(Exception):
     """Exception for Alias API request errors."""
+
 
 class AliasApiRequestNotValid(AliasApiRequestException):
     """Exception for Alias API request not valid error."""
 
+
 class AliasApiRequestNotSupported(AliasApiRequestException):
     """Exception for Alias API request not supported error."""
+
 
 class AliasApiPostProcessRequestError(AliasApiRequestException):
     """Exception for Alias API request post process error."""

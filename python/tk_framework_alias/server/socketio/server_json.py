@@ -311,7 +311,9 @@ class AliasServerJSONDecoder(json.JSONDecoder):
                 data_model = alias_bridge.AliasBridge().alias_data_model
                 instance = data_model.get_instance(instance_id)
                 if instance is None:
-                    raise AliasServerJSONDecoderError("Instance not found in data model registry")
+                    raise AliasServerJSONDecoderError(
+                        "Instance not found in data model registry"
+                    )
                 return instance
 
             # Next, try to decode the object as an Alias class object

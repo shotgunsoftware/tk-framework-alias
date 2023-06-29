@@ -33,7 +33,6 @@ class AliasEventsServerNamespace(socketio.Namespace):
 
         super(AliasEventsServerNamespace, self).__init__(self.get_namespace())
 
-
     # ----------------------------------------------------------------------------------------
     # Class methods
 
@@ -54,7 +53,6 @@ class AliasEventsServerNamespace(socketio.Namespace):
         clients are needed, use a namespace for each client.
         """
         return self.__client_sid
-
 
     # Event callback methods for namespace
     # ----------------------------------------------------------------------------------------
@@ -187,7 +185,6 @@ class AliasEventsServerNamespace(socketio.Namespace):
         callback_event = data.pop("callback_event")
         self._emit(callback_event, data=data)
 
-
     # ----------------------------------------------------------------------------------------
     # Protected methods
 
@@ -203,5 +200,7 @@ class AliasEventsServerNamespace(socketio.Namespace):
         for namespace in self.server.namespace_handlers:
             if namespace != self.namespace:
                 kwargs["namespace"] = namespace
-                self._log_message(None, f"Forwarding event {args[0]} to namespace {namespace}")
+                self._log_message(
+                    None, f"Forwarding event {args[0]} to namespace {namespace}"
+                )
                 self.emit(*args, **kwargs)

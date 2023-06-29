@@ -20,6 +20,7 @@ from tk_framework_alias.server.utils.exceptions import AliasApiRequestNotValid
 # fixtures
 ####################################################################################################
 
+
 @pytest.fixture()
 def data_model():
     """Fixture to return an instance of the AliasDataModel class."""
@@ -31,6 +32,7 @@ def data_model():
 # tk_framework_alias data_model.py AliasDataModel
 ####################################################################################################
 
+
 def test_data_model_register_instance(data_model):
     """Test the AliasDataModel register_instance method."""
 
@@ -40,6 +42,7 @@ def test_data_model_register_instance(data_model):
     result = data_model.get_instance(shader_id)
 
     assert result is shader
+
 
 def test_data_model_unregister_instance(data_model):
     """Test the AliasDataModel unregister_instance method."""
@@ -54,6 +57,7 @@ def test_data_model_unregister_instance(data_model):
     result = data_model.get_instance(shader_id)
     assert result is None
 
+
 def test_data_model_register_event(data_model):
     """Test the AliasDataModel register_instance method."""
 
@@ -65,6 +69,7 @@ def test_data_model_register_event(data_model):
 
     callbacks = data_model.get_event_callbacks(event_id)
     assert callbacks == [callback_id]
+
 
 def test_data_model_unregister_event(data_model):
     """Test the AliasDataModel unregister_instance method."""
@@ -81,6 +86,7 @@ def test_data_model_unregister_event(data_model):
     data_model.unregister_event(event_id, callback_id)
     callbacks = data_model.get_event_callbacks(event_id)
     assert callbacks == []
+
 
 def test_data_model_register_events_many(data_model):
     """Test the AliasDataModel register_instance method."""
@@ -129,6 +135,7 @@ def test_data_model_register_events_many(data_model):
     callbacks_3 = data_model.get_event_callbacks(event_3_id)
     assert callbacks_3 is None
 
+
 def test_data_model_destroy(data_model):
     """Test the AliasDataModel destroy method."""
 
@@ -157,4 +164,3 @@ def test_data_model_destroy(data_model):
 
     event_2_callbacks = data_model.get_event_callbacks(event_2_id)
     assert event_2_callbacks is None
-

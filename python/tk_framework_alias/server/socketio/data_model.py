@@ -25,7 +25,7 @@ class AliasDataModel:
     a client because it is a complex object that is JSON serializable. So to pass an Alias
     object to a client, a unique id is given to the client, which the client can use to make
     subsequent api requests to get data from the object.
-    
+
     For example:
         - Client makes api request to create an Alias layer
         - Server creates the layer, generates a unique id and stores it in the registry
@@ -90,7 +90,7 @@ class AliasDataModel:
     def register_instance(self, instance):
         """
         Store the instance in the registry.
-        
+
         :param instance: The instance object to register.
         :type instance: any
 
@@ -110,7 +110,7 @@ class AliasDataModel:
     def unregister_instance(self, instance_id):
         """
         Remove the instance from the registry.
-        
+
         :param intance_id: The id of the instance to remove.
         :type instance_id: int
         """
@@ -159,7 +159,7 @@ class AliasDataModel:
         Remove the Alias event callback from the events registry.
 
         If the callback id is not given, all callbacks will be removed for the event.
-        
+
         :param event_id: The event that the callback is registered to.
         :type event_id: alias_api.AlMessageType
         :param event_callback_id: The id for the callback to unregister.

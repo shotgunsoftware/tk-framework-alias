@@ -53,7 +53,6 @@ class AliasServerNamespace(socketio.Namespace):
 
         super(AliasServerNamespace, self).__init__(namespace)
 
-
     # ----------------------------------------------------------------------------------------
     # Properties
 
@@ -98,7 +97,6 @@ class AliasServerNamespace(socketio.Namespace):
             event_method = getattr(self, event_method_name)
             if callable(event_method):
                 return event_method(sid, *args)
-
 
         # No event method found, treat this event as an api request.
         return self._handle_api_event(event, sid, *args)
@@ -155,7 +153,6 @@ class AliasServerNamespace(socketio.Namespace):
 
         if self.client_sid is None or sid != self.client_sid:
             return
-
 
         # Reset the client id, since it will be disconnected and re-connected again.
         self.__client_sid = None
@@ -258,7 +255,6 @@ class AliasServerNamespace(socketio.Namespace):
             "client": client_info,
         }
 
-
     # ----------------------------------------------------------------------------------------
     # Protected methods
 
@@ -300,7 +296,11 @@ class AliasServerNamespace(socketio.Namespace):
             # Do any post processing after the request has been made.
             self._post_process_request(event, request, result)
         except Exception as post_process_error:
-            self._log_message(sid, "Alias API request post process error\n{post_process_error}", logging.ERROR)
+            self._log_message(
+                sid,
+                "Alias API request post process error\n{post_process_error}",
+                logging.ERROR,
+            )
             return AliasApiPostProcessRequestError(post_process_error)
 
         return result
@@ -333,11 +333,17 @@ class AliasServerNamespace(socketio.Namespace):
             return request.execute(request_name)
         except AliasApiRequestException as api_error:
             # Return an api request error
-            self._log_message(None, f"Alias API request error\n{api_error}", logging.ERROR)
+            self._log_message(
+                None, f"Alias API request error\n{api_error}", logging.ERROR
+            )
             return api_error
         except Exception as general_error:
             # Report a general error that occurred trying to execute the api request.
-            self._log_message(None, f"Error occurred attempting to execute request {request_name}\n{general_error}", logging.ERROR)
+            self._log_message(
+                None,
+                f"Error occurred attempting to execute request {request_name}\n{general_error}",
+                logging.ERROR,
+            )
             return AliasApiRequestException(general_error)
 
     def _post_process_request(self, event, data, result):
