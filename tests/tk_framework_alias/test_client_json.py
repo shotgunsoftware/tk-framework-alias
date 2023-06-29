@@ -20,6 +20,7 @@ from tk_framework_alias.client.utils.exceptions import AliasClientJSONEncoderErr
 # tk_framework_alias client_json AliasClientJSONEncoder
 ####################################################################################################
 
+
 @pytest.mark.parametrize(
     "value",
     [
@@ -36,11 +37,9 @@ def test_json_encode_set(value):
     """Test the AliasClientJSONEncoder default method to encode set objects."""
 
     result = client_json.AliasClientJSON.dumps(value)
-    expected = json.dumps({
-        "__type__": "set",
-        "__value__": list(value)
-    })
+    expected = json.dumps({"__type__": "set", "__value__": list(value)})
     assert result == expected
+
 
 def test_json_encode_function():
     """Test the AliasClientJSONEncoder default method to encode function objects."""
@@ -51,6 +50,7 @@ def test_json_encode_function():
     with pytest.raises(AliasClientJSONEncoderError):
         client_json.AliasClientJSON.dumps(my_func)
 
+
 def test_json_encode_class_type():
     """Test the AliasClientJSONEncoder default method to encode class objects."""
 
@@ -58,10 +58,13 @@ def test_json_encode_class_type():
         pass
 
     result = client_json.AliasClientJSON.dumps(MyClassToEncode)
-    expected = json.dumps({
-        "__class_name__": "MyClassToEncode",
-    })
+    expected = json.dumps(
+        {
+            "__class_name__": "MyClassToEncode",
+        }
+    )
     assert result == expected
+
 
 def test_json_encode_alias_client_module_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientModuleProxyWrapper object."""
@@ -76,6 +79,7 @@ def test_json_encode_alias_client_module_proxy():
     result = client_json.AliasClientJSON.dumps(module_proxy)
     assert result == expected
 
+
 def test_json_encode_alias_client_property_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientPropertyProxy object."""
 
@@ -87,6 +91,7 @@ def test_json_encode_alias_client_property_proxy():
     expected = json.dumps(data)
     result = client_json.AliasClientJSON.dumps(proxy)
     assert result == expected
+
 
 def test_json_encode_alias_client_function_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientFunctionProxy object."""
@@ -101,6 +106,7 @@ def test_json_encode_alias_client_function_proxy():
     result = client_json.AliasClientJSON.dumps(proxy)
     assert result == expected
 
+
 def test_json_encode_alias_client_class_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientClassProxyWrapper object."""
 
@@ -113,6 +119,7 @@ def test_json_encode_alias_client_class_proxy():
     expected = json.dumps(data)
     result = client_json.AliasClientJSON.dumps(proxy)
     assert result == expected
+
 
 def test_json_encode_alias_client_enum_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientEnumProxyWrapper object."""
@@ -127,6 +134,7 @@ def test_json_encode_alias_client_enum_proxy():
     expected = json.dumps(data)
     result = client_json.AliasClientJSON.dumps(proxy)
     assert result == expected
+
 
 def test_json_encode_alias_client_object_proxy():
     """Test the AliasClientJSONEncoder default method to encode an AliasClientObjectProxy object."""
@@ -145,35 +153,43 @@ def test_json_encode_alias_client_object_proxy():
 # tk_framework_alias client_json AliasClientJSONDecoder
 ####################################################################################################
 
+
 def test_json_decode_set():
     """Test the AliasClientJSONDecoder object_hook method to decode an api request."""
 
     set_value = [1, 2, 3]
-    value = json.dumps({
-        "__type__": "set",
-        "__value__": [1, 2, 3],
-    })
+    value = json.dumps(
+        {
+            "__type__": "set",
+            "__value__": [1, 2, 3],
+        }
+    )
 
     result = client_json.AliasClientJSON.loads(value)
     assert result == set(set_value)
+
 
 def test_json_decode_exception():
     """Test the AliasClientJSONDecoder object_hook method to decode an exception object."""
 
     class MyException(Exception):
         pass
+
     msg = "A test exception"
-    value = json.dumps({
-        "__exception_class_name__": MyException.__name__,
-        "__msg__": msg,
-        "__traceback__": None,
-    })
+    value = json.dumps(
+        {
+            "__exception_class_name__": MyException.__name__,
+            "__msg__": msg,
+            "__traceback__": None,
+        }
+    )
 
     result = client_json.AliasClientJSON.loads(value)
 
     assert isinstance(result, Exception)
     assert result.__class__.__name__ == MyException.__name__
     assert str(result) == msg
+
 
 def test_json_decode_alias_module():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
@@ -190,6 +206,7 @@ def test_json_decode_alias_module():
     assert result.module == result
     assert result.data == data
 
+
 def test_json_decode_alias_property():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
 
@@ -202,6 +219,7 @@ def test_json_decode_alias_property():
 
     assert isinstance(result, proxy_wrapper.AliasClientPropertyProxyWrapper)
     assert result.data == data
+
 
 def test_json_decode_alias_class():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
@@ -218,6 +236,7 @@ def test_json_decode_alias_class():
     assert isinstance(result, proxy_wrapper.AliasClientClassProxyWrapper)
     assert result.data == data
 
+
 def test_json_decode_alias_function():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
 
@@ -231,6 +250,7 @@ def test_json_decode_alias_function():
 
     assert isinstance(result, proxy_wrapper.AliasClientFunctionProxyWrapper)
     assert result.data == data
+
 
 def test_json_decode_alias_enum():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
@@ -247,10 +267,12 @@ def test_json_decode_alias_enum():
     assert isinstance(result, proxy_wrapper.AliasClientEnumProxyWrapper)
     assert result.data == data
 
+
 def test_json_decode_alias_object():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
 
     import alias_api_om
+
     proxy_wrapper.AliasClientObjectProxyWrapper.store_module("alias_api", alias_api_om)
 
     data = {

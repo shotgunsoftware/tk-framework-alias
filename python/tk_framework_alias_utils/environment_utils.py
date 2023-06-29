@@ -11,7 +11,7 @@ TOOLKIT_PLUGIN_NAME = "com.sg.basic.alias"
 #   >= v2020.3 & < v2021.3  -- distribution folder alias2020.3-alias2021
 #   >= v2021.3 & < v2022.2  -- distribution folder alias2021.3
 #   >= v2022.2 & < v2023.0  -- distribution folder alias2022.2
-# 
+#
 # For Alias >= 2023.0, there will be a dist folder matching the version exactly; e.g.:
 #   == v2023.0              -- distribution folder alias2023.0
 #   == v2023.1              -- distribution folder alias2023.1
@@ -44,25 +44,26 @@ def get_alias_app_data_dir():
 
     return os.path.join(app_data, "Autodesk", "Alias", "ShotGrid")
 
+
 def get_alias_plugin_dir():
     """Return the directory containing the Alias plugin installation."""
 
     return os.path.join(get_alias_app_data_dir(), "plugin")
+
 
 def get_plugin_install_directory():
     """Return the file path to the Alias plugin installation for the user."""
 
     return os.path.join(get_alias_plugin_dir(), TOOLKIT_PLUGIN_NAME)
 
+
 def get_python_directory(major_version, minor_version):
-    """
-    """
+    """ """
 
     return os.path.join(
-        get_alias_app_data_dir(),
-        "Python",
-        f"Python{major_version}{minor_version}"
+        get_alias_app_data_dir(), "Python", f"Python{major_version}{minor_version}"
     )
+
 
 def get_python_install_directory(major_version, minor_version):
     """
@@ -82,6 +83,7 @@ def get_python_install_directory(major_version, minor_version):
 
     return os.path.join(get_python_directory(major_version, minor_version), "install")
 
+
 def get_python_exe(major_version, minor_version):
     """
     Get the path to the python executable that the Alias Plugin should use.
@@ -98,7 +100,10 @@ def get_python_exe(major_version, minor_version):
     :rtype: str
     """
 
-    return os.path.join(get_python_install_directory(major_version, minor_version), "python.exe")
+    return os.path.join(
+        get_python_install_directory(major_version, minor_version), "python.exe"
+    )
+
 
 def get_python_site_packages(major_version, minor_version):
     """
@@ -116,9 +121,16 @@ def get_python_site_packages(major_version, minor_version):
     :rtype: str
     """
 
-    return os.path.join(get_python_install_directory(major_version, minor_version), "Lib", "site-packages")
+    return os.path.join(
+        get_python_install_directory(major_version, minor_version),
+        "Lib",
+        "site-packages",
+    )
 
-def get_alias_distribution_directory(alias_version, python_major_version, python_minor_version):
+
+def get_alias_distribution_directory(
+    alias_version, python_major_version, python_minor_version
+):
     """
     Return the directory containing the Alias distribution files.
 
@@ -175,8 +187,9 @@ def get_alias_distribution_directory(alias_version, python_major_version, python
         # Found the folder name, now create the full path
         return os.path.join(base_folder_path, folder_name)
 
-    # Failed to find the Alias distribution folder. 
+    # Failed to find the Alias distribution folder.
     return None
+
 
 def get_alias_api_cache_file_path(filename, alias_version, python_version):
     """Return the file path the cached api .json file."""
@@ -187,10 +200,12 @@ def get_alias_api_cache_file_path(filename, alias_version, python_version):
         f"{filename}{alias_version}_py{python_version}.json",
     )
 
+
 def get_python_embed_package_name(major_version, minor_version):
     """Return the name of the embeddable python package."""
 
     return f"python-{major_version}.{minor_version}-embed-amd64"
+
 
 def get_framework_python_path():
     """Return the absolute file path to the root python directory."""

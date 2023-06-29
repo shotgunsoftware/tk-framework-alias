@@ -19,6 +19,7 @@ from ..utils.decorators import check_server_result
 from tk_framework_alias_utils import utils as framework_utils
 from tk_framework_alias_utils import environment_utils as framework_env_utils
 
+
 class AliasSocketIoClient(socketio.Client):
     """
     A socketio client to communicate with Alias.
@@ -45,14 +46,16 @@ class AliasSocketIoClient(socketio.Client):
             self.__json = None
 
         # If no logger specified, provide a default logger that will write to the Alisa plugin
-        # install directory (as specified n the environment utils). 
-        logger = None 
+        # install directory (as specified n the environment utils).
+        logger = None
         if kwargs.get("logger") is None:
             logger = framework_utils.get_logger(self.__class__.__name__, "sio_client")
             kwargs["logger"] = logger
-        
+
         if kwargs.get("engineio_logger") is None:
-            kwargs["engineio_logger"] = logger or framework_utils.get_logger(self.__class__.__name__, "sio_client")
+            kwargs["engineio_logger"] = logger or framework_utils.get_logger(
+                self.__class__.__name__, "sio_client"
+            )
 
         super(AliasSocketIoClient, self).__init__(*args, **kwargs)
 
@@ -311,7 +314,9 @@ class AliasSocketIoClient(socketio.Client):
 
         # Get the cache file path for the api module
         filename = os.path.basename(api_info["file_path"]).split(".")[0]
-        cache_filepath = framework_env_utils.get_alias_api_cache_file_path(filename, api_info["alias_version"], api_info["python_version"])
+        cache_filepath = framework_env_utils.get_alias_api_cache_file_path(
+            filename, api_info["alias_version"], api_info["python_version"]
+        )
 
         cache_loaded = False
         if os.path.exists(cache_filepath):

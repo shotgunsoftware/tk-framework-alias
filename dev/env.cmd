@@ -9,4 +9,3 @@ rem uncomment the following line and set your path accordingly.
 @REM set "TKCORE_FOLDER=C:\Users\qa\sg_envs\dv\tk\tk-core"
 
 set "PYTHON_EXE=python"
-

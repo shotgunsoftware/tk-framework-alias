@@ -66,7 +66,7 @@ def get_key():
 
     key_location = os.path.abspath(
         os.path.join(
-           os.path.dirname( __file__),
+            os.path.dirname(__file__),
             "config",
         )
     )
@@ -124,13 +124,13 @@ def decrypt_from_str(value):
 
 
 def get_logger(
-        log_module,
-        log_name,
-        log_level=logging.DEBUG,
-        rotate_when="D",
-        rotate_interval=1,
-        rotate_backups=7,
-    ):
+    log_module,
+    log_name,
+    log_level=logging.DEBUG,
+    rotate_when="D",
+    rotate_interval=1,
+    rotate_backups=7,
+):
     """
     Return a rotating event logger.
 

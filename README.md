@@ -18,7 +18,7 @@ The main use of this framework is by the [Alias Engine](https://github.com/shotg
 ## What's in the Framework
 
 ### <a name="alias_plugin"></a>Alias Plugin ###
-  
+
 This plugin is loaded by Alias and is the main entry point to integrating a Python client (e.g. ShotGrid) with Alias. This is maintained by the ShotGrid Automotive Team.
 
 File location:  `dist/Alias/{python_version/{alias_version}/{plugin_name}.plugin`

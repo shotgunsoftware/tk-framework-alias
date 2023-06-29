@@ -32,12 +32,16 @@ def execute_in_main_thread(func):
         try:
             invoker = create_invoker()
         except QtImportError as qt_error:
-            return QtImportError(f"The version of PySide2 must match the Qt version that Alias is running with.\n{qt_error}")
+            return QtImportError(
+                f"The version of PySide2 must match the Qt version that Alias is running with.\n{qt_error}"
+            )
         except Exception as error:
-            return Exception(f"Failed to create invoker to execute function in the application main thread.\n{error}")
+            return Exception(
+                f"Failed to create invoker to execute function in the application main thread.\n{error}"
+            )
 
         return invoker.invoke(func, *args, **kwargs)
-        
+
     return wrapper
 
 
@@ -57,7 +61,9 @@ def create_invoker():
         # NOTE to developers, if Alias is running in debug then the PySide2 libraries used
         # must also be debug versions. If not, the Qt app instance will fail to be found.
         qt_version = QtCore.__version__
-        raise QtImportError(f"Qt Application instance must be created first. Using PySide2 version {qt_version}")
+        raise QtImportError(
+            f"Qt Application instance must be created first. Using PySide2 version {qt_version}"
+        )
         # raise Exception("Qt Application instance must be created first")
 
     # Classes are defined locally since Qt might not be available.

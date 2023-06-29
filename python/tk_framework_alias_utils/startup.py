@@ -102,7 +102,7 @@ def get_plugin_environment(
 
     if entity_type is not None:
         env["ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE"] = str(entity_type)
-    
+
     if entity_id is not None:
         env["ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID"] = str(entity_id)
 
@@ -129,6 +129,7 @@ def get_plugin_filename(alias_version, python_major_version, python_minor_versio
     # Alias < 2022.2
     return "shotgun"
 
+
 def get_plugin_file_path(alias_version, python_major_version, python_minor_version):
     """
     Get the file path to the plugin file given the python and alias version.
@@ -144,11 +145,17 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
     :rtype: str
     """
 
-    plugin_folder_path = environment_utils.get_alias_distribution_directory(alias_version, python_major_version, python_minor_version)
+    plugin_folder_path = environment_utils.get_alias_distribution_directory(
+        alias_version, python_major_version, python_minor_version
+    )
     if plugin_folder_path is None:
-        raise Exception(f"Alias Plugin folder not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}")
+        raise Exception(
+            f"Alias Plugin folder not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}"
+        )
 
-    plugin_filename = get_plugin_filename(alias_version, python_major_version, python_minor_version)
+    plugin_filename = get_plugin_filename(
+        alias_version, python_major_version, python_minor_version
+    )
     plugin_file_path = os.path.normpath(
         os.path.join(
             plugin_folder_path,
@@ -156,7 +163,9 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
         )
     )
     if plugin_file_path is None or not os.path.exists(plugin_file_path):
-        raise Exception(f"Alias Plugin not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}")
+        raise Exception(
+            f"Alias Plugin not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}"
+        )
 
     return plugin_file_path
 
@@ -212,7 +221,9 @@ def __ensure_toolkit_plugin_up_to_date(logger):
     # Get the version from the installed plugin's build_version.txt file
     installed_version_file_path = os.path.join(installed_plugin_dir, version_file)
     if not os.path.exists(installed_version_file_path):
-        logger.debug(f"Could not find installed version file {installed_version_file_path}. Reinstalling")
+        logger.debug(
+            f"Could not find installed version file {installed_version_file_path}. Reinstalling"
+        )
         __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
         return
 
@@ -220,12 +231,12 @@ def __ensure_toolkit_plugin_up_to_date(logger):
 
     # Get the version of the bundled plugin from the framework
     bundled_version_file_path = os.path.abspath(
-        os.path.join(
-            bundled_plugin_path, version_file
-        )
+        os.path.join(bundled_plugin_path, version_file)
     )
     if not os.path.exists(bundled_version_file_path):
-        raise sgtk.TankError(f"Could not find bundled version file: {bundled_version_file_path}")
+        raise sgtk.TankError(
+            f"Could not find bundled version file: {bundled_version_file_path}"
+        )
 
     # Get the bundled version from the version file
     with open(bundled_version_file_path, "r") as bundled_version_file:
@@ -240,7 +251,9 @@ def __ensure_toolkit_plugin_up_to_date(logger):
         installed_version = installed_version_file.read().strip()
 
     if installed_version is None:
-        logger.debug("Could not determine version of the installed plugin. Reinstalling")
+        logger.debug(
+            "Could not determine version of the installed plugin. Reinstalling"
+        )
         __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
         return
 
@@ -329,6 +342,7 @@ def __install_plugin(plugin_path, install_dir, logger):
     except Exception:
         pass
 
+
 def ensure_toolkit_plugin_up_to_date(logger):
     """
     Ensure that the Alias plugin is installed and up to date.
@@ -362,7 +376,8 @@ def ensure_toolkit_plugin_up_to_date(logger):
                 sgtk.support_url,
                 exc,
             )
-        ) 
+        )
+
 
 def get_plugin_lst(alias_version, python_major_version, python_minor_version, logger):
     """
@@ -398,7 +413,9 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
         python_minor_version = sys.version_info.minor
 
     # Get the path to the .plugin file
-    plugin_file_path = get_plugin_file_path(alias_version, python_major_version, python_minor_version)
+    plugin_file_path = get_plugin_file_path(
+        alias_version, python_major_version, python_minor_version
+    )
     logger.debug(f"Alias Plugin file path {plugin_file_path}")
 
     # Create or overwrite the lst file with the plugin file path found
@@ -443,8 +460,9 @@ def __ensure_python_packages_up_to_date(python_exe, logger):
     subprocess.run(
         [python_exe, "-m", "pip", "freeze", "--path", dist_dir],
         stdout=open(frozen_requirements_txt, "w"),
-        check=True
+        check=True,
     )
+
 
 def ensure_python_installed(major_version, minor_version, logger):
     """Ensure that the Python version is installed."""
@@ -456,7 +474,9 @@ def ensure_python_installed(major_version, minor_version, logger):
     # Check if python is installed and up to date
     python_install = environment_utils.get_python_exe(major_version, minor_version)
     python_dir = environment_utils.get_python_directory(major_version, minor_version)
-    python_install_dir = environment_utils.get_python_install_directory(major_version, minor_version)
+    python_install_dir = environment_utils.get_python_install_directory(
+        major_version, minor_version
+    )
     python_dist_dir = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
@@ -471,33 +491,43 @@ def ensure_python_installed(major_version, minor_version, logger):
     installed_version_txt = os.path.join(python_dir, "embed_version.txt")
     pth_filename = f"python{major_version}{minor_version}._pth"
     pth_filepath = os.path.join(python_install_dir, pth_filename)
-    
+
     if not os.path.exists(pth_filepath):
         update = True
     else:
         if not os.path.exists(version_txt):
-            logger.error("Missing version file in distribution to check if python up to date.")
+            logger.error(
+                "Missing version file in distribution to check if python up to date."
+            )
             update = True
         else:
             if not os.path.exists(installed_version_txt):
-                logger.error("Missing version file in installation to check if python up to date.")
+                logger.error(
+                    "Missing version file in installation to check if python up to date."
+                )
                 update = True
             else:
                 current_version = None
-                with open(version_txt, "r") as dist_fp: 
+                with open(version_txt, "r") as dist_fp:
                     current_version = dist_fp.read().strip()
 
                 installed_version = None
                 with open(installed_version_txt, "r") as installed_fp:
                     installed_version = installed_fp.read().strip()
 
-                if current_version is None or installed_version is None or current_version != installed_version:
-                    update = True 
+                if (
+                    current_version is None
+                    or installed_version is None
+                    or current_version != installed_version
+                ):
+                    update = True
                 else:
                     # Versions were found and are matching. No update required.
                     update = False
 
-    embed_package_name = environment_utils.get_python_embed_package_name(major_version, minor_version)
+    embed_package_name = environment_utils.get_python_embed_package_name(
+        major_version, minor_version
+    )
     if update:
         logger.error("Python not installed or out of date - installing")
 
@@ -505,12 +535,18 @@ def ensure_python_installed(major_version, minor_version, logger):
             shutil.rmtree(python_install_dir)
         ensure_folder_exists(python_install_dir)
 
-        embeddable_package_zip = os.path.join(python_dist_dir, f"{embed_package_name}.zip")
+        embeddable_package_zip = os.path.join(
+            python_dist_dir, f"{embed_package_name}.zip"
+        )
         if not os.path.exists(embeddable_package_zip):
-            raise Exception(f"Requires Python {major_version}.{minor_version}. Cannot find embeddable package to install {embeddable_package_zip}.")
-        
+            raise Exception(
+                f"Requires Python {major_version}.{minor_version}. Cannot find embeddable package to install {embeddable_package_zip}."
+            )
+
         # Install the embeddable package to user app data folder.
-        logger.debug(f"Installing required Python {major_version}.{minor_version} to {python_install_dir}")
+        logger.debug(
+            f"Installing required Python {major_version}.{minor_version} to {python_install_dir}"
+        )
         with zipfile.ZipFile(embeddable_package_zip, "r") as zip_ref:
             zip_ref.extractall(python_install_dir)
 
@@ -519,7 +555,7 @@ def ensure_python_installed(major_version, minor_version, logger):
 
         # Copy the version file to the installation.
         shutil.copyfile(version_txt, installed_version_txt)
-    
+
     # Ensure the framework python path is added to the ._pth file
     original_pth_filepath = os.path.join(python_install_dir, f"{pth_filename}.original")
     if os.path.exists(original_pth_filepath):
@@ -545,16 +581,17 @@ def ensure_python_installed(major_version, minor_version, logger):
     logger.debug(f"Using python {python_install}")
     return python_install
 
+
 def ensure_plugin_ready(
-        alias_version,
-        alias_exec_path,
-        client_name,
-        pipeline_config_id=None,
-        entity_type=None,
-        entity_id=None,
-        debug=None,
-        logger=None,
-    ):
+    alias_version,
+    alias_exec_path,
+    client_name,
+    pipeline_config_id=None,
+    entity_type=None,
+    entity_id=None,
+    debug=None,
+    logger=None,
+):
     """
     Do the necessary work to ensure the Alias plugin can be loaded with Alias at launch.
 
@@ -629,12 +666,19 @@ def ensure_plugin_ready(
         # Alias Plugin (which is done by setting the server python)
         py_major_version = 3
         py_minor_version = 7
-        server_python_exe = ensure_python_installed(py_major_version, py_minor_version, logger)
+        server_python_exe = ensure_python_installed(
+            py_major_version, py_minor_version, logger
+        )
         # We also need to ensure the python version that is currently running has the necessary
         # packages installed. This is in case the client needs to import any framework modules,
         # it will be running a different version than the server.
-        if sys.version_info.major != py_major_version or sys.version_info.minor != py_minor_version:
-            ensure_python_installed(sys.version_info.major, sys.version_info.minor, logger)
+        if (
+            sys.version_info.major != py_major_version
+            or sys.version_info.minor != py_minor_version
+        ):
+            ensure_python_installed(
+                sys.version_info.major, sys.version_info.minor, logger
+            )
     else:
         # Alias < 2024.0
         # Client will run in the same process as Alias.

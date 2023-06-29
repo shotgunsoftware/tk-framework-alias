@@ -26,7 +26,6 @@ class AliasEventsClientNamespace(socketio.ClientNamespace):
         namespace = AliasEventsServerNamespace.get_namespace()
         super(AliasEventsClientNamespace, self).__init__(namespace)
 
-
     # ----------------------------------------------------------------------------------------
     # Event callback methods for namespace
 
@@ -49,7 +48,6 @@ class AliasEventsClientNamespace(socketio.ClientNamespace):
         """Disconnect event."""
 
         self._log_message("Disconnected from server")
-    
 
     # ----------------------------------------------------------------------------------------
     # Protected methods

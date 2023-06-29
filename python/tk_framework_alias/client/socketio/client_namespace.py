@@ -100,7 +100,9 @@ class AliasClientNamespace(socketio.ClientNamespace):
         args = data.get("args", [])
         kwargs = data.get("kwargs", {})
 
-        self.client.logger.debug(f"Executing callback function {callback_func.__name__}")
+        self.client.logger.debug(
+            f"Executing callback function {callback_func.__name__}"
+        )
         return callback_func(*args, **kwargs)
 
     def _log_message(self, msg, level=logging.INFO):

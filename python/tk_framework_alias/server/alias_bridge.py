@@ -25,7 +25,12 @@ from .socketio.namespaces.events_client_namespace import (
     AliasEventsClientNamespace,
 )
 from .utils.singleton import Singleton
-from .utils.exceptions import AliasBridgeException, ClientAlreadyRegistered, ServerAlreadyRunning, ClientNameReservered
+from .utils.exceptions import (
+    AliasBridgeException,
+    ClientAlreadyRegistered,
+    ServerAlreadyRunning,
+    ClientNameReservered,
+)
 
 from tk_framework_alias_utils import utils as framework_utils
 
@@ -57,7 +62,9 @@ class AliasBridge(metaclass=Singleton):
 
         # Create the SocketIO server, long-polling is the default transport but websocket
         # transport will be used if possible
-        server_sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_server")
+        server_sio_logger = framework_utils.get_logger(
+            self.__class__.__name__, "sio_server"
+        )
         self.__server_sio = socketio.Server(
             aysnc_mode="eventlet",
             logger=server_sio_logger,
@@ -72,7 +79,9 @@ class AliasBridge(metaclass=Singleton):
         # events client.
         # These are special client/server namespaces, do not use the register_client_namespace
         # for these.
-        client_sio_logger = framework_utils.get_logger(self.__class__.__name__, "sio_client")
+        client_sio_logger = framework_utils.get_logger(
+            self.__class__.__name__, "sio_client"
+        )
         self.__alias_events_client_sio = socketio.Client(
             logger=client_sio_logger, engineio_logger=client_sio_logger
         )
@@ -81,7 +90,6 @@ class AliasBridge(metaclass=Singleton):
 
         # Create the WSGI middleware for the SocketIO server
         self.__app = socketio.WSGIApp(self.__server_sio, static_files={})
-
 
     # Properties
     # ----------------------------------------------------------------------------------------
@@ -129,9 +137,13 @@ class AliasBridge(metaclass=Singleton):
             # Already started
             host_in_use, port_in_use = self.__server_socket.getsockname()
             if host is not None and host != host_in_use:
-                raise ServerAlreadyRunning("Server already running on {host_in_use}:{port_in_use}. Server must be stopped first.")
+                raise ServerAlreadyRunning(
+                    "Server already running on {host_in_use}:{port_in_use}. Server must be stopped first."
+                )
             if port is not None and port != port_in_use:
-                raise ServerAlreadyRunning("Server already running on {host_in_use}:{port_in_use}. Server must be stopped first.")
+                raise ServerAlreadyRunning(
+                    "Server already running on {host_in_use}:{port_in_use}. Server must be stopped first."
+                )
             return True
 
         # First, find an open port on the host for the server socket to listen on.
@@ -236,7 +248,9 @@ class AliasBridge(metaclass=Singleton):
 
         namespace_handler = AliasServerNamespace(client_name)
         if namespace_handler.namespace == AliasEventsServerNamespace.get_namespace():
-            raise ClientNameReservered("Client name '{client_name}' is reserved. Use a different name.")
+            raise ClientNameReservered(
+                "Client name '{client_name}' is reserved. Use a different name."
+            )
 
         self.__server_sio.register_namespace(namespace_handler)
 
@@ -291,13 +305,15 @@ class AliasBridge(metaclass=Singleton):
             # this reason it is currently turned off. Ideally we can store an encryption key
             # in the ShotGrid database or a key vault. For ShotGrid clients, this is not an
             # issue because the toolkit manager should be used to start the ShotGrid engine.
-            # 
+            #
             # client_info = client_info or {}
             # client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
             # if client_exec_path:
             #     client_info["exec_path"] = client_exec_path
 
-            pipeline_config_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID")
+            pipeline_config_id = os.environ.get(
+                "ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID"
+            )
             entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
             entity_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID")
             if pipeline_config_id and entity_type and entity_id:
@@ -324,7 +340,7 @@ class AliasBridge(metaclass=Singleton):
                 python_exe = sys.executable
 
         # Get the client executable and args
-        shotgrid_info = client["info"].get("shotgrid") 
+        shotgrid_info = client["info"].get("shotgrid")
         if shotgrid_info:
             # Bootstrap using ShotGrid toolkit manager
             pipeline_config_id = shotgrid_info["pipeline_config_id"]
@@ -351,7 +367,9 @@ class AliasBridge(metaclass=Singleton):
             ]
         else:
             # Bootstrap by running the client executable
-            client_exe_path = framework_utils.decrypt_from_str(client["info"].get("exec_path"))
+            client_exe_path = framework_utils.decrypt_from_str(
+                client["info"].get("exec_path")
+            )
             if not client_exe_path:
                 return False
 
@@ -417,7 +435,11 @@ class AliasBridge(metaclass=Singleton):
 
         hostname = hostname or self.__default_hostname
         port = port if port is not None and port >= 0 else self.__default_port
-        max_retry_count = max_retries if max_retries is not None and max_retries >= 0 else self.__max_retry_count
+        max_retry_count = (
+            max_retries
+            if max_retries is not None and max_retries >= 0
+            else self.__max_retry_count
+        )
         server_socket = None
         retry_count = 0
         while server_socket is None and retry_count <= max_retry_count:

@@ -5,9 +5,10 @@ import datetime
 import os
 
 
-############################################################################### 
+###############################################################################
 # pytest configuration
-############################################################################### 
+###############################################################################
+
 
 def pytest_configure(config):
     """
@@ -24,20 +25,23 @@ def pytest_configure(config):
     # # debugpy.breakpoint()
 
     # Add the python modules to the sys.path for import
-    base_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "python")
-    )
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python"))
     tk_framework_alias = os.path.abspath(os.path.join(base_dir, "tk_framework_alias"))
-    tk_framework_alias_utils = os.path.abspath(os.path.join(base_dir, "tk_framework_alias_utils"))
-    sys.path.extend([
-        base_dir,
-        tk_framework_alias,
-        tk_framework_alias_utils,
-    ])
+    tk_framework_alias_utils = os.path.abspath(
+        os.path.join(base_dir, "tk_framework_alias_utils")
+    )
+    sys.path.extend(
+        [
+            base_dir,
+            tk_framework_alias,
+            tk_framework_alias_utils,
+        ]
+    )
 
     # TODO run tests for all supported api?
     # Set up the environment
     os.environ["ALIAS_PLUGIN_CLIENT_ALIAS_VERSION"] = "2024.0"
+
 
 def pytest_sessionstart(session):
     """
@@ -49,7 +53,11 @@ def pytest_sessionstart(session):
 
     from tk_framework_alias.server.api import alias_api
 
-    print("Alias API Python {mode}".format(mode="OpenModel" if alias_api.__open_model__ else "OpenAlias"))
+    print(
+        "Alias API Python {mode}".format(
+            mode="OpenModel" if alias_api.__open_model__ else "OpenAlias"
+        )
+    )
     print("\tv{}".format(alias_api.__version__))
     print("\tAlias v{}".format(alias_api.__alias_version__))
     print("\tPython v{}".format(sys.version))
@@ -73,9 +81,10 @@ def pytest_unconfigure(config):
     """
 
 
-############################################################################### 
+###############################################################################
 # Global Fixtures
-############################################################################### 
+###############################################################################
+
 
 @pytest.fixture(scope="session")
 def scripts_path(request):
@@ -87,20 +96,12 @@ def scripts_path(request):
         )
     )
 
+
 @pytest.fixture(scope="session")
 def client_exe_path(scripts_path):
-    return os.path.abspath(
-        os.path.join(
-            scripts_path,
-            "bootstrap_client_test.py"
-        )
-    )
+    return os.path.abspath(os.path.join(scripts_path, "bootstrap_client_test.py"))
+
 
 @pytest.fixture(scope="session")
 def start_server_script_path(scripts_path):
-    return os.path.abspath(
-        os.path.join(
-            scripts_path,
-            "start_server.py"
-        )
-    )
+    return os.path.abspath(os.path.join(scripts_path, "start_server.py"))

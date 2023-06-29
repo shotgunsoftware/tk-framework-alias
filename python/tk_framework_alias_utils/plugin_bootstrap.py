@@ -13,12 +13,7 @@ import sys
 
 
 def toolkit_plugin_bootstrap(
-        pipeline_config_id,
-        entity_type,
-        entity_id,
-        hostname,
-        port,
-        namespace
+    pipeline_config_id, entity_type, entity_id, hostname, port, namespace
 ):
     """
     Business logic for bootstrapping toolkit as a plugin.
@@ -42,7 +37,7 @@ def toolkit_plugin_bootstrap(
 
     # Note: the sgtk_plugin_basic_alias module is created as part of the plugin build process.
     plugin_root_path = get_plugin_install_directory()
-    sys.path.insert(0, os.path.join(plugin_root_path,"python"))
+    sys.path.insert(0, os.path.join(plugin_root_path, "python"))
     from sgtk_plugin_basic_alias import manifest
 
     tk_core_python_path = manifest.get_sgtk_pythonpath(plugin_root_path)
@@ -87,7 +82,6 @@ def toolkit_plugin_bootstrap(
     logger.debug("Removed bootstrap log handler from root logger...")
 
     logger.info("Toolkit Bootstrapped!")
-
 
     # core may have been swapped. import sgtk
     import sgtk

@@ -13,13 +13,17 @@ import socket
 
 from tk_framework_alias.server import alias_bridge
 from tk_framework_alias.server.api import alias_api
-from tk_framework_alias.server.socketio.namespaces import events_namespace, server_namespace
+from tk_framework_alias.server.socketio.namespaces import (
+    events_namespace,
+    server_namespace,
+)
 from tk_framework_alias.server.utils import exceptions
 
 
 ####################################################################################################
 # fixtures
 ####################################################################################################
+
 
 @pytest.fixture()
 def bridge():
@@ -33,6 +37,7 @@ def bridge():
 
     # Tear down after test has finished
     bridge.stop_server()
+
 
 @pytest.fixture()
 def sock():
@@ -55,6 +60,7 @@ def sock():
     # Tear down
     sock.close()
 
+
 @pytest.fixture()
 def client(client_exe_path):
     """Fixture to return a dictionary containing client data."""
@@ -64,9 +70,9 @@ def client(client_exe_path):
         "exe_path": client_exe_path,
         "info": {
             "intarg": 1,
-            "list_arg": [1,2,3],
+            "list_arg": [1, 2, 3],
             "str_arg": "test",
-        }
+        },
     }
 
 
@@ -74,12 +80,14 @@ def client(client_exe_path):
 # tk_framework_alias alias_bridge.py AliasBridge
 ####################################################################################################
 
+
 def test_bridge_singleton():
     """Test the AliasBridge object instantiation."""
 
     bridge = alias_bridge.AliasBridge()
     another_bridge = alias_bridge.AliasBridge()
     assert bridge == another_bridge
+
 
 def test_bridge_start_server(bridge):
     """Test the AliasBridge start_server method."""
@@ -89,9 +97,13 @@ def test_bridge_start_server(bridge):
     assert success
     assert bridge.alias_events_client_sio.connected
     assert len(bridge.alias_events_client_sio.connection_namespaces) == 1
-    assert bridge.alias_events_client_sio.connection_namespaces[0] == events_namespace.AliasEventsServerNamespace.get_namespace()
+    assert (
+        bridge.alias_events_client_sio.connection_namespaces[0]
+        == events_namespace.AliasEventsServerNamespace.get_namespace()
+    )
 
     bridge.stop_server()
+
 
 def test_bridge_start_server_on_address(bridge):
     """Test the AliasBridge start_server method."""
@@ -103,10 +115,14 @@ def test_bridge_start_server_on_address(bridge):
     assert success
     assert bridge.alias_events_client_sio.connected
     assert len(bridge.alias_events_client_sio.connection_namespaces) == 1
-    assert bridge.alias_events_client_sio.connection_namespaces[0] == events_namespace.AliasEventsServerNamespace.get_namespace()
+    assert (
+        bridge.alias_events_client_sio.connection_namespaces[0]
+        == events_namespace.AliasEventsServerNamespace.get_namespace()
+    )
 
     server_url = f"http://{host}:{port}"
     assert bridge.alias_events_client_sio.connection_url == server_url
+
 
 def test_bridge_start_server_again(bridge):
     """Test the AliasBridge start_server method."""
@@ -120,6 +136,7 @@ def test_bridge_start_server_again(bridge):
     with pytest.raises(exceptions.ServerAlreadyRunning) as error:
         bridge.start_server("new_host", 9999)
         assert str(error).startswith("Server already running on")
+
 
 def test_bridge_stop_server(bridge):
     """Test the AliasBridge stop_server method."""
@@ -152,10 +169,11 @@ def test_bridge_stop_server(bridge):
     server_url = f"http://127.0.0.1:{new_port}"
     assert bridge.alias_events_client_sio.connection_url == server_url
 
+
 def test_bridge_address_in_use(bridge, sock):
     """
     Test the AliasBridge to start the server.
-    
+
     Test when the address is already in use, server should retry to then connect to the next
     available port.
     """
@@ -171,10 +189,11 @@ def test_bridge_address_in_use(bridge, sock):
     server_url = f"http://{host}:{expected_port}"
     assert bridge.alias_events_client_sio.connection_url == server_url
 
+
 def test_bridge_address_in_use_no_retry(bridge, sock):
     """
     Test the AliasBridge to start the server.
-    
+
     Test when the address is already in use and no retries allowed.
     """
 
@@ -184,6 +203,7 @@ def test_bridge_address_in_use_no_retry(bridge, sock):
     with pytest.raises(exceptions.AliasBridgeException) as connection_error:
         bridge.start_server(host=host, port=port, max_retries=0)
         assert str(connection_error) == "Failed to open server socket."
+
 
 def test_bridge_register_client_namespace_reservered(bridge):
     """
@@ -196,17 +216,18 @@ def test_bridge_register_client_namespace_reservered(bridge):
 
     with pytest.raises(exceptions.ClientNameReservered) as client_error:
         bridge.register_client_namespace(reserved_client_name, "/path", {})
-        assert str(client_error) == "Client name 'events' is reserved. Use a different name."
-        
+        assert (
+            str(client_error)
+            == "Client name 'events' is reserved. Use a different name."
+        )
+
+
 def test_bridge_register_client_namespace(bridge):
     """Test the AliasBridge register_client_namespace method."""
 
     name = "my_client"
     exe_path = "/a/path/to/client.exe"
-    info = {
-        "test_info": "text",
-        "other_data": [1,2,3]
-    }
+    info = {"test_info": "text", "other_data": [1, 2, 3]}
 
     client = bridge.register_client_namespace(name, exe_path, info)
     assert client["name"] == name
@@ -217,12 +238,14 @@ def test_bridge_register_client_namespace(bridge):
     namespace_by_client = bridge.get_client_by_namespace(client["namespace"])
     assert client == namespace_by_client
 
+
 def test_bridge_get_client_by_namespace_not_exist(bridge):
     """Test the AliasBridge register_client_namespace method."""
 
     client = bridge.get_client_by_namespace("bad_namespace")
     assert client == {}
-        
+
+
 def test_bridge_register_client_namespace_already_registered(bridge):
     """
     Test the AliasBridge register_client_namespace method.
@@ -233,20 +256,19 @@ def test_bridge_register_client_namespace_already_registered(bridge):
 
     name = "my_client"
     exe_path = "/a/path/to/client.exe"
-    info = {
-        "test_info": "text",
-        "other_data": [1,2,3]
-    }
+    info = {"test_info": "text", "other_data": [1, 2, 3]}
 
     bridge.register_client_namespace(name, exe_path, info)
     with pytest.raises(exceptions.ClientAlreadyRegistered):
         bridge.register_client_namespace(name, exe_path, info)
+
 
 def test_bridge_bootstrap_client_server_not_ready(bridge):
     """Test the AliasBridge bootstrap_client method."""
 
     success = bridge.bootstrap_client("bad_client", "/path/client.exe")
     assert not success
+
 
 def test_bridge_bootstrap_client(bridge, client):
     """Test the AliasBridge bootstrap_client method."""

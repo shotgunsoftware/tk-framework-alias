@@ -26,7 +26,7 @@ class AliasApiRequestWrapper:
         2. instance methods (e.g. layer.is_folder())
         3. instance property getter (e.g. layer.symmetric)
         4. instance property setter (e.g. layer.symmetric = True)
-     """
+    """
 
     # ----------------------------------------------------------------------------------------
     # Class methods
@@ -48,9 +48,9 @@ class AliasApiRequestWrapper:
     def required_data(cls):
         """
         Abstract class method.
-        
+
         Return the set of required data dictionary keys to create an instance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
@@ -84,7 +84,6 @@ class AliasApiRequestWrapper:
         """
 
         raise NotImplementedError("Subclass must implement")
-
 
     # ----------------------------------------------------------------------------------------
     # Public methods
@@ -130,7 +129,7 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             # This is an instance method, or class method
             data_model = alias_bridge.AliasBridge().alias_data_model
             self.__instance = data_model.get_instance(instance_id)
-        
+
         if self.__instance is None:
             # This is a module-level function
             self.__instance = alias_api
@@ -163,7 +162,7 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         except:
             # Do not fail on trying to return a string representation.
             return super(AliasApiRequestFunctionWrapper, self).__str__()
-        
+
     # ----------------------------------------------------------------------------------------
     # Class methods
 
@@ -171,7 +170,7 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an instance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
@@ -197,7 +196,6 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         """
 
         return cls.required_data().issubset(set(value.keys()))
-
 
     # ----------------------------------------------------------------------------------------
     # Properties
@@ -226,7 +224,6 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
     def func_kwargs(self):
         """Get the key-word arguments to be passed to the function."""
         return self.__func_kwargs
-
 
     # ----------------------------------------------------------------------------------------
     # Public methods
@@ -294,12 +291,11 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
 
         if hasattr(self.instance, "__name__"):
             return f"{self.instance.__name__}.{self.property_name}"
-            
+
         if hasattr(self.instance, "__class__"):
             return f"{self.instance.__class__.__name__}.{self.property_name}"
 
         return f"{self.instance}.{self.property_name}"
-
 
     # ----------------------------------------------------------------------------------------
     # Class methods
@@ -308,7 +304,7 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an instance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
@@ -401,13 +397,14 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
         """Return a string representation for the Alias Api request object."""
 
         if hasattr(self.instance, "__name__"):
-            return f"{self.instance.__name__}.{self.property_name} = {self.property_value}"
+            return (
+                f"{self.instance.__name__}.{self.property_name} = {self.property_value}"
+            )
 
         if hasattr(self.instance, "__class__"):
             return f"{self.instance.__class__.__name__}.{self.property_name} = {self.property_value}"
 
         return f"{self.instance}.{self.property_name} = {self.property_value}"
-
 
     # ----------------------------------------------------------------------------------------
     # Class methods
@@ -416,7 +413,7 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
     def required_data(cls):
         """
         Return the set of required data dictionary keys to create an instance of this class.
-        
+
         :return: The set of required keys.
         :rtype: set
         """
@@ -443,7 +440,6 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
 
         return cls.required_data() == set(value.keys())
 
-
     # ----------------------------------------------------------------------------------------
     # Properties
 
@@ -461,7 +457,6 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
     def property_value(self):
         """Get the value to set on this property."""
         return self.__property_value
-
 
     # ----------------------------------------------------------------------------------------
     # Public methods

@@ -20,6 +20,7 @@ from tk_framework_alias.server.utils.exceptions import AliasApiRequestNotValid
 # tk_framework_alias api_request.py AliasApiRequestWrapper
 ####################################################################################################
 
+
 def test_api_request_function_validate():
     """Test the AliasApiRequestFunctionWrapper object."""
 
@@ -34,6 +35,7 @@ def test_api_request_function_validate():
         func_wrapper.validate("bad request")
 
     assert func_wrapper.validate("create_shader")
+
 
 def test_api_request_function_execute():
     """Test the AliasApiRequestFunctionWrapper object."""
@@ -53,6 +55,7 @@ def test_api_request_function_execute():
     assert isinstance(result, alias_api.AlLayer)
     assert result.name == layer_name
 
+
 def test_api_request_instance_method_execute():
     """Test the AliasApiRequestFunctionWrapper object."""
 
@@ -69,7 +72,8 @@ def test_api_request_instance_method_execute():
     func_wrapper = api_request.AliasApiRequestFunctionWrapper(func_data)
 
     result = func_wrapper.execute("is_folder")
-    assert not result 
+    assert not result
+
 
 def test_api_request_function_new_execute():
     """Test the AliasApiRequestFunctionWrapper object."""
@@ -89,6 +93,7 @@ def test_api_request_function_new_execute():
     assert result.name == stage_name
     assert result.path == stage_path
 
+
 def test_api_request_property_getter_validate():
     """Test the AliasApiRequestPropertyGetterWrapper object."""
 
@@ -106,6 +111,7 @@ def test_api_request_property_getter_validate():
         wrapper.validate("bad property")
 
     assert wrapper.validate("number")
+
 
 def test_api_request_property_getter_execute():
     """Test the AliasApiRequestPropertyGetterWrapper object."""
@@ -126,6 +132,7 @@ def test_api_request_property_getter_execute():
     result = wrapper.execute("number")
     assert result == layer.number
 
+
 def test_api_request_property_setter_validate():
     """Test the AliasApiRequestPropertyGetterWrapper object."""
 
@@ -145,6 +152,7 @@ def test_api_request_property_setter_validate():
         wrapper.validate("bad property")
 
     assert wrapper.validate("symmetric")
+
 
 def test_api_request_property_setter_execute():
     """Test the AliasApiRequestPropertyGetterWrapper object."""
