@@ -1,5 +1,5 @@
 [![Python 3.7 3.9](https://img.shields.io/badge/python-3.7%20%7C%203.9-blue.svg)](https://www.python.org/)
-[![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status/Frameworks/tk-framework-alias?branchName=main)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=62&branchName=main)
+[![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status/Frameworks/tk-framework-alias?branchName=main)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=120&branchName=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # tk-framework-alias
