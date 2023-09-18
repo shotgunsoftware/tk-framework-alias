@@ -72,6 +72,7 @@ def get_key():
     )
 
     # First, try to get the existing key
+    key = None
     if os.path.exists(key_location):
         with open(key_location, "r") as fp:
             key = fp.read()
