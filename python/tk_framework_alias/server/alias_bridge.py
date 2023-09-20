@@ -293,13 +293,13 @@ class AliasBridge(metaclass=Singleton):
 
         hostname, port = self.__server_socket.getsockname()
 
-        # Get the client info to bootstrap
+        # Check if the client is already registered. Clients are unique by name.
         if not isinstance(client, dict):
             client_name = client
             client = self.__clients.get(client_name)
 
         if not client:
-            # Get client info from environment
+            # Get client info from the environment and register it.
 
             # NOTE uncomment to allow client to run from python script.
             # Warning that the framework attempts to encrypt and decrypt the executable path
@@ -313,6 +313,9 @@ class AliasBridge(metaclass=Singleton):
             # if client_exec_path:
             #     client_info["exec_path"] = client_exec_path
 
+            # Check for ShotGrid specific client info. ShotGrid clients do not provide a
+            # bootstrap executable path, instead the plugin_bootstrap.py script is used
+            # from within the framework.
             pipeline_config_id = os.environ.get(
                 "ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID"
             )
@@ -385,7 +388,6 @@ class AliasBridge(metaclass=Singleton):
             #     hostname,
             #     str(port),
             #     client["namespace"],
-            #     pipeline_config_id,
             # ]
             raise ClientBootstrapMethodNotSupported("""
                 Bootstrapping Alias client via executable path is currently not supported. Only ShotGrid clients supported.
