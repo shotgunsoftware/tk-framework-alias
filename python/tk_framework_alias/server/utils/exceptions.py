@@ -24,6 +24,7 @@ class ClientAlreadyRegistered(AliasBridgeException):
 class ClientNameReservered(AliasBridgeException):
     """Exception for AliasBridge when attempting to register a client whose name is in the reserved list."""
 
+
 class ClientBootstrapMethodNotSupported(AliasBridgeException):
     """Exception for AliasBridge when attempting to register a client whose name is in the reserved list."""
 

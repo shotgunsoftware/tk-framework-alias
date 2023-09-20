@@ -324,7 +324,7 @@ class AliasBridge(metaclass=Singleton):
             # A client is considered a ShotGrid client if it provides an entity type and id.
             # The pipeline configuration is optional, since an unmanaged pipeline could be in
             # use. In that case, the default will be the latet basic config in the app store.
-            if entity_type is not None and entity_id is not None :
+            if entity_type is not None and entity_id is not None:
                 client_info["shotgrid"] = {
                     "pipeline_config_id": pipeline_config_id,
                     "entity_type": entity_type,
@@ -389,12 +389,14 @@ class AliasBridge(metaclass=Singleton):
             #     str(port),
             #     client["namespace"],
             # ]
-            raise ClientBootstrapMethodNotSupported("""
+            raise ClientBootstrapMethodNotSupported(
+                """
                 Bootstrapping Alias client via executable path is currently not supported. Only ShotGrid clients supported.
                 Client info: {client_info}
             """.format(
-                client_info=pprint.pformat(client_info)
-            ))
+                    client_info=pprint.pformat(client_info)
+                )
+            )
 
         # Copy the env variables to start the new process with
         startup_env = os.environ.copy()
