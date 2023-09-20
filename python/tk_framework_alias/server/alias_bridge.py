@@ -318,7 +318,10 @@ class AliasBridge(metaclass=Singleton):
             )
             entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
             entity_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID")
-            if pipeline_config_id and entity_type and entity_id:
+            # A client is considered a ShotGrid client if it provides an entity type and id.
+            # The pipeline configuration is optional, since an unmanaged pipeline could be in
+            # use. In that case, the default will be the latet basic config in the app store.
+            if entity_type is not None and entity_id is not None :
                 client_info["shotgrid"] = {
                     "pipeline_config_id": pipeline_config_id,
                     "entity_type": entity_type,
@@ -345,7 +348,7 @@ class AliasBridge(metaclass=Singleton):
         shotgrid_info = client["info"].get("shotgrid")
         if shotgrid_info:
             # Bootstrap using ShotGrid toolkit manager
-            pipeline_config_id = shotgrid_info["pipeline_config_id"]
+            pipeline_config_id = shotgrid_info["pipeline_config_id"] or ""
             entity_type = shotgrid_info["entity_type"]
             entity_id = shotgrid_info["entity_id"]
             plugin_bootstrap_path = os.path.abspath(
