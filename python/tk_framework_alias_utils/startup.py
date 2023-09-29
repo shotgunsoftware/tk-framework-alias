@@ -175,7 +175,7 @@ def __ensure_toolkit_plugin_up_to_date(logger):
     """
     Ensure the basic Alias plugin is up to date.
 
-    Install the plugin to the OS-specific location defined by the environtment utils, if it
+    Install the plugin to the OS-specific location defined by the environment utils, if it
     does not exist. If it does exist, check that the installed plugin version is up to date
     with the pre-built plugin in the framework. This requires the framework itself to build
     the plugin bundle and ensure itself reflects the latest version.
@@ -753,6 +753,6 @@ def ensure_plugin_ready(
         server_python_exe=server_python_exe,
         new_process=new_process,
     )
-    logger.debug(f"Alias Plugin environtment\n{pprint.pformat(plugin_env)}")
+    logger.debug(f"Alias Plugin environment\n{pprint.pformat(plugin_env)}")
 
     return (plugin_lst_path, plugin_env)
