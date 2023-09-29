@@ -45,6 +45,19 @@ def get_alias_app_data_dir():
     return os.path.join(app_data, "Autodesk", "Alias", "ShotGrid")
 
 
+def get_distribution_directory():
+    """Return the directory containing the distribution files."""
+
+    return os.path.normpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            os.pardir,
+            "dist",
+        )
+    )
+
+
 def get_alias_plugin_dir():
     """Return the directory containing the Alias plugin installation."""
 
@@ -84,6 +97,38 @@ def get_python_install_directory(major_version, minor_version):
     return os.path.join(get_python_directory(major_version, minor_version), "install")
 
 
+def get_python_packages_directory(major_version, minor_version):
+    """
+    Get the directory to install python packages for the user.
+
+    :param major_version: The python major version to install for.
+    :type major_version: int
+    :param minor_version: The python minor version to install for.
+    :type minor_version: int
+
+    :return: The file path the python install directory.
+    :rtype: str
+    """
+
+    return os.path.join(get_python_directory(major_version, minor_version), "packages")
+
+
+def get_python_packages_c_extensions_directory(major_version, minor_version):
+    """
+    Get the directory to install python C extension packages for the user.
+
+    :param major_version: The python major version to install for.
+    :type major_version: int
+    :param minor_version: The python minor version to install for.
+    :type minor_version: int
+
+    :return: The file path the python install directory.
+    :rtype: str
+    """
+
+    return os.path.join(get_python_packages_directory(major_version, minor_version), "c_extensions")
+
+
 def get_python_exe(major_version, minor_version):
     """
     Get the path to the python executable that the Alias Plugin should use.
@@ -105,6 +150,57 @@ def get_python_exe(major_version, minor_version):
     )
 
 
+def get_python_distribution_directory(major_version, minor_version):
+    """"Return the directory containing the Python distribution files."""
+
+    python_folder_name = f"Python{major_version}{minor_version}"
+    dist_base_path = get_distribution_directory()
+    return os.path.normpath(
+        os.path.join(
+            dist_base_path,
+            "Python",
+            python_folder_name,
+        )
+    )
+
+
+def get_python_distribution_install_directory(major_version, minor_version):
+    """Return the directory containing the embedable Python install files."""
+
+    python_dist_path = get_python_distribution_directory(major_version, minor_version)
+    return os.path.normpath(
+        os.path.join(python_dist_path, "install")
+    )
+
+
+def get_python_distribution_packages_directory(major_version, minor_version):
+    """Get the directory containing the local pre-installed packages."""
+
+    python_dist_path = get_python_distribution_directory(major_version, minor_version)
+    return os.path.normpath(
+        os.path.join(python_dist_path, "packages")
+    )
+
+
+def get_python_local_c_extension_packages(major_version, minor_version):
+    """Get the local Python dist site packages."""
+
+    python_dist_path = get_python_distribution_packages_directory(major_version, minor_version)
+    return os.path.normpath(
+        # os.path.join(python_dist_path, "c_extensions")
+        os.path.join(python_dist_path, "c_extensions.zip")
+    )
+
+
+def get_python_distribution_packages(major_version, minor_version):
+    """Get the local Python dist site packages."""
+
+    packages_path = get_python_distribution_packages_directory(major_version, minor_version)
+    return os.path.normpath(
+        os.path.join(packages_path, "pkgs.zip")
+    )
+
+
 def get_python_site_packages(major_version, minor_version):
     """
     Get the path to the python site-packages that the Alias Plugin should use.
@@ -121,11 +217,25 @@ def get_python_site_packages(major_version, minor_version):
     :rtype: str
     """
 
-    return os.path.join(
+    package_paths = []
+
+    installed_packages_path = os.path.join(
         get_python_install_directory(major_version, minor_version),
         "Lib",
         "site-packages",
     )
+    if os.path.exists(installed_packages_path):
+        package_paths.append(installed_packages_path)
+
+    c_ext_path = get_python_packages_c_extensions_directory(major_version, minor_version)
+    if os.path.exists(c_ext_path):
+        package_paths.append(c_ext_path)
+
+    local_packages_path = get_python_distribution_packages(major_version, minor_version)
+    if os.path.exists(local_packages_path):
+        package_paths.append(local_packages_path)
+
+    return package_paths
 
 
 def get_alias_distribution_directory(
@@ -160,12 +270,10 @@ def get_alias_distribution_directory(
 
     # First try to get the folder directly matching the running version of Alias
     dist_folder_name = f"alias{alias_version}"
+    dist_base_path = get_distribution_directory()
     base_folder_path = os.path.normpath(
         os.path.join(
-            os.path.dirname(__file__),
-            os.pardir,
-            os.pardir,
-            "dist",
+            dist_base_path,
             "Alias",
             python_folder_name,
         )
