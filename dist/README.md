@@ -26,6 +26,7 @@ For example, Alias 2024.0 uses Qt version 5.15.0, which means the framework must
 
 1. Download the base embeddable package for the desired Python version from [here](https://www.python.org/ftp/python/).
 2. After downloading, unzip the package.
+3. Downlad the get-pip.py script [here](https://pip.pypa.io/en/stable/installation/) to the dev directory.
 3. Add pip to the python package by running:
 
 ```
