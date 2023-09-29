@@ -12,6 +12,7 @@ import os
 import subprocess
 import sys
 import threading
+import pprint
 
 # Third party pacakges included in dist/pkgs.zip
 import socketio
@@ -30,6 +31,7 @@ from .utils.exceptions import (
     ClientAlreadyRegistered,
     ServerAlreadyRunning,
     ClientNameReservered,
+    ClientBootstrapMethodNotSupported,
 )
 
 from tk_framework_alias_utils import utils as framework_utils
@@ -291,15 +293,15 @@ class AliasBridge(metaclass=Singleton):
 
         hostname, port = self.__server_socket.getsockname()
 
-        # Get the client info to bootstrap
+        # Check if the client is already registered. Clients are unique by name.
         if not isinstance(client, dict):
             client_name = client
             client = self.__clients.get(client_name)
 
         if not client:
-            # Get client info from environment
+            # Get client info from the environment and register it.
 
-            # NOTE uncomment to not allow client to run from python script.
+            # NOTE uncomment to allow client to run from python script.
             # Warning that the framework attempts to encrypt and decrypt the executable path
             # for security, however it does not have a secure place to store the key, so for
             # this reason it is currently turned off. Ideally we can store an encryption key
@@ -311,12 +313,18 @@ class AliasBridge(metaclass=Singleton):
             # if client_exec_path:
             #     client_info["exec_path"] = client_exec_path
 
+            # Check for ShotGrid specific client info. ShotGrid clients do not provide a
+            # bootstrap executable path, instead the plugin_bootstrap.py script is used
+            # from within the framework.
             pipeline_config_id = os.environ.get(
                 "ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID"
             )
             entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
             entity_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID")
-            if pipeline_config_id and entity_type and entity_id:
+            # A client is considered a ShotGrid client if it provides an entity type and id.
+            # The pipeline configuration is optional, since an unmanaged pipeline could be in
+            # use. In that case, the default will be the latet basic config in the app store.
+            if entity_type is not None and entity_id is not None:
                 client_info["shotgrid"] = {
                     "pipeline_config_id": pipeline_config_id,
                     "entity_type": entity_type,
@@ -343,7 +351,7 @@ class AliasBridge(metaclass=Singleton):
         shotgrid_info = client["info"].get("shotgrid")
         if shotgrid_info:
             # Bootstrap using ShotGrid toolkit manager
-            pipeline_config_id = shotgrid_info["pipeline_config_id"]
+            pipeline_config_id = shotgrid_info["pipeline_config_id"] or ""
             entity_type = shotgrid_info["entity_type"]
             entity_id = shotgrid_info["entity_id"]
             plugin_bootstrap_path = os.path.abspath(
@@ -366,21 +374,29 @@ class AliasBridge(metaclass=Singleton):
                 client["namespace"],
             ]
         else:
-            # Bootstrap by running the client executable
-            client_exe_path = framework_utils.decrypt_from_str(
-                client["info"].get("exec_path")
-            )
-            if not client_exe_path:
-                return False
+            # NOTE uncomment to allow client to run from python script.
+            # # Bootstrap by running the client executable
+            # client_exe_path = framework_utils.decrypt_from_str(
+            #     client["info"].get("exec_path")
+            # )
+            # if not client_exe_path:
+            #     return False
 
-            args = [
-                python_exe,
-                client_exe_path,
-                hostname,
-                str(port),
-                client["namespace"],
-                pipeline_config_id,
-            ]
+            # args = [
+            #     python_exe,
+            #     client_exe_path,
+            #     hostname,
+            #     str(port),
+            #     client["namespace"],
+            # ]
+            raise ClientBootstrapMethodNotSupported(
+                """
+                Bootstrapping Alias client via executable path is currently not supported. Only ShotGrid clients supported.
+                Client info: {client_info}
+            """.format(
+                    client_info=pprint.pformat(client_info)
+                )
+            )
 
         # Copy the env variables to start the new process with
         startup_env = os.environ.copy()

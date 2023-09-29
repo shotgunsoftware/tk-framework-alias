@@ -64,7 +64,7 @@ def toolkit_plugin_bootstrap(
     manifest.initialize_manager(toolkit_mgr, plugin_root_path)
 
     # Set the pipeline configuration id to use, if given
-    if pipeline_config_id is not None:
+    if pipeline_config_id:
         toolkit_mgr.pipeline_configuration = int(pipeline_config_id)
 
     # set up progress reporting
