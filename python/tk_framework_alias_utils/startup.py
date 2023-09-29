@@ -443,7 +443,7 @@ def __ensure_python_c_extension_packages_installed(logger):
         if not os.path.exists(local_c_ext_path):
             logger.debug(f"No C extensions found to install {local_c_ext_path}")
             return
-        
+
         python_packages_path = environment_utils.get_python_packages_directory(
             major_version, minor_version
         )
@@ -451,8 +451,10 @@ def __ensure_python_c_extension_packages_installed(logger):
             logger.debug(f"Creating Python packages directory {python_packages_path}")
             os.makedirs(python_packages_path)
 
-        install_c_ext_path = environment_utils.get_python_packages_c_extensions_directory(
-            major_version, minor_version
+        install_c_ext_path = (
+            environment_utils.get_python_packages_c_extensions_directory(
+                major_version, minor_version
+            )
         )
         install_c_ext_zip_path = f"{install_c_ext_path}.zip"
         if os.path.exists(install_c_ext_zip_path):
@@ -470,13 +472,17 @@ def __ensure_python_c_extension_packages_installed(logger):
         # Now extract the files
         logger.debug("Unzipping C extension packages...")
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
-            zip_ref.extractall(install_c_ext_path) 
+            zip_ref.extractall(install_c_ext_path)
 
 
-def __ensure_python_packages_up_to_date(python_exe, major_version, minor_version, logger):
+def __ensure_python_packages_up_to_date(
+    python_exe, major_version, minor_version, logger
+):
     """Ensure python packages are up to date."""
 
-    python_dist_dir = environment_utils.get_python_distribution_directory(major_version, minor_version)
+    python_dist_dir = environment_utils.get_python_distribution_directory(
+        major_version, minor_version
+    )
     lib_dir = os.path.join(os.path.dirname(python_exe), "Lib")
     dist_dir = os.path.join(lib_dir, "site-packages")
     if not os.path.exists(dist_dir):
@@ -512,7 +518,9 @@ def __ensure_python_packages_up_to_date(python_exe, major_version, minor_version
     )
 
 
-def ensure_python_installed(major_version, minor_version, logger, install_python_packages=False):
+def ensure_python_installed(
+    major_version, minor_version, logger, install_python_packages=False
+):
     """Ensure that the Python version is installed."""
 
     from sgtk.util.filesystem import ensure_folder_exists
@@ -593,7 +601,9 @@ def ensure_python_installed(major_version, minor_version, logger, install_python
 
         # Install additional packages
         if install_python_packages:
-            __ensure_python_packages_up_to_date(python_install, major_version, minor_version, logger)
+            __ensure_python_packages_up_to_date(
+                python_install, major_version, minor_version, logger
+            )
 
         # Copy the version file to the installation.
         shutil.copyfile(version_txt, installed_version_txt)
@@ -702,16 +712,21 @@ def ensure_plugin_ready(
         # Check the basic.alias Toolkit plugin is installed and up to date. This is used by
         # the Alias Plugin to bootstrap the ShotGrid Alias Engine.
         ensure_toolkit_plugin_up_to_date(logger)
-        
+
         # Alias 2024.0 is running with Qt 5.15.0, which means the PySide2 version used by the
         # version of Python that is embedded by the Alias Plugin must also be 5.15.0. Since
         # PySide2 5.15.0 requires Python < 3.9, we will force Python 3.7 to be used by the
         # Alias Plugin (which is done by setting the server python)
         py_major_version = 3
         py_minor_version = 7
-        install_python_packages = os.environ.get("SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES") in ("1", "true", "True")
+        install_python_packages = os.environ.get(
+            "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
+        ) in ("1", "true", "True")
         server_python_exe = ensure_python_installed(
-            py_major_version, py_minor_version, logger, install_python_packages=install_python_packages
+            py_major_version,
+            py_minor_version,
+            logger,
+            install_python_packages=install_python_packages,
         )
     else:
         # Alias < 2024.0
@@ -725,7 +740,7 @@ def ensure_plugin_ready(
         py_minor_version = sys.version_info.minor
         # Do not set the server python, this is not used by Alias < 2024.0
         server_python_exe = None
-    
+
     # Ensure C extension packages installed for user
     __ensure_python_c_extension_packages_installed(logger)
 

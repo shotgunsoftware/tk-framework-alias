@@ -28,8 +28,7 @@ def zip_recursively(zip_file, root_dir, folder_name):
 
 
 def modify_pyside2(pyside2_path):
-    """Modify the PySide2 package such that it only includes the necessary files.
-    """
+    """Modify the PySide2 package such that it only includes the necessary files."""
 
     # Required files by name. These are absoultely required. No override.
     required_files = [
@@ -80,16 +79,16 @@ def modify_pyside2(pyside2_path):
             # Copy the file to the new PySide2 package
             src_path = os.path.join(pyside2_path, file_name)
             shutil.copyfile(src_path, dst_path)
-        
+
         # Remove the original PySide2 package
         shutil.rmtree(pyside2_path)
         # Copy the temp package to the original path
         shutil.copytree(pyside2_temp_dir, pyside2_path)
 
 
-# 
+#
 # Script body
-# 
+#
 with TemporaryDirectory() as temp_dir:
     temp_dir_path = Path(temp_dir)
 
@@ -154,9 +153,7 @@ with TemporaryDirectory() as temp_dir:
     assert len(package_names) >= nb_dependencies
 
     # TODO auto-detect C extension modules (and other dynamic modules)
-    c_extension_modules = [
-        "greenlet", "PySide2", "shiboken2"
-    ]
+    c_extension_modules = ["greenlet", "PySide2", "shiboken2"]
 
     # Write out the zip file for python packages. Compress the zip file with ZIP_DEFLATED. Note
     # that this requires zlib to decompress when importing. Compression also causes import to
@@ -189,7 +186,9 @@ with TemporaryDirectory() as temp_dir:
             # If we have a .py file to zip, simple write it
             # full_package_path = temp_dir_path / package_name
             if full_package_path.suffix == ".py":
-                pkgs_zip.write(full_package_path, full_package_path.relative_to(temp_dir))
+                pkgs_zip.write(
+                    full_package_path, full_package_path.relative_to(temp_dir)
+                )
             else:
                 # Otherwise zip package folders recursively.
                 zip_recursively(pkgs_zip, temp_dir_path, package_name)

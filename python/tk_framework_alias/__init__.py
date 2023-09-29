@@ -12,9 +12,8 @@
 # First add our third-party packages to sys.path
 import sys
 from tk_framework_alias_utils.environment_utils import get_python_site_packages
-package_paths = get_python_site_packages(
-    sys.version_info.major, sys.version_info.minor
-)
+
+package_paths = get_python_site_packages(sys.version_info.major, sys.version_info.minor)
 for package_path in package_paths:
     sys.path.insert(0, package_path)
 

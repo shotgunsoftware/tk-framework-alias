@@ -201,4 +201,3 @@ def verify_file(src_file, verify_to_file):
     src_hex = get_md5_hex_string(src_file)
     file_hex = get_md5_hex_string(verify_to_file)
     return src_hex == file_hex
-

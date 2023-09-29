@@ -8,9 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+cryptography
 eventlet
 PySide2==5.15.0
 python-socketio
-websocket-client
 requests
-cryptography
+websocket-client

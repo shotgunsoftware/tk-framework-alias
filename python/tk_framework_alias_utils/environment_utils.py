@@ -126,7 +126,9 @@ def get_python_packages_c_extensions_directory(major_version, minor_version):
     :rtype: str
     """
 
-    return os.path.join(get_python_packages_directory(major_version, minor_version), "c_extensions")
+    return os.path.join(
+        get_python_packages_directory(major_version, minor_version), "c_extensions"
+    )
 
 
 def get_python_exe(major_version, minor_version):
@@ -151,7 +153,7 @@ def get_python_exe(major_version, minor_version):
 
 
 def get_python_distribution_directory(major_version, minor_version):
-    """"Return the directory containing the Python distribution files."""
+    """ "Return the directory containing the Python distribution files."""
 
     python_folder_name = f"Python{major_version}{minor_version}"
     dist_base_path = get_distribution_directory()
@@ -168,24 +170,22 @@ def get_python_distribution_install_directory(major_version, minor_version):
     """Return the directory containing the embedable Python install files."""
 
     python_dist_path = get_python_distribution_directory(major_version, minor_version)
-    return os.path.normpath(
-        os.path.join(python_dist_path, "install")
-    )
+    return os.path.normpath(os.path.join(python_dist_path, "install"))
 
 
 def get_python_distribution_packages_directory(major_version, minor_version):
     """Get the directory containing the local pre-installed packages."""
 
     python_dist_path = get_python_distribution_directory(major_version, minor_version)
-    return os.path.normpath(
-        os.path.join(python_dist_path, "packages")
-    )
+    return os.path.normpath(os.path.join(python_dist_path, "packages"))
 
 
 def get_python_local_c_extension_packages(major_version, minor_version):
     """Get the local Python dist site packages."""
 
-    python_dist_path = get_python_distribution_packages_directory(major_version, minor_version)
+    python_dist_path = get_python_distribution_packages_directory(
+        major_version, minor_version
+    )
     return os.path.normpath(
         # os.path.join(python_dist_path, "c_extensions")
         os.path.join(python_dist_path, "c_extensions.zip")
@@ -195,10 +195,10 @@ def get_python_local_c_extension_packages(major_version, minor_version):
 def get_python_distribution_packages(major_version, minor_version):
     """Get the local Python dist site packages."""
 
-    packages_path = get_python_distribution_packages_directory(major_version, minor_version)
-    return os.path.normpath(
-        os.path.join(packages_path, "pkgs.zip")
+    packages_path = get_python_distribution_packages_directory(
+        major_version, minor_version
     )
+    return os.path.normpath(os.path.join(packages_path, "pkgs.zip"))
 
 
 def get_python_site_packages(major_version, minor_version):
@@ -227,7 +227,9 @@ def get_python_site_packages(major_version, minor_version):
     if os.path.exists(installed_packages_path):
         package_paths.append(installed_packages_path)
 
-    c_ext_path = get_python_packages_c_extensions_directory(major_version, minor_version)
+    c_ext_path = get_python_packages_c_extensions_directory(
+        major_version, minor_version
+    )
     if os.path.exists(c_ext_path):
         package_paths.append(c_ext_path)
 
