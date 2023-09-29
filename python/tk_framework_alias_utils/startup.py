@@ -436,21 +436,28 @@ def __ensure_python_c_extension_packages_installed(logger):
         (3, 9),
     ]
 
-    # TODO check if zip is corrupt or changed?
-
     for major_version, minor_version in python_versions:
         local_c_ext_path = environment_utils.get_python_local_c_extension_packages(
             major_version, minor_version
         )
         if not os.path.exists(local_c_ext_path):
+            logger.debug(f"No C extensions found to install {local_c_ext_path}")
             return
         
+        python_packages_path = environment_utils.get_python_packages_directory(
+            major_version, minor_version
+        )
+        if not os.path.exists(python_packages_path):
+            logger.debug(f"Creating Python packages directory {python_packages_path}")
+            os.makedirs(python_packages_path)
+
         install_c_ext_path = environment_utils.get_python_packages_c_extensions_directory(
             major_version, minor_version
         )
         install_c_ext_zip_path = f"{install_c_ext_path}.zip"
         if os.path.exists(install_c_ext_zip_path):
             if verify_file(local_c_ext_path, install_c_ext_zip_path):
+                logger.debug("C extensions already up to date.")
                 return  # Packages already exist, not change.
 
         if os.path.exists(install_c_ext_path):
@@ -458,8 +465,10 @@ def __ensure_python_c_extension_packages_installed(logger):
 
         # Copy the zip folder. This will be used to check if updates are needed based on file
         # modifiation timestamp
+        logger.debug(f"Coying C extension zip package to {install_c_ext_zip_path}")
         shutil.copyfile(local_c_ext_path, install_c_ext_zip_path)
         # Now extract the files
+        logger.debug("Unzipping C extension packages...")
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
             zip_ref.extractall(install_c_ext_path) 
 
