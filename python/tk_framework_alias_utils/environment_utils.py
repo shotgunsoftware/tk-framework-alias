@@ -8,6 +8,7 @@ TOOLKIT_PLUGIN_NAME = "com.sg.basic.alias"
 # --------------------------------------------------------------------------------------------
 # User App Data directory paths
 
+
 def get_alias_app_data_dir():
     """
     Get the user specific root directory for the Alias plugin installation.
@@ -135,6 +136,7 @@ def get_python_c_ext_dir(major_version, minor_version):
 # --------------------------------------------------------------------------------------------
 # Framework directory paths
 
+
 def get_framework_python_path():
     """Return the normalized file path to the root python directory."""
 
@@ -145,9 +147,11 @@ def get_framework_python_path():
             os.pardir,
         )
     )
-    
+
+
 # --------------------------------------------------------------------------------------------
 # Framework 'dist' directory paths
+
 
 def get_dist_dir():
     """Return the normalized path to the framework directory containing all distribution files."""
@@ -234,9 +238,7 @@ def get_python_dist_packages_zip(major_version, minor_version):
     :rtype: str
     """
 
-    packages_path = get_python_dist_packages_dir(
-        major_version, minor_version
-    )
+    packages_path = get_python_dist_packages_dir(major_version, minor_version)
     return os.path.normpath(os.path.join(packages_path, "pkgs.zip"))
 
 
@@ -253,17 +255,11 @@ def get_python_dist_c_ext_zip(major_version, minor_version):
     :rtype: str
     """
 
-    python_dist_path = get_python_dist_packages_dir(
-        major_version, minor_version
-    )
-    return os.path.normpath(
-        os.path.join(python_dist_path, "c_extensions.zip")
-    )
+    python_dist_path = get_python_dist_packages_dir(major_version, minor_version)
+    return os.path.normpath(os.path.join(python_dist_path, "c_extensions.zip"))
 
 
-def get_alias_dist_dir(
-    alias_version, python_major_version, python_minor_version
-):
+def get_alias_dist_dir(alias_version, python_major_version, python_minor_version):
     """
     Return the directory containing the Alias distribution files.
 
@@ -296,7 +292,7 @@ def get_alias_dist_dir(
     dist_folder_path = os.path.join(base_folder_path, alias_version)
     if os.path.exists(dist_folder_path):
         return dist_folder_path
-    
+
     # Alias distribution not found for exact version, fallback to the next supported version.
     alias_dist_versions = sorted(os.listdir(base_folder_path))
     last_version = alias_dist_versions[0]
@@ -316,6 +312,7 @@ def get_alias_dist_dir(
 
 # --------------------------------------------------------------------------------------------
 # Convenience functions for the framework
+
 
 def get_framework_python_site_packages_paths(major_version, minor_version):
     """
@@ -347,9 +344,7 @@ def get_framework_python_site_packages_paths(major_version, minor_version):
         package_paths.append(dist_packages_path)
 
     # Check the framework distribution folder for C extension packages
-    c_ext_path = get_python_c_ext_dir(
-        major_version, minor_version
-    )
+    c_ext_path = get_python_c_ext_dir(major_version, minor_version)
     if os.path.exists(c_ext_path):
         package_paths.append(c_ext_path)
 

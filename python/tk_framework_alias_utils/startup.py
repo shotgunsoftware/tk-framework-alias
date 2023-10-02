@@ -419,7 +419,9 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
         alias_version, python_major_version, python_minor_version
     )
     if alias_version not in plugin_file_path:
-        logger.warning(f"Did not find Alias plugin for version {alias_version}. Falling back to plugin {plugin_file_path}")
+        logger.warning(
+            f"Did not find Alias plugin for version {alias_version}. Falling back to plugin {plugin_file_path}"
+        )
     else:
         logger.debug(f"Successfully found Alias plugin {plugin_file_path}")
 
@@ -467,16 +469,14 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
             logger.debug(f"Creating Python packages directory {python_packages_path}")
             os.makedirs(python_packages_path)
 
-        install_c_ext_path = (
-            environment_utils.get_python_c_ext_dir(
-                major_version, minor_version
-            )
+        install_c_ext_path = environment_utils.get_python_c_ext_dir(
+            major_version, minor_version
         )
         install_c_ext_zip_path = f"{install_c_ext_path}.zip"
         if os.path.exists(install_c_ext_zip_path):
             if verify_file(framework_c_ext_zip, install_c_ext_zip_path):
                 logger.debug("C extensions already up to date.")
-                return  True # Packages already exist and no change.
+                return True  # Packages already exist and no change.
 
         if os.path.exists(install_c_ext_path):
             shutil.rmtree(install_c_ext_path)
@@ -489,7 +489,7 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
         logger.debug("Unzipping C extension packages...")
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
             zip_ref.extractall(install_c_ext_path)
-    
+
     return True
 
 
@@ -546,7 +546,9 @@ def ensure_python_installed(
     logger.debug(f"Ensuring Python {major_version}.{minor_version} installed...")
 
     # Check if python is installed and up to date
-    python_install = environment_utils.get_python_install_exe(major_version, minor_version)
+    python_install = environment_utils.get_python_install_exe(
+        major_version, minor_version
+    )
     python_dir = environment_utils.get_python_dir(major_version, minor_version)
     python_install_dir = environment_utils.get_python_install_dir(
         major_version, minor_version

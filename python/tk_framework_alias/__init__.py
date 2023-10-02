@@ -10,8 +10,13 @@
 
 # First add our third-party package paths to sys.path
 import sys
-from tk_framework_alias_utils.environment_utils import get_framework_python_site_packages_paths
-for p in get_framework_python_site_packages_paths(sys.version_info.major, sys.version_info.minor):
+from tk_framework_alias_utils.environment_utils import (
+    get_framework_python_site_packages_paths,
+)
+
+for p in get_framework_python_site_packages_paths(
+    sys.version_info.major, sys.version_info.minor
+):
     sys.path.insert(0, p)
 
 from . import client
