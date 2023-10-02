@@ -8,14 +8,11 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-
-# First add our third-party packages to sys.path
+# First add our third-party package paths to sys.path
 import sys
-from tk_framework_alias_utils.environment_utils import get_python_site_packages
-
-package_paths = get_python_site_packages(sys.version_info.major, sys.version_info.minor)
-for package_path in package_paths:
-    sys.path.insert(0, package_path)
+from tk_framework_alias_utils.environment_utils import get_framework_python_site_packages_paths
+for p in get_framework_python_site_packages_paths(sys.version_info.major, sys.version_info.minor):
+    sys.path.insert(0, p)
 
 from . import client
 from . import server

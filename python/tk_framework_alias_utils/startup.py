@@ -146,7 +146,7 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
     :rtype: str
     """
 
-    plugin_folder_path = environment_utils.get_alias_distribution_directory(
+    plugin_folder_path = environment_utils.get_alias_dist_dir(
         alias_version, python_major_version, python_minor_version
     )
     if plugin_folder_path is None:
@@ -209,7 +209,7 @@ def __ensure_toolkit_plugin_up_to_date(logger):
         raise sgtk.TankError(f"Could not find bundled plugin: {bundled_plugin_path}")
 
     # Ensure that the plugin is installed in the specified directory
-    installed_plugin_dir = environment_utils.get_plugin_install_directory()
+    installed_plugin_dir = environment_utils.get_plugin_install_dir()
     if not os.path.exists(installed_plugin_dir):
         logger.debug(f"Installing Alias plugin: {installed_plugin_dir}")
         __install_plugin(bundled_plugin_path, installed_plugin_dir, logger)
@@ -354,7 +354,8 @@ def ensure_toolkit_plugin_up_to_date(logger):
     framework to the users's Alias AppData folder. The framework will pre-build the plugin
     using the build_extension.py script from the repo dev folder.
 
-    :param logger:
+    :param logger: Set a logger object to capture output from this operation.
+    :type logger: Logger
     """
 
     import sgtk
@@ -417,7 +418,10 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
     plugin_file_path = get_plugin_file_path(
         alias_version, python_major_version, python_minor_version
     )
-    logger.debug(f"Alias Plugin file path {plugin_file_path}")
+    if alias_version not in plugin_file_path:
+        logger.warning(f"Did not find Alias plugin for version {alias_version}. Falling back to plugin {plugin_file_path}")
+    else:
+        logger.debug(f"Successfully found Alias plugin {plugin_file_path}")
 
     # Create or overwrite the lst file with the plugin file path found
     lst_file = os.path.join(tempfile.gettempdir(), "alias_plugins.lst")
@@ -427,24 +431,36 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
     return lst_file
 
 
-def __ensure_python_c_extension_packages_installed(logger):
-    """Ensure python C extension packages are unzipped and installed for user."""
+def __ensure_python_c_extension_packages_installed(python_version=None, logger=None):
+    """
+    Ensure python C extension packages are unzipped and installed for user.
 
-    # These are the python versions the framework supports
-    python_versions = [
-        (3, 7),
-        (3, 9),
-    ]
+    This routine will ensure C extensions are installed for the given python version, or for
+    all supported Ptyhon versions
+
+    :param logger: Set a logger object to capture output from this operation.
+    :type logger: Logger
+
+    :return: True if the packages have beene installed, else False.
+    :rtype: bool
+    """
+
+    python_versions = environment_utils.get_framework_supported_python_versions()
+    if python_version:
+        if python_version not in python_versions:
+            # The requested version is not supported
+            return False
+        python_versions = [python_version]
 
     for major_version, minor_version in python_versions:
-        local_c_ext_path = environment_utils.get_python_local_c_extension_packages(
+        framework_c_ext_zip = environment_utils.get_python_dist_c_ext_zip(
             major_version, minor_version
         )
-        if not os.path.exists(local_c_ext_path):
-            logger.debug(f"No C extensions found to install {local_c_ext_path}")
-            return
+        if not os.path.exists(framework_c_ext_zip):
+            logger.debug(f"No C extensions found to install {framework_c_ext_zip}")
+            return True
 
-        python_packages_path = environment_utils.get_python_packages_directory(
+        python_packages_path = environment_utils.get_python_packages_dir(
             major_version, minor_version
         )
         if not os.path.exists(python_packages_path):
@@ -452,15 +468,15 @@ def __ensure_python_c_extension_packages_installed(logger):
             os.makedirs(python_packages_path)
 
         install_c_ext_path = (
-            environment_utils.get_python_packages_c_extensions_directory(
+            environment_utils.get_python_c_ext_dir(
                 major_version, minor_version
             )
         )
         install_c_ext_zip_path = f"{install_c_ext_path}.zip"
         if os.path.exists(install_c_ext_zip_path):
-            if verify_file(local_c_ext_path, install_c_ext_zip_path):
+            if verify_file(framework_c_ext_zip, install_c_ext_zip_path):
                 logger.debug("C extensions already up to date.")
-                return  # Packages already exist, not change.
+                return  True # Packages already exist and no change.
 
         if os.path.exists(install_c_ext_path):
             shutil.rmtree(install_c_ext_path)
@@ -468,11 +484,13 @@ def __ensure_python_c_extension_packages_installed(logger):
         # Copy the zip folder. This will be used to check if updates are needed based on file
         # modifiation timestamp
         logger.debug(f"Coying C extension zip package to {install_c_ext_zip_path}")
-        shutil.copyfile(local_c_ext_path, install_c_ext_zip_path)
+        shutil.copyfile(framework_c_ext_zip, install_c_ext_zip_path)
         # Now extract the files
         logger.debug("Unzipping C extension packages...")
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
             zip_ref.extractall(install_c_ext_path)
+    
+    return True
 
 
 def __ensure_python_packages_up_to_date(
@@ -480,7 +498,7 @@ def __ensure_python_packages_up_to_date(
 ):
     """Ensure python packages are up to date."""
 
-    python_dist_dir = environment_utils.get_python_distribution_directory(
+    python_dist_dir = environment_utils.get_python_dist_dir(
         major_version, minor_version
     )
     lib_dir = os.path.join(os.path.dirname(python_exe), "Lib")
@@ -528,12 +546,12 @@ def ensure_python_installed(
     logger.debug(f"Ensuring Python {major_version}.{minor_version} installed...")
 
     # Check if python is installed and up to date
-    python_install = environment_utils.get_python_exe(major_version, minor_version)
-    python_dir = environment_utils.get_python_directory(major_version, minor_version)
-    python_install_dir = environment_utils.get_python_install_directory(
+    python_install = environment_utils.get_python_install_exe(major_version, minor_version)
+    python_dir = environment_utils.get_python_dir(major_version, minor_version)
+    python_install_dir = environment_utils.get_python_install_dir(
         major_version, minor_version
     )
-    python_dist_dir = environment_utils.get_python_distribution_install_directory(
+    python_dist_dir = environment_utils.get_python_dist_install_dir(
         major_version, minor_version
     )
     version_txt = os.path.join(python_dist_dir, "embed_version.txt")
@@ -741,8 +759,10 @@ def ensure_plugin_ready(
         # Do not set the server python, this is not used by Alias < 2024.0
         server_python_exe = None
 
-    # Ensure C extension packages installed for user
-    __ensure_python_c_extension_packages_installed(logger)
+    # Ensure C extension packages installed for user. Install for all supported Python
+    # versions, just in case the python version the framework runs with is different that
+    # the current running version.
+    __ensure_python_c_extension_packages_installed(logger=logger)
 
     # Get the file path to the .lst file that contains the file path to the Alias Plugin to
     # load at startup with Alias.
