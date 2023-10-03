@@ -8,12 +8,17 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+import sys
 import pytest
 import json
 
 from tk_framework_alias.client.socketio import client_json
 from tk_framework_alias.client.socketio import proxy_wrapper
 from tk_framework_alias.client.utils.exceptions import AliasClientJSONEncoderError
+
+
+if sys.platform != "win32":
+    pytestmark = pytest.mark.skip("Only Windows platform is supported")
 
 
 ####################################################################################################
