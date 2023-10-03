@@ -17,6 +17,9 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
+    if sys.platform != "win32":
+        pytestmark = pytest.mark.skip("Only Windows platform is supported")
+
     print("Configuring...")
 
     # import debugpy
