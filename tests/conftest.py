@@ -17,9 +17,6 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
-    if sys.platform != "win32":
-        pytestmark = pytest.mark.skip("Only Windows platform is supported")
-
     print("Configuring...")
 
     # import debugpy
@@ -53,6 +50,9 @@ def pytest_sessionstart(session):
     """
 
     print("Timestamp:  {}".format(datetime.datetime.now()))
+
+    if sys.platform != "win32":
+        pytestmark = pytest.mark.skip("Only Windows platform is supported")
 
     from tk_framework_alias.server.api import alias_api
 
