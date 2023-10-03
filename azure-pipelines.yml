@@ -32,4 +32,4 @@ jobs:
 - template: build-pipeline.yml@templates
   parameters:
     skip_tests: false
-    extra_test_dependencies: [socketio]
+    extra_test_dependencies: [python-socketio, websocket-client]
