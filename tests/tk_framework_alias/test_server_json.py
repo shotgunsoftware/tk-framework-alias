@@ -21,10 +21,6 @@ from tk_framework_alias.server import alias_bridge
 from tk_framework_alias.server.utils.exceptions import AliasServerJSONDecoderError
 
 
-if sys.platform != "win32":
-    pytestmark = pytest.mark.skip("Only Windows platform is supported")
-
-
 ####################################################################################################
 # fixtures
 ####################################################################################################

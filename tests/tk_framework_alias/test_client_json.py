@@ -17,10 +17,6 @@ from tk_framework_alias.client.socketio import proxy_wrapper
 from tk_framework_alias.client.utils.exceptions import AliasClientJSONEncoderError
 
 
-if sys.platform != "win32":
-    pytestmark = pytest.mark.skip("Only Windows platform is supported")
-
-
 ####################################################################################################
 # tk_framework_alias client_json AliasClientJSONEncoder
 ####################################################################################################

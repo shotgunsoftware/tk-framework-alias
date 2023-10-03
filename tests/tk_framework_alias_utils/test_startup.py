@@ -15,10 +15,6 @@ import sys
 from tk_framework_alias_utils import startup
 
 
-if sys.platform != "win32":
-    pytestmark = pytest.mark.skip("Only Windows platform is supported")
-
-
 ####################################################################################################
 # tk_framework_alias_utils startup.py Test Cases
 ####################################################################################################

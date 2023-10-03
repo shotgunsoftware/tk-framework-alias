@@ -21,10 +21,6 @@ from tk_framework_alias.server.socketio.namespaces import (
 from tk_framework_alias.server.utils import exceptions
 
 
-if sys.platform != "win32":
-    pytestmark = pytest.mark.skip("Only Windows platform is supported")
-
-
 ####################################################################################################
 # fixtures
 ####################################################################################################

@@ -53,6 +53,7 @@ def pytest_sessionstart(session):
 
     if sys.platform != "win32":
         pytestmark = pytest.mark.skip("Only Windows platform is supported")
+        return
 
     from tk_framework_alias.server.api import alias_api
 
