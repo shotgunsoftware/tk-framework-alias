@@ -31,7 +31,7 @@ File location:  `dist/Alias/{python_version/{alias_version}/alias_api.pyd`
 
 ### <a name="toolkit_plugin"></a>Toolkit Plugin for Alias ###
 
-The Toolkit Plugin is used by [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias_utils/plugin_bootstrap.py) to bootstrap the ShotGrid Alias Engine, which can be initiated by the Alias Plugin. This allows ShotGrid to be started up by Alias. See [dev](https://github.com/shotgunsoftware/tk-framework-alias/tree/main/dev#readme) for more details on how the Toolkit Plugin is built.
+The Toolkit Plugin is used by [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py) to bootstrap the ShotGrid Alias Engine, which can be initiated by the Alias Plugin. This allows ShotGrid to be started up by Alias. See [dev](https://github.com/shotgunsoftware/tk-framework-alias/tree/main/dev#readme) for more details on how the Toolkit Plugin is built.
 
 File location:  `dist/Toolkit/plugin/com.sg.basic.alias`
 
@@ -60,7 +60,7 @@ The framework can be used for any version of Alias (within the [support](#suppor
 ```
 3. Alias loads the plugin which will embed Python to access the Python modules to initialize ShotGrid and establish communication with Alias.
 
-The [startup utils](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias_utils/startup.py) do all the necessary set up to ensure that Alias can load the plugin to initialize ShotGrid. See the main start up function [ensure_plugin_ready](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias_utils/startup.py#L536) for more details.
+The [startup utils](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py) do all the necessary set up to ensure that Alias can load the plugin to initialize ShotGrid. See the main start up function [ensure_plugin_ready](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py#L536) for more details.
 
 Due to major changes to Alias starting in 2024.0, the framework essentially operates in two different modes. For Alias versions prior to 2024.0:
 
@@ -80,7 +80,7 @@ For Alias 2024.0 and later:
 - The Alias Engine will establish a connection to the Alias Python API server to interact with the data in Alias
 - the Alias Engine will create a Qt Application and start its own event loop to display Toolkit UI alongside Alias
 
-The plugin will use the [AliasBridge](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias/server/alias_bridge.py#L33) object to manage the Alias Python API server. The [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias_utils/plugin_bootstrap.py) script will called to bootsrap the Alias Engine. The Alias Engine will create a [client](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias/client/socketio/client.py) to connect to the Alias Python API server.
+The plugin will use the [AliasBridge](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/server/alias_bridge.py#L33) object to manage the Alias Python API server. The [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py) script will called to bootsrap the Alias Engine. The Alias Engine will create a [client](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/client/socketio/client.py) to connect to the Alias Python API server.
 
 <br/>
 

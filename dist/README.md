@@ -66,13 +66,13 @@ requests
 
 6. Zip up the package again. Make sure that when unzipping the package, the `python.exe` file is in the root folder (e.g. make sure an intermediate folder is not added on zip).
 
-At run time, the framework's start up utils will check if the current version of Python is compatible with the framework. If it is not, the framework will install the embeddable package to the user's `%APPDATA%` folder by unzipping `python-3.7-embed-amd64.zip` to `%APPDATA%/Autodesk/Alias/ShotGrid/Python/Python37/install`. The additional packages will be installed using pip and the requiements.txt to `Lib/site-packages`. Regardless of which version of Python is being used, these installed site-packages will be imported by the framework [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/main/python/tk_framework_alias/__init__.py), to ensure the correct package versions are used.
+At run time, the framework's start up utils will check if the current version of Python is compatible with the framework. If it is not, the framework will install the embeddable package to the user's `%APPDATA%` folder by unzipping `python-3.7-embed-amd64.zip` to `%APPDATA%/Autodesk/Alias/ShotGrid/Python/Python37/install`. The additional packages will be installed using pip and the requiements.txt to `Lib/site-packages`. Regardless of which version of Python is being used, these installed site-packages will be imported by the framework [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/__init__.py), to ensure the correct package versions are used.
 
 If the embeddable package needs to be updated, for example, to add more site-packages, remember to update the `embed_version.txt` file to bump the version. This version is checked to see if the installed embedded package needs to be updated on the user's local disk.
 
 ## Required Python Packages
 
-Additional Python packages are required to run the framework that ShotGrid Toolkit does not ship with. These packages are added to the Python system path at run time [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/aea3b00153d1f0e63c38b4444fa24764fbc6dcfa/python/tk_framework_alias/__init__.py#L11-L20). By including the packages in the path, these modules must be made available by either:
+Additional Python packages are required to run the framework that ShotGrid Toolkit does not ship with. These packages are added to the Python system path at run time [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/__init__.py#L11-L20). By including the packages in the path, these modules must be made available by either:
 
 1. Dynamically install packages from a requirements file to the user's AppData folder using pip install.
 2. Pre-install packages to the framework.
