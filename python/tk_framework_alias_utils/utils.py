@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import hashlib
 import os
 import logging
 import logging.handlers
@@ -182,3 +183,21 @@ def get_logger(
     logger.addHandler(fh)
 
     return logger
+
+
+def get_md5_hex_string(file_name):
+    """Return the hex string using MD5."""
+
+    hash_md5 = hashlib.md5()
+    with open(file_name, "rb") as fp:
+        for chunk in iter(lambda: fp.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def verify_file(src_file, verify_to_file):
+    """Return True if the file to verify is the same as the source, using MD5."""
+
+    src_hex = get_md5_hex_string(src_file)
+    file_hex = get_md5_hex_string(verify_to_file)
+    return src_hex == file_hex

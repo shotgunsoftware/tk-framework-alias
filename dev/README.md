@@ -4,14 +4,15 @@
 
 - Windows
 
-The framework has a couple pre-release steps:
+The framework has pre-release steps:
 
 1. Include a pre-built [Toolkit Plugin](#build_toolkit_plugin)
 2. Include any necessary [embeddable Python packages](#embed_py_package)
+3. Include any [required Python packages](#required-python-packages)
 
 ## <a name="build_toolkit_plugin"></a> Build the Toolkit Plugin
 
-The framework provides the functionality to bootstrap a Toolkit engine (e.g. [tk-alias](https://github.com/shotgunsoftware/tk-alias)) using the the [ToolkitManager](https://github.com/shotgunsoftware/tk-core/blob/master/python/tank/bootstrap/manager.py). A Toolkit Plugin must be created in order to intialize the manager to bootstrap an engine. The framework provides build scripts to generate the plugin bundle; after running the build, it will create the `com.sg.basic.alias` plugin bundle in the `dist/Toolkit/plugin` folder. At runtime, the framework start up utils will install the plugin bundle to the user's `%APPDATA%` folder, where it can be accessed during the [bootstrap process](https://github.com/shotgunsoftware/tk-framework-alias/blob/init/python/tk_framework_alias_utils/plugin_bootstrap.py).
+The framework provides the functionality to bootstrap a Toolkit engine (e.g. [tk-alias](https://github.com/shotgunsoftware/tk-alias)) using the the [ToolkitManager](https://github.com/shotgunsoftware/tk-core/blob/develop/python/tank/bootstrap/manager.py). A Toolkit Plugin must be created in order to intialize the manager to bootstrap an engine. The framework provides build scripts to generate the plugin bundle; after running the build, it will create the `com.sg.basic.alias` plugin bundle in the `dist/Toolkit/plugin` folder. At runtime, the framework start up utils will install the plugin bundle to the user's `%APPDATA%` folder, where it can be accessed during the [bootstrap process](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py).
 
 The following files are provided to build the plugin:
 
@@ -64,4 +65,30 @@ make clean
 
 ## <a name="embed_py_package"></a>Embeddable Python Package
 
-The `get-pip.py` script is included for convenience to set up the embeddable Python packages in `dist` (see [pip installation](https://pip.pypa.io/en/stable/installation/)) The base embeddable Python packages do not come with pip, so this script can be used to make pip available to the embeddable Python, which can then be used to install any additional required Python packages. See [dist](https://github.com/shotgunsoftware/tk-framework-alias/blob/initial/dist/README.md) for more details on how to set up the embeddable Python package.
+The `get-pip.py` script is included for convenience to set up the embeddable Python packages in `dist` (see [pip installation](https://pip.pypa.io/en/stable/installation/)) The base embeddable Python packages do not come with pip, so this script can be used to make pip available to the embeddable Python, which can then be used to install any additional required Python packages. See [dist](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dist/README.md) for more details on how to set up the embeddable Python package.
+
+## Required Python Packages
+
+The framework requires additional Python packages to the standard package that ShotGrid Toolkit ships with. To make these packages available to the framework, they must be included in the distribution directory `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>/packages`.
+
+### What's included?
+
+The packages that are included are defined by the `requirements.txt` in each of the `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>` directory. The packages can be obtained by running the [update_python_packages.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dev/update_python_packages.py) script that uses pip to intall them. The script will then zip of the packages and copy them to the distribution directory. Standard Python packages will be found in `pkgs.zip`, and C extension packages will be found in `c_extensions.zip`. The reason for separating these packages is because C extension packages need to be unzipped in order to allow them to be imported by the framework (while standard packages do not).
+
+### Update the packages
+
+Follow these steps to update the packages when needed, these steps will update the packages for Python 3.7:
+
+1. Change the packages (add, remove, update version) by modifying the [requirements.txt](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dist/Python/Python37/requirements.txt).
+2. Using Python 3.7, run the [update_python_packages.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dev/update_python_packages.py) script. This script must be run from inside the `dev` directory.
+3. Check that the packages have been updated correctly [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dist/Python/Python37/packages). There is a `frozen_requirements.txt` file that records the package versions that were installed.
+4. Add the changes to the packages to git using `git add dist -f`.
+5. Commit and push the change to git as for any change.
+
+#### Key details about the update script
+
+- The version of Python used to run the scripts, is the version of Python that the packages will be installed for
+- The script must be run from inside the `dev` folder
+- The update script will use the requirements file and pip to install the packages to a local temp directory, which are eventually copied to the `dist` folder
+- C extension packages are put in their own separate zip file, to easily unzip them at run time.
+- To limit the size of the packages (to not bloat the repository size), special handling is made to the PySide2 package. PySide2 functionality is limited to using a single method from the QtCore module, and it is not intended that any further PySide2 functionality is to be needed. For this reason, the minimum files are included to use only the QtCore module.
