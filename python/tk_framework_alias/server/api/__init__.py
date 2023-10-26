@@ -32,7 +32,7 @@ def get_alias_version():
 def get_module_path(module_name, alias_version):
     """Return the file path to the Alias Python API module to use."""
 
-    api_folder_path = environment_utils.get_alias_distribution_directory(
+    api_folder_path = environment_utils.get_alias_dist_dir(
         alias_version, sys.version_info.major, sys.version_info.minor
     )
     if not api_folder_path or not os.path.exists(api_folder_path):

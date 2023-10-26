@@ -21,7 +21,7 @@ def toolkit_plugin_bootstrap(
     :param plugin_root_path: Path to the root of the plugin
     """
 
-    from environment_utils import get_plugin_install_directory
+    from environment_utils import get_plugin_install_dir
     import log
 
     # Set env var for ToolkitManager
@@ -36,7 +36,7 @@ def toolkit_plugin_bootstrap(
     os.environ["TK_ALIAS_OPEN_MODEL"] = "0"
 
     # Note: the sgtk_plugin_basic_alias module is created as part of the plugin build process.
-    plugin_root_path = get_plugin_install_directory()
+    plugin_root_path = get_plugin_install_dir()
     sys.path.insert(0, os.path.join(plugin_root_path, "python"))
     from sgtk_plugin_basic_alias import manifest
 
@@ -64,7 +64,7 @@ def toolkit_plugin_bootstrap(
     manifest.initialize_manager(toolkit_mgr, plugin_root_path)
 
     # Set the pipeline configuration id to use, if given
-    if pipeline_config_id is not None:
+    if pipeline_config_id:
         toolkit_mgr.pipeline_configuration = int(pipeline_config_id)
 
     # set up progress reporting
