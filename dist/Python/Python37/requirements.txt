@@ -8,9 +8,14 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+PySide2==5.15.0
+# ./wheels/PySide2-5.15.0.commercial-5.15.0-cp35.cp36.cp37.cp38-none-win_amd64.whl
+# ./wheels/shiboken2-5.15.0.commercial-5.15.0-cp35.cp36.cp37.cp38-none-win_amd64.whl
+PySide6==6.2.1
+# ./wheels/PySide6-6.2.10.commercial-cp36-abi3-win_amd64.whl
+# ./wheels/shiboken6-6.2.10.commercial-cp36-abi3-win_amd64.whl
 cryptography
 eventlet
-PySide2==5.15.0
 python-socketio
 requests
 websocket-client

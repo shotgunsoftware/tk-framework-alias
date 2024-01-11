@@ -26,15 +26,21 @@ def zip_recursively(zip_file, root_dir, folder_name):
             full_file_path = Path(os.path.join(root, f))
             zip_file.write(full_file_path, full_file_path.relative_to(root_dir))
 
+def modify_pyside(pyside_path):
+    """
+    Modify the PySide package such that it only includes the necessary files.
 
-def modify_pyside2(pyside2_path):
-    """Modify the PySide2 package such that it only includes the necessary files."""
+    This function supports modifying PySide versions:
+        - PySide2
+        - PySide6
+    """
 
-    # Required files by name. These are absoultely required. No override.
+    # Required files by name.
     required_files = [
         "QtCore.pyd",
         "QtCore.pyi",
-        "Qt5Core.dll",
+        "Qt5Core.dll",  # PySide2
+        "Qt6Core.dll",  # PySide6
     ]
     # Required files by file type extension. Files may be ignored if they fall into one of the
     # specified ignore patterns, even if they are one of these required file types
@@ -46,17 +52,21 @@ def modify_pyside2(pyside2_path):
     # Ignore files that start with these prefixes, unless they are in the 'required_files'
     ignore_files_startswith = ["Qt"]
 
-    # First create a temp directory to create the stripped down PySide2 package
-    with TemporaryDirectory() as pyside2_temp_dir:
+    # First create a temp directory to create the stripped down PySide package
+    with TemporaryDirectory() as pyside_temp_dir:
         # Add all required files
         for required_file in required_files:
-            src_path = os.path.join(pyside2_path, required_file)
-            dst_path = os.path.join(pyside2_temp_dir, required_file)
+            src_path = os.path.join(pyside_path, required_file)
+            if not os.path.exists(src_path):
+                # Some required files may be skipped due to version differences
+                print(f"\tSkipping {required_file}")
+                continue
+            dst_path = os.path.join(pyside_temp_dir, required_file)
             shutil.copyfile(src_path, dst_path)
 
-        # Go through the PySide2 top-level directory and add all files with the required file
+        # Go through the PySide top-level directory and add all files with the required file
         # type, unless it falls into one of the ignore patterns, or is already copied over.
-        for file_name in os.listdir(pyside2_path):
+        for file_name in os.listdir(pyside_path):
             # Check ignore patterns
             ignore = False
             for startswith_pattern in ignore_files_startswith:
@@ -72,18 +82,18 @@ def modify_pyside2(pyside2_path):
                 continue
 
             # Check if it already exists
-            dst_path = os.path.join(pyside2_temp_dir, file_name)
+            dst_path = os.path.join(pyside_temp_dir, file_name)
             if os.path.exists(dst_path):
                 continue
 
-            # Copy the file to the new PySide2 package
-            src_path = os.path.join(pyside2_path, file_name)
+            # Copy the file to the new PySide package
+            src_path = os.path.join(pyside_path, file_name)
             shutil.copyfile(src_path, dst_path)
 
-        # Remove the original PySide2 package
-        shutil.rmtree(pyside2_path)
+        # Remove the original PySide package
+        shutil.rmtree(pyside_path)
         # Copy the temp package to the original path
-        shutil.copytree(pyside2_temp_dir, pyside2_path)
+        shutil.copytree(pyside_temp_dir, pyside_path)
 
 
 #
@@ -153,7 +163,13 @@ with TemporaryDirectory() as temp_dir:
     assert len(package_names) >= nb_dependencies
 
     # TODO auto-detect C extension modules (and other dynamic modules)
-    c_extension_modules = ["greenlet", "PySide2", "shiboken2"]
+    c_extension_modules = [
+        "greenlet",
+        "PySide2",
+        "shiboken2",
+        "PySide6",
+        "shiboken6",
+    ]
 
     # Write out the zip file for python packages. Compress the zip file with ZIP_DEFLATED. Note
     # that this requires zlib to decompress when importing. Compression also causes import to
@@ -171,10 +187,11 @@ with TemporaryDirectory() as temp_dir:
 
         full_package_path = temp_dir_path / package_name
 
-        if package_name == "PySide2":
-            # Special handling for PySide2 to limit the package size. Only the QtCore module is
-            # needed, so this package will be stripped down to only include the necessary files
-            modify_pyside2(full_package_path)
+        if package_name.startswith("PySide"):
+            # Special handling for PySide packages to limit the package size. Only the QtCore
+            # module is needed, so this package will be stripped down to only include the
+            # necessary files
+            modify_pyside(full_package_path)
 
         if package_name in c_extension_modules:
             # Cannot include C extension modules in zip. These module types cannot be imported
