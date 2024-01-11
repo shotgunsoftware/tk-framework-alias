@@ -80,8 +80,10 @@ class AliasApiPostProcessRequestError(AliasApiRequestException):
 # Qt exceptions
 # ----------------------------------------------------------------------------------------
 
+
 class QtImportError(Exception):
     """Base Exception for errors related to importing the Qt framework module."""
+
 
 class QtModuleNotFound(QtImportError):
     """
@@ -92,6 +94,7 @@ class QtModuleNotFound(QtImportError):
     by the framework are not compatibile. To avoid this Qt version mismatch error, the PySide
     version should match the version that Alias is running with.
     """
+
 
 class QtAppInstanceNotFound(QtImportError):
     """

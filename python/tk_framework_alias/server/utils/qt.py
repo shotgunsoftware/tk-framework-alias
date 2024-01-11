@@ -21,6 +21,7 @@ qt_app = None
 try:
     # Alias < 2025.0 uses Qt 5.15.0
     from PySide2 import QtCore
+
     if QtCore:
         qt_app = QtCore.QCoreApplication.instance()
 except Exception:
@@ -35,6 +36,7 @@ if not QtCore or not qt_app:
     try:
         # Alias >= 2025.0 uses Qt 6.2.10
         from PySide6 import QtCore
+
         if QtCore:
             qt_app = QtCore.QCoreApplication.instance()
     except Exception:
@@ -44,4 +46,6 @@ if not QtCore or not qt_app:
 if not QtCore:
     raise QtModuleNotFound("QtCore module not found")
 if not qt_app:
-    raise QtAppInstanceNotFound(f"Qt App instance not found for Qt {QtCore.__version__}")
+    raise QtAppInstanceNotFound(
+        f"Qt App instance not found for Qt {QtCore.__version__}"
+    )
