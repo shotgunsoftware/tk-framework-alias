@@ -26,6 +26,7 @@ def zip_recursively(zip_file, root_dir, folder_name):
             full_file_path = Path(os.path.join(root, f))
             zip_file.write(full_file_path, full_file_path.relative_to(root_dir))
 
+
 def modify_pyside(pyside_path):
     """
     Modify the PySide package such that it only includes the necessary files.
