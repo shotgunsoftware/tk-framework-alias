@@ -31,16 +31,11 @@ def execute_in_main_thread(func):
         # invoke the function with the invoker
         try:
             invoker = create_invoker()
+            return invoker.invoke(func, *args, **kwargs)
         except QtImportError as qt_error:
-            return QtImportError(
-                f"The version of PySide2 must match the Qt version that Alias is running with.\n{qt_error}"
-            )
+            return QtImportError(qt_error)
         except Exception as error:
-            return Exception(
-                f"Failed to create invoker to execute function in the application main thread.\n{error}"
-            )
-
-        return invoker.invoke(func, *args, **kwargs)
+            return Exception(error)
 
     return wrapper
 
@@ -48,25 +43,10 @@ def execute_in_main_thread(func):
 def create_invoker():
     """Create an object used to invoke function calls on the main thread when called from a different thread."""
 
-    try:
-        from PySide2 import QtCore
-    except Exception as e:
-        raise QtImportError(e)
+    # Import Qt at the time when needed to ensure Alias has initialized the Qt app (instead of
+    # importing at the global scope).
+    from .qt import QtCore, qt_app
 
-    if not QtCore:
-        raise QtImportError("QtCore not found")
-
-    instance = QtCore.QCoreApplication.instance()
-    if not instance:
-        # NOTE to developers, if Alias is running in debug then the PySide2 libraries used
-        # must also be debug versions. If not, the Qt app instance will fail to be found.
-        qt_version = QtCore.__version__
-        raise QtImportError(
-            f"Qt Application instance must be created first. Using PySide2 version {qt_version}"
-        )
-        # raise Exception("Qt Application instance must be created first")
-
-    # Classes are defined locally since Qt might not be available.
     class Invoker(QtCore.QObject):
         """
         Invoker class - implements a mechanism to execute a function with arbitrary
@@ -111,13 +91,11 @@ def create_invoker():
 
         @QtCore.Slot()
         def _do_invoke(self):
-            """
-            Execute the function
-            """
+            """Execute the function."""
             self._res = self._fn()
 
     # Make sure that the invoker exists in the main thread:
     invoker = Invoker()
-    invoker.moveToThread(instance.thread())
+    invoker.moveToThread(qt_app.thread())
 
     return invoker
