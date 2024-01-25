@@ -136,6 +136,8 @@ class AliasBridge(metaclass=Singleton):
         :rtype: bool
         """
 
+        self.__log("Starting server...")
+
         if self.__server_socket:
             # Already started
             host_in_use, port_in_use = self.__server_socket.getsockname()
@@ -182,6 +184,8 @@ class AliasBridge(metaclass=Singleton):
         single thread that it was created in. By emitting an event from the client, the server
         will receive the shutdown event in the correct thread.
         """
+
+        self.__log("Stopping server...")
 
         # Destroy the server scope, this will remove any event handlers registered. Do this
         # before shutting down clients so that their shutdown does not trigger any events.
@@ -246,7 +250,7 @@ class AliasBridge(metaclass=Singleton):
         :rtype: dict
         """
 
-        self._log_message(None, f"Registering client: {client_name}\n{client_info}", logging.INFO)
+        self.__log(f"Registering client namespace: {client_name}\n{client_info}")
 
         if self.__clients.get(client_name):
             raise ClientAlreadyRegistered("Client already registered")
@@ -290,7 +294,7 @@ class AliasBridge(metaclass=Singleton):
         :rtype: bool
         """
 
-        self._log_message(None, f"Bootstrapping client: {client}", logging.INFO)
+        self.__log(f"Bootstrapping client: {client}")
 
         # Check if the server is ready to have a client connect to it.
         if not self.__server_socket:
@@ -413,7 +417,7 @@ class AliasBridge(metaclass=Singleton):
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Start the client in a new a process, don't wait for it to finish.
-        self._log_message(None, f"Executing subprocess: {args}", logging.INFO)
+        self.__log(f"Executing subprocess: {args}")
         subprocess.Popen(args, env=startup_env, startupinfo=si)
 
         return True
@@ -425,6 +429,8 @@ class AliasBridge(metaclass=Singleton):
         :param client_namespace: Restart the client applicatino registered to the namespace.
         :type client_namespace: str
         """
+
+        self.__log(f"Restarting client {client_namespace}...")
 
         client = self.get_client_by_namespace(client_namespace)
         if not client:
@@ -495,3 +501,15 @@ class AliasBridge(metaclass=Singleton):
         # created in).
         wsgi_logger = framework_utils.get_logger(self.__class__.__name__, "wsgi")
         eventlet.wsgi.server(self.__server_socket, self.__app, log=wsgi_logger)
+
+    def __log(self, msg, level=logging.INFO):
+        """
+        Log a message to the logger.
+
+        :param msg: The message to log.
+        :type msg: str
+        :param level: The log level to log the message at.
+        :type level: int
+        """
+
+        self.__server_sio.logger.log(level, msg)
