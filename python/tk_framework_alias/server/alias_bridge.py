@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import logging
 import os
 import subprocess
 import sys
@@ -245,6 +246,8 @@ class AliasBridge(metaclass=Singleton):
         :rtype: dict
         """
 
+        self._log_message(None, f"Registering client: {client_name}\n{client_info}", logging.DEBUG)
+
         if self.__clients.get(client_name):
             raise ClientAlreadyRegistered("Client already registered")
 
@@ -286,6 +289,8 @@ class AliasBridge(metaclass=Singleton):
             bootstrapped, only that the process was created to bootstrap the client.
         :rtype: bool
         """
+
+        self._log_message(None, f"Bootstrapping client: {client}", logging.DEBUG)
 
         # Check if the server is ready to have a client connect to it.
         if not self.__server_socket:
@@ -408,6 +413,7 @@ class AliasBridge(metaclass=Singleton):
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Start the client in a new a process, don't wait for it to finish.
+        self._log_message(None, f"Executing subprocess: {args}", logging.DEBUG)
         subprocess.Popen(args, env=startup_env, startupinfo=si)
 
         return True

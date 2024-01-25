@@ -164,6 +164,8 @@ class AliasServerNamespace(socketio.Namespace):
         # Emit event back to the client to shutdown (though do not wait for it, else this will
         # hang the server), then re-bootstrap the client.
         self.emit("shutdown", namespace=self.namespace)
+
+        self._log_message(sid, f"Restarting client: {self.namespace}", logging.DEBUG)
         alias_bridge.AliasBridge().restart_client(self.namespace)
 
     def on_get_alias_api(self, sid):
