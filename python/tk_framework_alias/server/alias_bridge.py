@@ -246,7 +246,7 @@ class AliasBridge(metaclass=Singleton):
         :rtype: dict
         """
 
-        self._log_message(None, f"Registering client: {client_name}\n{client_info}", logging.DEBUG)
+        self._log_message(None, f"Registering client: {client_name}\n{client_info}", logging.INFO)
 
         if self.__clients.get(client_name):
             raise ClientAlreadyRegistered("Client already registered")
@@ -290,7 +290,7 @@ class AliasBridge(metaclass=Singleton):
         :rtype: bool
         """
 
-        self._log_message(None, f"Bootstrapping client: {client}", logging.DEBUG)
+        self._log_message(None, f"Bootstrapping client: {client}", logging.INFO)
 
         # Check if the server is ready to have a client connect to it.
         if not self.__server_socket:
@@ -413,7 +413,7 @@ class AliasBridge(metaclass=Singleton):
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Start the client in a new a process, don't wait for it to finish.
-        self._log_message(None, f"Executing subprocess: {args}", logging.DEBUG)
+        self._log_message(None, f"Executing subprocess: {args}", logging.INFO)
         subprocess.Popen(args, env=startup_env, startupinfo=si)
 
         return True
