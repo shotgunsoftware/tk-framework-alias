@@ -65,7 +65,7 @@ make clean
 
 ## <a name="embed_py_package"></a>Embeddable Python Package
 
-The `get-pip.py` script is included for convenience to set up the embeddable Python packages in `dist` (see [pip installation](https://pip.pypa.io/en/stable/installation/)) The base embeddable Python packages do not come with pip, so this script can be used to make pip available to the embeddable Python, which can then be used to install any additional required Python packages. See [dist](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dist/README.md) for more details on how to set up the embeddable Python package.
+The `get-pip.py` script is not included to set up the embeddable Python packages in `dist` (see [pip installation](https://pip.pypa.io/en/stable/installation/)). Download from [here](https://bootstrap.pypa.io/get-pip.py). The base embeddable Python packages do not come with pip, so this script can be used to make pip available to the embeddable Python, which can then be used to install any additional required Python packages. See [dist](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dist/README.md) for more details on how to set up the embeddable Python package.
 
 ## Required Python Packages
 
