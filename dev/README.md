@@ -69,7 +69,7 @@ The `get-pip.py` script is not included to set up the embeddable Python packages
 
 ## Required Python Packages
 
-The framework requires additional Python packages to the standard package that ShotGrid Toolkit ships with. To make these packages available to the framework, they must be included in the distribution directory `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>/packages`.
+The framework requires additional Python packages to the standard package that Flow Production Tracking Toolkit ships with. To make these packages available to the framework, they must be included in the distribution directory `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>/packages`.
 
 ### What's included?
 

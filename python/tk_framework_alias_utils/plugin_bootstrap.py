@@ -94,7 +94,7 @@ def toolkit_plugin_bootstrap(
     from sgtk.platform.engine_logging import ToolkitEngineHandler
 
     # Create the Qt app
-    app_name = "ShotGrid for Alias"
+    app_name = "Flow Production Tracking for Alias"
     app = QtGui.QApplication([app_name])
     app.setApplicationName(app_name)
     app.setQuitOnLastWindowClosed(False)
@@ -106,13 +106,13 @@ def toolkit_plugin_bootstrap(
     # the event loop starts.
     engine.post_qt_init()
 
-    # Log message to Alias prompt indicating that ShotGrid is ready
-    engine.alias_py.log_to_prompt("ShotGrid initialized")
+    # Log message to Alias prompt indicating that Flow Production Tracking is ready
+    engine.alias_py.log_to_prompt("Flow Production Tracking initialized")
 
-    # This will block and not return until ShotGrid app exits.
+    # This will block and not return until Flow Production Tracking app exits.
     ret = app.exec_()
 
-    # Clean up ShotGrid components
+    # Clean up Flow Production Tracking components
     root_logger = sgtk.LogManager().root_logger
     handlers = list(root_logger.handlers)
     while handlers:
@@ -128,7 +128,7 @@ def toolkit_plugin_bootstrap(
 
 if __name__ == "__main__":
     """
-    Bootstrap the ShotGrid Alias Engine application.
+    Bootstrap the Flow Production Tracking Alias Engine application.
 
     This script calls the `bootstrap_engine` method with the script args to do the work.
 
