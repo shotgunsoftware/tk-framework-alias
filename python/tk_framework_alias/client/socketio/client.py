@@ -344,7 +344,7 @@ class AliasSocketIoClient(socketio.Client):
                 json.dump(module_proxy, fp=fp, cls=self.get_json_encoder())
             # Copy the api module to the cache folder in order to determine next time if the
             # cache requies an update
-            shutil.copyfile(api_info["file_path"], cache_api_filepath)            
+            shutil.copyfile(api_info["file_path"], cache_api_filepath)
 
         return module_proxy.get_or_create_module(self)
 
