@@ -350,7 +350,7 @@ class AliasBridge(metaclass=Singleton):
         # Get the client executable and args
         shotgrid_info = client["info"].get("shotgrid")
         if shotgrid_info:
-            # Bootstrap using Flow Production Tracking toolkit manager
+            # Bootstrap using Flow Production Tracking manager
             pipeline_config_id = shotgrid_info["pipeline_config_id"] or ""
             entity_type = shotgrid_info["entity_type"]
             entity_id = shotgrid_info["entity_id"]

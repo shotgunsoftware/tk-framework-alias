@@ -6,7 +6,7 @@
 
 Toolkit framework for integration with Autodesk Alias.
 
-The main use of this framework is by the [Alias Engine](https://github.com/shotgunsoftware/tk-alias). The framework allows the engine to run alongside Alias, providing access to the Flow Production Tracking Toolkit Apps that can interact wtih the data in Alias.
+The main use of this framework is by the [Alias Engine](https://github.com/shotgunsoftware/tk-alias). The framework allows the engine to run alongside Alias, providing access to the Flow Production Tracking Apps that can interact wtih the data in Alias.
 
 ### <a name="support"></a>Support
 
