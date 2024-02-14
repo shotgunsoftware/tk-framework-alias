@@ -460,7 +460,7 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
         )
         if not os.path.exists(framework_c_ext_zip):
             logger.debug(f"No C extensions found to install {framework_c_ext_zip}")
-            return True
+            continue
 
         python_packages_path = environment_utils.get_python_packages_dir(
             major_version, minor_version
@@ -476,7 +476,7 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
         if os.path.exists(install_c_ext_zip_path):
             if verify_file(framework_c_ext_zip, install_c_ext_zip_path):
                 logger.debug("C extensions already up to date.")
-                return True  # Packages already exist and no change.
+                continue # Packages already exist and no change.
 
         if os.path.exists(install_c_ext_path):
             shutil.rmtree(install_c_ext_path)
