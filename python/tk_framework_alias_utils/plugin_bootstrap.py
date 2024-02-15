@@ -51,25 +51,21 @@ def toolkit_plugin_bootstrap(
     log_handler = log.get_sgtk_logger(sgtk)
     logger.debug("Added bootstrap log hander to root logger...")
 
-    # set up the toolkit bootstrap manager
-
     # TODO  For standalone workflows, need to handle authentication here
     #       this includes workflows for logging in and out (see maya plugin).
     #       For now, assume that we are correctly authenticated.
     #       Also, need to check that the SHOTGUN_SITE env var matches
     #       the currently logged in site.
 
+    # ---- set up the toolkit bootstrap manager
     toolkit_mgr = sgtk.bootstrap.ToolkitManager()
     # run the default init which sets plugin id, base config and bundle cache path
+    logger.debug("Initializing Toolkit Manager: %s" % toolkit_mgr)
     manifest.initialize_manager(toolkit_mgr, plugin_root_path)
 
     # Set the pipeline configuration id to use, if given
     if pipeline_config_id:
         toolkit_mgr.pipeline_configuration = int(pipeline_config_id)
-
-    # set up progress reporting
-    # toolkit_mgr.progress_callback = _progress_handler
-    logger.debug("Toolkit Manager: %s" % toolkit_mgr)
 
     entity = toolkit_mgr.get_entity_from_environment()
     logger.debug("Will launch the engine with entity: %s" % entity)
