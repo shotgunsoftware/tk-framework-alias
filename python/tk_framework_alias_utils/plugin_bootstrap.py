@@ -71,7 +71,11 @@ def toolkit_plugin_bootstrap(
     logger.debug("Will launch the engine with entity: %s" % entity)
 
     logger.info("Bootstrapping toolkit...")
-    toolkit_mgr.bootstrap_engine("tk-alias", entity=entity)
+    try:
+        toolkit_mgr.bootstrap_engine("tk-alias", entity=entity)
+    except Exception as e:
+        logger.exception("Error bootstrapping toolkit: %s" % e)
+        return -1
 
     # ---- tear down logging
     sgtk.LogManager().root_logger.removeHandler(log_handler)
