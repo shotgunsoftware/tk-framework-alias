@@ -72,7 +72,7 @@ If the embeddable package needs to be updated, for example, to add more site-pac
 
 ## Required Python Packages
 
-Additional Python packages are required to run the framework that Flow Production Tracking does not ship with. These packages are added to the Python system path at run time [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/__init__.py#L11-L20). By including the packages in the path, these modules must be made available by either:
+Additional Python packages are required to run the framework that Flow Production Tracking Toolkit does not ship with. These packages are added to the Python system path at run time [here](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias/__init__.py#L11-L20). By including the packages in the path, these modules must be made available by either:
 
 1. Dynamically install packages from a requirements file to the user's AppData folder using pip install.
 2. Pre-install packages to the framework.
