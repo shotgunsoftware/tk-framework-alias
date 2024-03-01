@@ -10,7 +10,7 @@ The main use of this framework is by the [Alias Engine](https://github.com/shotg
 
 ### <a name="support"></a>Support
 
-- Alias >= 2021
+- Alias >= 2022.0
 - Windows only
 
 <br/>
