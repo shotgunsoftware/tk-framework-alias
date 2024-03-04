@@ -13,6 +13,8 @@ The framework includes distributed files:
         - [Required python packages](#required-python-packages) running the framework with 3.7
     - Python39
         - [Required python packages](#required-python-packages) running the framework with 3.9
+    - Python310
+        - [Required python packages](#required-python-packages) running the framework with 3.10
 
 The Alias distributed files are maintained by the ShotGrid Automotive Team.
 
