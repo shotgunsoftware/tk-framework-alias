@@ -405,4 +405,5 @@ def get_framework_supported_python_versions():
     return [
         (3, 7),
         (3, 9),
+        (3, 10),
     ]
