@@ -111,6 +111,7 @@ def toolkit_plugin_bootstrap(
 
     # This will block and not return until ShotGrid app exits.
     ret = app.exec_()
+    logger.info("ShotGrid QApplication exited with return code: %s" % ret)
 
     # Clean up ShotGrid components
     root_logger = sgtk.LogManager().root_logger
@@ -120,9 +121,13 @@ def toolkit_plugin_bootstrap(
         if isinstance(handler, ToolkitEngineHandler):
             root_logger.removeHandler(handler)
 
+    # Get the engine again before clean up, our reference may be stale.
+    engine = sgtk.platform.current_engine()
     if engine:
+        logger.info("Destroying Toolkit...")
         engine.destroy()
 
+    logger.info("Plugin bootstrap exiting")
     return ret
 
 
