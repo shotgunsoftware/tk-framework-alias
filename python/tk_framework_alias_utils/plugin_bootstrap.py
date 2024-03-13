@@ -121,6 +121,8 @@ def toolkit_plugin_bootstrap(
         if isinstance(handler, ToolkitEngineHandler):
             root_logger.removeHandler(handler)
 
+    # Get the engine again before clean up, our reference may be stale.
+    engine = sgtk.platform.current_engine()
     if engine:
         logger.info("Destroying Toolkit...")
         engine.destroy()
