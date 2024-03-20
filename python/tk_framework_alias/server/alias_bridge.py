@@ -117,7 +117,7 @@ class AliasBridge(metaclass=Singleton):
 
     def start_server(self, host=None, port=None, max_retries=None):
         """
-        Start the server to communicate between Alias and ShotGrid.
+        Start the server to communicate between Alias and Flow Production Tracking.
 
         This will create a new thread to serve the WSGI server application to listen for
         client connections to the socketio server.
@@ -314,15 +314,15 @@ class AliasBridge(metaclass=Singleton):
             # Warning that the framework attempts to encrypt and decrypt the executable path
             # for security, however it does not have a secure place to store the key, so for
             # this reason it is currently turned off. Ideally we can store an encryption key
-            # in the ShotGrid database or a key vault. For ShotGrid clients, this is not an
-            # issue because the toolkit manager should be used to start the ShotGrid engine.
+            # in the Flow Production Tracking database or a key vault. For Flow Production Tracking clients, this is not an
+            # issue because the toolkit manager should be used to start the Flow Production Tracking engine.
             #
             # client_info = client_info or {}
             # client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
             # if client_exec_path:
             #     client_info["exec_path"] = client_exec_path
 
-            # Check for ShotGrid specific client info. ShotGrid clients do not provide a
+            # Check for Flow Production Tracking specific client info. Flow Production Tracking clients do not provide a
             # bootstrap executable path, instead the plugin_bootstrap.py script is used
             # from within the framework.
             pipeline_config_id = os.environ.get(
@@ -330,7 +330,7 @@ class AliasBridge(metaclass=Singleton):
             )
             entity_type = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE")
             entity_id = os.environ.get("ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID")
-            # A client is considered a ShotGrid client if it provides an entity type and id.
+            # A client is considered a Flow Production Tracking client if it provides an entity type and id.
             # The pipeline configuration is optional, since an unmanaged pipeline could be in
             # use. In that case, the default will be the latet basic config in the app store.
             if entity_type is not None and entity_id is not None:
@@ -359,7 +359,7 @@ class AliasBridge(metaclass=Singleton):
         # Get the client executable and args
         shotgrid_info = client["info"].get("shotgrid")
         if shotgrid_info:
-            # Bootstrap using ShotGrid toolkit manager
+            # Bootstrap using Flow Production Tracking manager
             pipeline_config_id = shotgrid_info["pipeline_config_id"] or ""
             entity_type = shotgrid_info["entity_type"]
             entity_id = shotgrid_info["entity_id"]
@@ -400,7 +400,7 @@ class AliasBridge(metaclass=Singleton):
             # ]
             raise ClientBootstrapMethodNotSupported(
                 """
-                Bootstrapping Alias client via executable path is currently not supported. Only ShotGrid clients supported.
+                Bootstrapping Alias client via executable path is currently not supported. Only Flow Production Tracking clients supported.
                 Client info: {client_info}
             """.format(
                     client_info=pprint.pformat(client_info)
