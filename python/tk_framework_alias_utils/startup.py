@@ -56,11 +56,11 @@ def get_plugin_environment(
             version of Python will be used when creating a new process to execute the client.
         ALIAS_PLUGIN_CLIENT_NEW_PROCESS - "1" if the client should execute in a separate
             process than Alias, else "0"
-        ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID - For ShotGrid clients, the id of the
+        ALIAS_PLUGIN_CLIENT_SHOTGRID_PIPELINE_CONFIG_ID - For Flow Production Tracking clients, the id of the
             pipeline configuration can be set for the Toolkit Manager to bootstrap the engine
-        ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE - For ShotGrid clients, the entity type can be
+        ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_TYPE - For Flow Production Tracking clients, the entity type can be
             set for the Toolkit Manager to bootstrap the engine
-        ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID - For ShotGrid clients, the entity id can be set
+        ALIAS_PLUGIN_CLIENT_SHOTGRID_ENTITY_ID - For Flow Production Tracking clients, the entity id can be set
             for the Toolkit Manager to bootstrap the engine
         ALIAS_PLUGIN_CLIENT_SIO_HOSTNAME - the host for the socketio server to connect to
         ALIAS_PLUGIN_CLIENT_SIO_PORT - the port number for the socketio server to connect to
@@ -669,30 +669,30 @@ def ensure_plugin_ready(
     """
     Do the necessary work to ensure the Alias plugin can be loaded with Alias at launch.
 
-    Starting in Alias 2024.0, Qt is now used for Alias UI. This conflicts with ShotGrid Qt
-    because Alias is a QtQuick/QML application, while ShotGrid is a QWidget application.
-    QWidgets cannot be created within an application using QtQuick/QML, so ShotGrid must
+    Starting in Alias 2024.0, Qt is now used for Alias UI. This conflicts with Flow Production Tracking Qt
+    because Alias is a QtQuick/QML application, while Flow Production Tracking is a QWidget application.
+    QWidgets cannot be created within an application using QtQuick/QML, so Flow Production Tracking must
     run in a separate process than Alias. Thus, the Alias plugin for Alias 2024 and later
     differs quite a bit from Alias before 2024.0:
 
     For Alias < 2024.0:
-        - ShotGrid will run in the same process as Alias, which means the Qt application is
-          shared between Alias and ShotGrid. Alias does not use Qt, so effectively ShotGrid
+        - Flow Production Tracking will run in the same process as Alias, which means the Qt application is
+          shared between Alias and Flow Production Tracking. Alias does not use Qt, so effectively Flow Production Tracking
           owns it
         - Alias will be launched with the -P param to specify the Alias Plugin to load at
           start up with Alias
         - The Alias Plugin will embed Python and call the tk-alias `start_engine` method to
-          start up ShotGrid
+          start up Flow Production Tracking
 
     For Alias >= 2024.0:
-        - ShotGrid will run in a separate process than Alias; Alias will have its own Qt
-          application (in QtQuick/QML) and ShotGrid will have its own Qt application (in
+        - Flow Production Tracking will run in a separate process than Alias; Alias will have its own Qt
+          application (in QtQuick/QML) and Flow Production Tracking will have its own Qt application (in
           QWidgets)
         - Alias will be launched with the -P param to specify the Alias Plugin to load at
           startup with Alias
         - The Alias Plugin will embed Python to start a socketio server to handle communication
-          between Alias and ShotGrid, as well as use the Toolkit Manager to bootstrap the
-          ShotGrid Alias Engine
+          between Alias and Flow Production Tracking, as well as use the Toolkit Manager to bootstrap the
+          Flow Production Tracking Alias Engine
         - The Python version used when embedding in the Alias process must be have installed
           a PySide2 version that matches the Qt version that Alias is using (5.15.0). For this
           reason, the framework may need to install a specific Python version in order to have
@@ -704,14 +704,14 @@ def ensure_plugin_ready(
     :type alias_exec_path: str
     :param client_name: A name of the application that is launching Alias with the plugin.
     :type client_name: str
-    :param pipeline_configuration_id: If the client is running within ShotGrid, set the id of
+    :param pipeline_configuration_id: If the client is running within Flow Production Tracking, set the id of
         the pipeline configuration used by the Toolkit Manager to bootstrap the engine from the
         plugin.
     :type pipeline_config_id: int
-    :param entity_type: If the client is running within ShotGrid, set the entity type used by
+    :param entity_type: If the client is running within Flow Production Tracking, set the entity type used by
         the Toolkit Manager to bootstrap the engine from the plugin.
     :type entity_type: str
-    :param entity_id: If the client is running within ShotGrid, set the entity id used by
+    :param entity_id: If the client is running within Flow Production Tracking, set the entity id used by
         the Toolkit Manager to bootstrap the engine from the plugin.
     :type entity_id: int
     :param debug: Set to True to turn on debugging for the plugin, else False.
@@ -732,7 +732,7 @@ def ensure_plugin_ready(
         new_process = True
 
         # Check the basic.alias Toolkit plugin is installed and up to date. This is used by
-        # the Alias Plugin to bootstrap the ShotGrid Alias Engine.
+        # the Alias Plugin to bootstrap the Flow Production Tracking Alias Engine.
         ensure_toolkit_plugin_up_to_date(logger)
 
         # Alias 2024.0 is running with Qt 5.15.0, which means the PySide2 version used by the

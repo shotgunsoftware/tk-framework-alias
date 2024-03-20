@@ -7,7 +7,7 @@
 
 Toolkit framework for integration with Autodesk Alias.
 
-The main use of this framework is by the [Alias Engine](https://github.com/shotgunsoftware/tk-alias). The framework allows the engine to run alongside Alias, providing access to the ShotGrid Toolkit Apps that can interact wtih the data in Alias.
+The main use of this framework is by the [Alias Engine](https://github.com/shotgunsoftware/tk-alias). The framework allows the engine to run alongside Alias, providing access to the Flow Production Tracking Toolkit Apps that can interact with the data in Alias.
 
 ### <a name="support"></a>Support
 
@@ -20,19 +20,19 @@ The main use of this framework is by the [Alias Engine](https://github.com/shotg
 
 ### <a name="alias_plugin"></a>Alias Plugin ###
 
-This plugin is loaded by Alias and is the main entry point to integrating a Python client (e.g. ShotGrid) with Alias. This is maintained by the ShotGrid Automotive Team.
+This plugin is loaded by Alias and is the main entry point to integrating a Python client (e.g. Flow Production Tracking) with Alias. This is maintained by the Flow Production Tracking Automotive Team.
 
 File location:  `dist/Alias/{python_version/{alias_version}/{plugin_name}.plugin`
 
 ### Alias Python API ###
 
-The Python module that provides bindings to the C++ Alias API. This allows the Python client (e.g. ShotGrid) to interact with the Alias data. This is maintained by the ShotGrid Automotive Team.
+The Python module that provides bindings to the C++ Alias API. This allows the Python client (e.g. Flow Production Tracking) to interact with the Alias data. This is maintained by the Flow Production Tracking Automotive Team.
 
 File location:  `dist/Alias/{python_version/{alias_version}/alias_api.pyd`
 
 ### <a name="toolkit_plugin"></a>Toolkit Plugin for Alias ###
 
-The Toolkit Plugin is used by [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py) to bootstrap the ShotGrid Alias Engine, which can be initiated by the Alias Plugin. This allows ShotGrid to be started up by Alias. See [dev](https://github.com/shotgunsoftware/tk-framework-alias/tree/main/dev#readme) for more details on how the Toolkit Plugin is built.
+The Toolkit Plugin is used by [plugin_bootstrap.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py) to bootstrap the Flow Production Tracking Alias Engine, which can be initiated by the Alias Plugin. This allows Flow Production Tracking to be started up by Alias. See [dev](https://github.com/shotgunsoftware/tk-framework-alias/tree/main/dev#readme) for more details on how the Toolkit Plugin is built.
 
 File location:  `dist/Toolkit/plugin/com.sg.basic.alias`
 
@@ -59,9 +59,9 @@ The framework can be used for any version of Alias (within the [support](#suppor
 ```
 "C:\Program Files\Autodesk\AliasAutoStudio2024.0\bin\Alias.exe" -a as -P "C:\path\to\alias_plugins.lst"
 ```
-3. Alias loads the plugin which will embed Python to access the Python modules to initialize ShotGrid and establish communication with Alias.
+3. Alias loads the plugin which will embed Python to access the Python modules to initialize Flow Production Tracking and establish communication with Alias.
 
-The [startup utils](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py) do all the necessary set up to ensure that Alias can load the plugin to initialize ShotGrid. See the main start up function [ensure_plugin_ready](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py#L536) for more details.
+The [startup utils](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py) do all the necessary set up to ensure that Alias can load the plugin to initialize Flow Production Tracking. See the main start up function [ensure_plugin_ready](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/startup.py#L536) for more details.
 
 Due to major changes to Alias starting in 2024.0, the framework essentially operates in two different modes. For Alias versions prior to 2024.0:
 
