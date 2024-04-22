@@ -58,10 +58,14 @@ class AliasSocketIoClient(socketio.Client):
                 self.__class__.__name__, "sio_client"
             )
 
-        super(AliasSocketIoClient, self).__init__(*args, **kwargs)
-
         # The connection timeout in seconds
-        self.__timeout = kwargs.get("timeout", 20)
+        self.__timeout = kwargs.pop("timeout", 20)
+        if kwargs.get("execute_in_main_thread_func"):
+            self.execute_in_main_thread_func = kwargs.pop("execute_in_main_thread_func")
+        else:
+            self.execute_in_main_thread_func = None
+
+        super(AliasSocketIoClient, self).__init__(*args, **kwargs)
 
         # The callbacks registry. Callback functions passed to the server are stored in the
         # client by their id, such that they can be looked up and executed when the server

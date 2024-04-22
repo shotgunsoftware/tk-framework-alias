@@ -103,6 +103,10 @@ class AliasClientNamespace(socketio.ClientNamespace):
         self.client.logger.debug(
             f"Executing callback function {callback_func.__name__}"
         )
+
+        # FIXME TEMP
+        if hasattr(self.client, "execute_in_main_thread_func") and self.client.execute_in_main_thread_func:
+            return self.client.execute_in_main_thread_func(callback_func, *args, **kwargs)
         return callback_func(*args, **kwargs)
 
     def _log_message(self, msg, level=logging.INFO):
