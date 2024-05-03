@@ -103,21 +103,25 @@ def get_alias_api_module():
 
     return api_module
 
-
-#
-# Get the Alias API module and and make it available through this api module global variable
-# 'alias_api', e.g. api.alias_api
-#
-if hasattr(os, "add_dll_directory"):
-    # For Python >= 3.9, ensure that the DLL path is in the search path by using the os method
-    # add_dll_directory. Starting in 3.9, the sys.path is no longer used to find DLLs.
-    alias_bin_path = os.environ.get("ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH")
-    if not alias_bin_path:
-        raise AliasPythonApiImportError(
-            "Couldn't get Alias bin path: set the environment variable ALIAS_PLUGIN_CLINET_ALIAS_EXECPATH."
-        )
-    alias_dll_path = os.path.dirname(alias_bin_path)
-    with os.add_dll_directory(alias_dll_path):
+try:
+    #
+    # Get the Alias API module and and make it available through this api module global variable
+    # 'alias_api', e.g. api.alias_api
+    #
+    if hasattr(os, "add_dll_directory"):
+        # For Python >= 3.9, ensure that the DLL path is in the search path by using the os method
+        # add_dll_directory. Starting in 3.9, the sys.path is no longer used to find DLLs.
+        alias_bin_path = os.environ.get("ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH")
+        if not alias_bin_path:
+            raise AliasPythonApiImportError(
+                "Couldn't get Alias bin path: set the environment variable ALIAS_PLUGIN_CLINET_ALIAS_EXECPATH."
+            )
+        alias_dll_path = os.path.dirname(alias_bin_path)
+        with os.add_dll_directory(alias_dll_path):
+            alias_api = get_alias_api_module()
+    else:
         alias_api = get_alias_api_module()
-else:
-    alias_api = get_alias_api_module()
+
+except Exception as e:
+    print(e)
+    import alias_api
