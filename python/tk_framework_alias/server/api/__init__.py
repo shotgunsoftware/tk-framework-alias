@@ -128,3 +128,5 @@ try:
 except Exception as e:
     print(e)
     import alias_api
+    from alias_api import alias_api
+    print(alias_api.__file__)

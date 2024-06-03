@@ -60,6 +60,8 @@ class AliasSocketIoClient(socketio.Client):
 
         # The connection timeout in seconds
         self.__timeout = kwargs.pop("timeout", 20)
+
+        # Added for flow... and generic clients
         if kwargs.get("execute_in_main_thread_func"):
             self.execute_in_main_thread_func = kwargs.pop("execute_in_main_thread_func")
         else:

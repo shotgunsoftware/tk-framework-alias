@@ -185,6 +185,7 @@ class AliasBridge(metaclass=Singleton):
             raise Exception("Alias events client failed to connect")
 
         self.register_client_namespace("fptr", {"test": "debug"})
+        self.register_client_namespace("python", {"test": "debug"})
 
         return True
 

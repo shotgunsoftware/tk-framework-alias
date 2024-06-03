@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="alias-python-api",
-    version="0.1.1",
+    version="0.0.1",
     packages=find_packages(where="python"),
     package_dir={"": "python"},
 
@@ -41,6 +41,7 @@ setup(
     ],
 
     data_files=[
-        ('alias_api', ['python/api/alias_api.pyd'])
+        ('alias_api', ['python/api/alias_api.pyd']),
+        ('Lib/site-packages/tk_framework_alias/client/gui/console', ['python/tk_framework_alias/client/gui/console/style.qss']),
     ]
 )
