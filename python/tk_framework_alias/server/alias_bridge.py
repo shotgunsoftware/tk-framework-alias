@@ -8,15 +8,26 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+# try:
+#     import sys
+#     sys.path.append("C:\\python_libs")
+#     import ptvsd
+#     ptvsd.enable_attach()
+#     ptvsd.wait_for_attach()
+# except:
+#     pass 
+
 import logging
 import os
 import subprocess
 import sys
+print(sys.version)
 import threading
 import pprint
 
 # Third party pacakges included in dist/pkgs.zip
 import socketio
+print(socketio.__file__)
 import eventlet
 
 from .socketio.data_model import AliasDataModel
@@ -173,6 +184,8 @@ class AliasBridge(metaclass=Singleton):
         if not self.alias_events_client_sio.connected:
             raise Exception("Alias events client failed to connect")
 
+        self.register_client_namespace("fptr", {"test": "debug"})
+
         return True
 
     def stop_server(self):
@@ -296,6 +309,7 @@ class AliasBridge(metaclass=Singleton):
 
         self.__log(f"Bootstrapping client: {client}")
 
+
         # Check if the server is ready to have a client connect to it.
         if not self.__server_socket:
             return False
@@ -316,11 +330,11 @@ class AliasBridge(metaclass=Singleton):
             # this reason it is currently turned off. Ideally we can store an encryption key
             # in the Flow Production Tracking database or a key vault. For Flow Production Tracking clients, this is not an
             # issue because the toolkit manager should be used to start the Flow Production Tracking engine.
-            #
-            # client_info = client_info or {}
-            # client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
-            # if client_exec_path:
-            #     client_info["exec_path"] = client_exec_path
+            
+            client_info = client_info or {}
+            client_exec_path = os.environ.get("ALIAS_PLUGIN_CLIENT_EXECPATH")
+            if client_exec_path:
+                client_info["exec_path"] = client_exec_path
 
             # Check for Flow Production Tracking specific client info. Flow Production Tracking clients do not provide a
             # bootstrap executable path, instead the plugin_bootstrap.py script is used
@@ -384,28 +398,29 @@ class AliasBridge(metaclass=Singleton):
             ]
         else:
             # NOTE uncomment to allow client to run from python script.
-            # # Bootstrap by running the client executable
+            # Bootstrap by running the client executable
             # client_exe_path = framework_utils.decrypt_from_str(
             #     client["info"].get("exec_path")
             # )
-            # if not client_exe_path:
-            #     return False
+            client_exec_path = client["info"].get("exec_path")
+            if not client_exec_path:
+                return False
 
-            # args = [
-            #     python_exe,
-            #     client_exe_path,
-            #     hostname,
-            #     str(port),
-            #     client["namespace"],
-            # ]
-            raise ClientBootstrapMethodNotSupported(
-                """
-                Bootstrapping Alias client via executable path is currently not supported. Only Flow Production Tracking clients supported.
-                Client info: {client_info}
-            """.format(
-                    client_info=pprint.pformat(client_info)
-                )
-            )
+            args = [
+                python_exe,
+                client_exec_path,
+                hostname,
+                str(port),
+                client["namespace"],
+            ]
+            # raise ClientBootstrapMethodNotSupported(
+            #     """
+            #     Bootstrapping Alias client via executable path is currently not supported. Only Flow Production Tracking clients supported.
+            #     Client info: {client_info}
+            # """.format(
+            #         client_info=pprint.pformat(client_info)
+            #     )
+            # )
 
         # Copy the env variables to start the new process with
         startup_env = os.environ.copy()

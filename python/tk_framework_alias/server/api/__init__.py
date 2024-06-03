@@ -75,9 +75,11 @@ def get_alias_api_module():
     # Find and create the module spec object for the Alias Python API
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if not spec:
-        raise AliasPythonApiImportError(
-            "Could not find the Alias Python API module {}".format(module_path)
-        )
+        # raise AliasPythonApiImportError(
+        #     "Could not find the Alias Python API module {}".format(module_path)
+        # )
+        # FIXME
+        return
 
     try:
         # module_from_spec will add the api module to the sys.modules
@@ -97,9 +99,10 @@ def get_alias_api_module():
             py_minor=sys.version_info.minor,
             py_micro=sys.version_info.micro,
         )
-        raise AliasPythonApiImportError(
-            "{error}\n\n{info}".format(error=str(e), info=info_msg)
-        )
+        # raise AliasPythonApiImportError(
+        #     "{error}\n\n{info}".format(error=str(e), info=info_msg)
+        # )
+        return
 
     return api_module
 
