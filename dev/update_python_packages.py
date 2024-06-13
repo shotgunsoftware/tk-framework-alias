@@ -123,7 +123,9 @@ def install_common_python_packages(python_dist_dir):
         if not os.path.exists(packages_dist_dir):
             os.makedirs(packages_dist_dir)
 
-        frozen_requirements_txt = os.path.join(packages_dist_dir, "frozen_requirements.txt")
+        frozen_requirements_txt = os.path.join(
+            packages_dist_dir, "frozen_requirements.txt"
+        )
 
         # Pip install everything and capture everything that was installed.
         subprocess.run(
@@ -286,8 +288,12 @@ def install_qt_packages(python_dist_dir):
             # Write out the zip file for qt c extension pacakges. These are handled separately, since they
             # need to be unzipped at runtime in order to be imported, AND it will vary depending on the
             # Alias version
-            qt_extension_zip_path = os.path.join(qt_packages_dist_dir, "qt_extensions.zip")
-            qt_ext_zip = zipfile.ZipFile(qt_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
+            qt_extension_zip_path = os.path.join(
+                qt_packages_dist_dir, "qt_extensions.zip"
+            )
+            qt_ext_zip = zipfile.ZipFile(
+                qt_extension_zip_path, "w", zipfile.ZIP_DEFLATED
+            )
 
             for package_name in package_names:
                 print(f"Zipping {package_name}...")
