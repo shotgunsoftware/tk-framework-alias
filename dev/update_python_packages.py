@@ -97,148 +97,35 @@ def modify_pyside(pyside_path):
         shutil.copytree(pyside_temp_dir, pyside_path)
 
 
-#
-# Script body
-#
+def install_common_python_packages(python_dist_dir):
+    """
+    Install common Python packages.
 
-python_dist_dir = os.path.normpath(
-    os.path.join(
-        os.path.dirname(__file__),
-        os.pardir,
-        "dist",
-        "Python",
-        f"Python{sys.version_info.major}{sys.version_info.minor}",
-    )
-)
-if not os.path.exists(python_dist_dir):
-    raise Exception(f"Cannot find Python distribution folder {python_dist_dir}")
+    :param python_dist_dir: The path containing the package requirements.txt
+        file, and where to install the packages.
+    :type python_dist_dir: str
+    """
 
-#
-# Install common Python packages
-#
-with TemporaryDirectory() as temp_dir:
-    print("Installing common Python packages...")
+    if not os.path.exists(python_dist_dir):
+        print(f"Cannot find Python distribution folder {python_dist_dir}")
+        return
 
-    temp_dir_path = Path(temp_dir)
+    with TemporaryDirectory() as temp_dir:
+        print("Installing common Python packages...")
 
-    requirements_txt = os.path.join(python_dist_dir, "requirements.txt")
-    if not os.path.exists(requirements_txt):
-        raise Exception(f"Cannot find requirements file {requirements_txt}")
+        temp_dir_path = Path(temp_dir)
 
-    packages_dist_dir = os.path.join(python_dist_dir, "packages")
-    if not os.path.exists(packages_dist_dir):
-        os.makedirs(packages_dist_dir)
-
-    frozen_requirements_txt = os.path.join(packages_dist_dir, "frozen_requirements.txt")
-
-    # Pip install everything and capture everything that was installed.
-    subprocess.run(
-        [
-            "python",
-            "-m",
-            "pip",
-            "install",
-            "-r",
-            requirements_txt,
-            "--no-compile",
-            # The combination of --target and --upgrade forces pip to install
-            # all packages to the temporary directory, even if an already existing
-            # version is installed
-            "--target",
-            temp_dir,
-            "--upgrade",
-        ]
-    )
-    subprocess.run(
-        ["python", "-m", "pip", "freeze", "--path", temp_dir],
-        stdout=open(frozen_requirements_txt, "w"),
-    )
-
-    # Quickly compute the number of requirements we have.
-    nb_dependencies = len([_ for _ in open(frozen_requirements_txt, "rt")])
-
-    # Figure out if those packages were installed as single file packages or folders.
-    package_names = [
-        package_name
-        for package_name in os.listdir(temp_dir)
-        if "info" not in package_name and package_name != "bin"
-    ]
-
-    # Make sure we found as many Python packages as there
-    # are packages listed inside frozen_requirements.txt
-    # assert len(package_names) == nb_dependencies
-    assert len(package_names) >= nb_dependencies
-
-    # TODO auto-detect C extension modules (and other dynamic modules)
-    c_extension_modules = [
-        "greenlet",
-    ]
-
-    # Write out the zip file for python packages. Compress the zip file with ZIP_DEFLATED. Note
-    # that this requires zlib to decompress when importing. Compression also causes import to
-    # be slower, but the file size is simply too large to not be compressed
-    pkgs_zip_path = os.path.join(packages_dist_dir, "pkgs.zip")
-    pkgs_zip = zipfile.ZipFile(pkgs_zip_path, "w", zipfile.ZIP_DEFLATED)
-    # Write out the zip file for c extension pacakges. These are handled separately, since they
-    # need to be unzipped at runtime in order to be imported.
-    c_extension_path = os.path.join(packages_dist_dir, "c_extensions")
-    c_extension_zip_path = os.path.join(packages_dist_dir, "c_extensions.zip")
-    c_ext_zip = zipfile.ZipFile(c_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
-
-    for package_name in package_names:
-        print(f"Zipping {package_name}...")
-
-        full_package_path = temp_dir_path / package_name
-
-        if package_name in c_extension_modules:
-            # Cannot include C extension modules in zip. These module types cannot be imported
-            # from a zip file. Instead, put them in a separate folder
-            full_c_extension_path = os.path.join(c_extension_path, package_name)
-            zip_recursively(c_ext_zip, temp_dir_path, package_name)
-        else:
-            # If we have a .py file to zip, simple write it
-            # full_package_path = temp_dir_path / package_name
-            if full_package_path.suffix == ".py":
-                pkgs_zip.write(
-                    full_package_path, full_package_path.relative_to(temp_dir)
-                )
-            else:
-                # Otherwise zip package folders recursively.
-                zip_recursively(pkgs_zip, temp_dir_path, package_name)
-
-#
-# Install Qt packages separately
-#
-qt_dist_dir = os.path.join(python_dist_dir, "qt")
-if not os.path.exists(qt_dist_dir):
-    raise Exception(f"Cannot find Python distribution folder {qt_dist_dir}")
-
-# We expect the qt directory to contain a list of directories, named by Alias version
-for alias_version in os.listdir(qt_dist_dir):
-    alias_version_dir_path = os.path.join(qt_dist_dir, alias_version)
-    if not os.path.isdir(alias_version_dir_path):
-        continue
-
-    print(f"Installing Qt packages for Alias {alias_version}...")
-
-    with TemporaryDirectory() as qt_temp_dir:
-        qt_temp_dir_path = Path(qt_temp_dir)
-
-        requirements_txt = os.path.join(alias_version_dir_path, "requirements.txt")
+        requirements_txt = os.path.join(python_dist_dir, "requirements.txt")
         if not os.path.exists(requirements_txt):
             raise Exception(f"Cannot find requirements file {requirements_txt}")
 
-        qt_packages_dist_dir = os.path.join(
-            python_dist_dir, "packages", "qt", alias_version
-        )
-        if not os.path.exists(qt_packages_dist_dir):
-            os.makedirs(qt_packages_dist_dir)
+        packages_dist_dir = os.path.join(python_dist_dir, "packages")
+        if not os.path.exists(packages_dist_dir):
+            os.makedirs(packages_dist_dir)
 
-        frozen_requirements_txt = os.path.join(
-            qt_packages_dist_dir, "frozen_requirements.txt"
-        )
+        frozen_requirements_txt = os.path.join(packages_dist_dir, "frozen_requirements.txt")
 
-        # Pip install Qt packages from requirements and capture everything that was installed.
+        # Pip install everything and capture everything that was installed.
         subprocess.run(
             [
                 "python",
@@ -252,12 +139,12 @@ for alias_version in os.listdir(qt_dist_dir):
                 # all packages to the temporary directory, even if an already existing
                 # version is installed
                 "--target",
-                qt_temp_dir,
+                temp_dir,
                 "--upgrade",
             ]
         )
         subprocess.run(
-            ["python", "-m", "pip", "freeze", "--path", qt_temp_dir],
+            ["python", "-m", "pip", "freeze", "--path", temp_dir],
             stdout=open(frozen_requirements_txt, "w"),
         )
 
@@ -267,40 +154,171 @@ for alias_version in os.listdir(qt_dist_dir):
         # Figure out if those packages were installed as single file packages or folders.
         package_names = [
             package_name
-            for package_name in os.listdir(qt_temp_dir)
+            for package_name in os.listdir(temp_dir)
             if "info" not in package_name and package_name != "bin"
         ]
 
-        # Make sure we found both PySide and shiboken packages
-        assert len(package_names) == 2
+        # Make sure we found as many Python packages as there
+        # are packages listed inside frozen_requirements.txt
+        # assert len(package_names) == nb_dependencies
+        assert len(package_names) >= nb_dependencies
 
-        qt_extension_modules = [
-            "PySide2",
-            "shiboken2",
-            "PySide6",
-            "shiboken6",
+        # TODO auto-detect C extension modules (and other dynamic modules)
+        c_extension_modules = [
+            "greenlet",
         ]
 
-        # Write out the zip file for qt c extension pacakges. These are handled separately, since they
-        # need to be unzipped at runtime in order to be imported, AND it will vary depending on the
-        # Alias version
-        qt_extension_zip_path = os.path.join(qt_packages_dist_dir, "qt_extensions.zip")
-        qt_ext_zip = zipfile.ZipFile(qt_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
+        # Write out the zip file for python packages. Compress the zip file with ZIP_DEFLATED. Note
+        # that this requires zlib to decompress when importing. Compression also causes import to
+        # be slower, but the file size is simply too large to not be compressed
+        pkgs_zip_path = os.path.join(packages_dist_dir, "pkgs.zip")
+        pkgs_zip = zipfile.ZipFile(pkgs_zip_path, "w", zipfile.ZIP_DEFLATED)
+        # Write out the zip file for c extension pacakges. These are handled separately, since they
+        # need to be unzipped at runtime in order to be imported.
+        c_extension_path = os.path.join(packages_dist_dir, "c_extensions")
+        c_extension_zip_path = os.path.join(packages_dist_dir, "c_extensions.zip")
+        c_ext_zip = zipfile.ZipFile(c_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
 
         for package_name in package_names:
             print(f"Zipping {package_name}...")
 
-            full_package_path = qt_temp_dir_path / package_name
+            full_package_path = temp_dir_path / package_name
 
-            if package_name.startswith("PySide"):
-                # Special handling for PySide packages to limit the package size. Only the QtCore
-                # module is needed, so this package will be stripped down to only include the
-                # necessary files
-                modify_pyside(full_package_path)
-
-            if package_name in qt_extension_modules:
-                # Qt extensions are also C extension modules, but they need to be handled separately
-                # in order to support mulitple Qt versions for Alias
-                zip_recursively(qt_ext_zip, qt_temp_dir_path, package_name)
+            if package_name in c_extension_modules:
+                # Cannot include C extension modules in zip. These module types cannot be imported
+                # from a zip file. Instead, put them in a separate folder
+                full_c_extension_path = os.path.join(c_extension_path, package_name)
+                zip_recursively(c_ext_zip, temp_dir_path, package_name)
             else:
-                print(f"Unexpected package: {package_name}")
+                # If we have a .py file to zip, simple write it
+                # full_package_path = temp_dir_path / package_name
+                if full_package_path.suffix == ".py":
+                    pkgs_zip.write(
+                        full_package_path, full_package_path.relative_to(temp_dir)
+                    )
+                else:
+                    # Otherwise zip package folders recursively.
+                    zip_recursively(pkgs_zip, temp_dir_path, package_name)
+
+
+def install_qt_packages(python_dist_dir):
+    """
+    Install Qt packages.
+
+    :param python_dist_dir: The path containing the Qt directory with the
+        package requirements.txt file, and where to install the packages.
+    :type python_dist_dir: str
+    """
+
+    qt_dist_dir = os.path.join(python_dist_dir, "qt")
+    if not os.path.exists(qt_dist_dir):
+        print(f"No Qt extensions to install")
+        return
+
+    # We expect the qt directory to contain a list of directories, named by Alias version
+    for alias_version in os.listdir(qt_dist_dir):
+        alias_version_dir_path = os.path.join(qt_dist_dir, alias_version)
+        if not os.path.isdir(alias_version_dir_path):
+            continue
+
+        print(f"Installing Qt packages for Alias {alias_version}...")
+
+        with TemporaryDirectory() as qt_temp_dir:
+            qt_temp_dir_path = Path(qt_temp_dir)
+
+            requirements_txt = os.path.join(alias_version_dir_path, "requirements.txt")
+            if not os.path.exists(requirements_txt):
+                raise Exception(f"Cannot find requirements file {requirements_txt}")
+
+            qt_packages_dist_dir = os.path.join(
+                python_dist_dir, "packages", "qt", alias_version
+            )
+            if not os.path.exists(qt_packages_dist_dir):
+                os.makedirs(qt_packages_dist_dir)
+
+            frozen_requirements_txt = os.path.join(
+                qt_packages_dist_dir, "frozen_requirements.txt"
+            )
+
+            # Pip install Qt packages from requirements and capture everything that was installed.
+            subprocess.run(
+                [
+                    "python",
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    requirements_txt,
+                    "--no-compile",
+                    # The combination of --target and --upgrade forces pip to install
+                    # all packages to the temporary directory, even if an already existing
+                    # version is installed
+                    "--target",
+                    qt_temp_dir,
+                    "--upgrade",
+                ]
+            )
+            subprocess.run(
+                ["python", "-m", "pip", "freeze", "--path", qt_temp_dir],
+                stdout=open(frozen_requirements_txt, "w"),
+            )
+
+            # Quickly compute the number of requirements we have.
+            nb_dependencies = len([_ for _ in open(frozen_requirements_txt, "rt")])
+
+            # Figure out if those packages were installed as single file packages or folders.
+            package_names = [
+                package_name
+                for package_name in os.listdir(qt_temp_dir)
+                if "info" not in package_name and package_name != "bin"
+            ]
+
+            # Make sure we found both PySide and shiboken packages
+            assert len(package_names) == 2
+
+            qt_extension_modules = [
+                "PySide2",
+                "shiboken2",
+                "PySide6",
+                "shiboken6",
+            ]
+
+            # Write out the zip file for qt c extension pacakges. These are handled separately, since they
+            # need to be unzipped at runtime in order to be imported, AND it will vary depending on the
+            # Alias version
+            qt_extension_zip_path = os.path.join(qt_packages_dist_dir, "qt_extensions.zip")
+            qt_ext_zip = zipfile.ZipFile(qt_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
+
+            for package_name in package_names:
+                print(f"Zipping {package_name}...")
+
+                full_package_path = qt_temp_dir_path / package_name
+
+                if package_name.startswith("PySide"):
+                    # Special handling for PySide packages to limit the package size. Only the QtCore
+                    # module is needed, so this package will be stripped down to only include the
+                    # necessary files
+                    modify_pyside(full_package_path)
+
+                if package_name in qt_extension_modules:
+                    # Qt extensions are also C extension modules, but they need to be handled separately
+                    # in order to support mulitple Qt versions for Alias
+                    zip_recursively(qt_ext_zip, qt_temp_dir_path, package_name)
+                else:
+                    print(f"Unexpected package: {package_name}")
+
+
+#
+# Script body
+#
+python_dist_dir = os.path.normpath(
+    os.path.join(
+        os.path.dirname(__file__),
+        os.pardir,
+        "dist",
+        "Python",
+        f"Python{sys.version_info.major}{sys.version_info.minor}",
+    )
+)
+install_common_python_packages(python_dist_dir)
+install_qt_packages(python_dist_dir)
