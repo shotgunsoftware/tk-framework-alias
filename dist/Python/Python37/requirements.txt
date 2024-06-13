@@ -10,8 +10,6 @@
 
 cryptography
 eventlet
-PySide2==5.15.0
-PySide6==6.2.1
 python-socketio
 requests
 websocket-client
