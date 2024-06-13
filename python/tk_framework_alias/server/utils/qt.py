@@ -20,6 +20,7 @@ qt_app = None
 # have access to the qt app instance. First try import PySide2:
 try:
     from PySide2 import QtCore
+
     if QtCore:
         qt_app = QtCore.QCoreApplication.instance()
 except Exception:
@@ -33,6 +34,7 @@ if not QtCore or not qt_app:
         QtCore = None
     try:
         from PySide6 import QtCore
+
         if QtCore:
             qt_app = QtCore.QCoreApplication.instance()
     except Exception:

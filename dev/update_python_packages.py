@@ -113,7 +113,7 @@ python_dist_dir = os.path.normpath(
 if not os.path.exists(python_dist_dir):
     raise Exception(f"Cannot find Python distribution folder {python_dist_dir}")
 
-# 
+#
 # Install common Python packages
 #
 with TemporaryDirectory() as temp_dir:
@@ -206,14 +206,14 @@ with TemporaryDirectory() as temp_dir:
                 # Otherwise zip package folders recursively.
                 zip_recursively(pkgs_zip, temp_dir_path, package_name)
 
-# 
+#
 # Install Qt packages separately
-# 
+#
 qt_dist_dir = os.path.join(python_dist_dir, "qt")
 if not os.path.exists(qt_dist_dir):
     raise Exception(f"Cannot find Python distribution folder {qt_dist_dir}")
 
-# We expect the qt directory to contain a list of directories, named by Alias version 
+# We expect the qt directory to contain a list of directories, named by Alias version
 for alias_version in os.listdir(qt_dist_dir):
     alias_version_dir_path = os.path.join(qt_dist_dir, alias_version)
     if not os.path.isdir(alias_version_dir_path):
@@ -228,11 +228,15 @@ for alias_version in os.listdir(qt_dist_dir):
         if not os.path.exists(requirements_txt):
             raise Exception(f"Cannot find requirements file {requirements_txt}")
 
-        qt_packages_dist_dir = os.path.join(python_dist_dir, "packages", "qt", alias_version)
+        qt_packages_dist_dir = os.path.join(
+            python_dist_dir, "packages", "qt", alias_version
+        )
         if not os.path.exists(qt_packages_dist_dir):
             os.makedirs(qt_packages_dist_dir)
 
-        frozen_requirements_txt = os.path.join(qt_packages_dist_dir, "frozen_requirements.txt")
+        frozen_requirements_txt = os.path.join(
+            qt_packages_dist_dir, "frozen_requirements.txt"
+        )
 
         # Pip install Qt packages from requirements and capture everything that was installed.
         subprocess.run(

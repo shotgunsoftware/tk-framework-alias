@@ -153,7 +153,8 @@ def get_python_qt_ext_dir(py_major_version, py_minor_version, alias_version=None
     """
 
     qt_ext_dir = os.path.join(
-        get_python_packages_dir(py_major_version, py_minor_version), "qt",
+        get_python_packages_dir(py_major_version, py_minor_version),
+        "qt",
     )
     if alias_version:
         return os.path.join(qt_ext_dir, alias_version, "qt_extensions")
@@ -319,7 +320,9 @@ def get_python_dist_qt_ext_zip(py_major_version, py_minor_version, alias_version
     """
 
     qt_dist_path = get_python_dist_qt_ext_dir(py_major_version, py_minor_version)
-    return os.path.normpath(os.path.join(qt_dist_path, alias_version, "qt_extensions.zip"))
+    return os.path.normpath(
+        os.path.join(qt_dist_path, alias_version, "qt_extensions.zip")
+    )
 
 
 def get_alias_dist_dir(alias_version, python_major_version, python_minor_version):
@@ -377,7 +380,9 @@ def get_alias_dist_dir(alias_version, python_major_version, python_minor_version
 # Convenience functions for the framework
 
 
-def get_framework_python_qt_site_packages_path(py_major_version, py_minor_version, alias_version):
+def get_framework_python_qt_site_packages_path(
+    py_major_version, py_minor_version, alias_version
+):
     """
     Get the directory to the Qt extension packages for the specified Python and Alias version.
 
@@ -398,7 +403,9 @@ def get_framework_python_qt_site_packages_path(py_major_version, py_minor_versio
     if not alias_version:
         return
 
-    alias_qt_ext_path = get_python_qt_ext_dir(py_major_version, py_minor_version, alias_version)
+    alias_qt_ext_path = get_python_qt_ext_dir(
+        py_major_version, py_minor_version, alias_version
+    )
     if os.path.exists(alias_qt_ext_path):
         return alias_qt_ext_path
 
@@ -413,17 +420,21 @@ def get_framework_python_qt_site_packages_path(py_major_version, py_minor_versio
 
     last_version = alias_dist_versions[0]
     if version_cmp(alias_version, last_version) < 0:
-        return # requested version does not meet minimum supported vesrion
+        return  # requested version does not meet minimum supported vesrion
 
     # Go through all supported versions, get the highest supported version that is not higher
     # than the requested version.
     for cur_version in alias_dist_versions[1:]:
         if version_cmp(alias_version, cur_version) < 0:
-            return get_python_qt_ext_dir(py_major_version, py_minor_version, last_version)
+            return get_python_qt_ext_dir(
+                py_major_version, py_minor_version, last_version
+            )
         last_version = cur_version
 
 
-def get_framework_python_site_packages_paths(py_major_version, py_minor_version, alias_version=None):
+def get_framework_python_site_packages_paths(
+    py_major_version, py_minor_version, alias_version=None
+):
     """
     Get the list of python packages paths to the modules that the framework requires.
 
@@ -451,7 +462,9 @@ def get_framework_python_site_packages_paths(py_major_version, py_minor_version,
         package_paths.append(installed_packages_path)
 
     # Check the framework distribution folder for packages
-    dist_packages_path = get_python_dist_packages_zip(py_major_version, py_minor_version)
+    dist_packages_path = get_python_dist_packages_zip(
+        py_major_version, py_minor_version
+    )
     if os.path.exists(dist_packages_path):
         package_paths.append(dist_packages_path)
 
@@ -526,6 +539,7 @@ def get_framework_supported_python_versions():
         (3, 9),
         (3, 10),
     ]
+
 
 def get_alias_version():
     """Convenience function to get the Alias version set in the environment."""

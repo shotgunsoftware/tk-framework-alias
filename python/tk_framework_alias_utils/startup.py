@@ -494,6 +494,7 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
 
     return True
 
+
 def __ensure_python_qt_extension_packages_installed(python_version=None, logger=None):
     """
     Ensure python Qt extension packages are unzipped and installed for user.
@@ -518,9 +519,13 @@ def __ensure_python_qt_extension_packages_installed(python_version=None, logger=
         python_versions = [python_version]
 
     for major_version, minor_version in python_versions:
-        framework_qt_ext_path = environment_utils.get_python_dist_qt_ext_dir(major_version, minor_version)
+        framework_qt_ext_path = environment_utils.get_python_dist_qt_ext_dir(
+            major_version, minor_version
+        )
         if not os.path.exists(framework_qt_ext_path):
-            logger.debug(f"No Qt extensions to install for Python {major_version}.{minor_version}")
+            logger.debug(
+                f"No Qt extensions to install for Python {major_version}.{minor_version}"
+            )
             continue
 
         for alias_version in os.listdir(framework_qt_ext_path):
@@ -528,10 +533,14 @@ def __ensure_python_qt_extension_packages_installed(python_version=None, logger=
                 major_version, minor_version, alias_version
             )
             if not os.path.exists(framework_qt_ext_zip):
-                logger.debug(f"No Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}")
+                logger.debug(
+                    f"No Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}"
+                )
                 continue
 
-            logger.debug(f"Installing Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}")
+            logger.debug(
+                f"Installing Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}"
+            )
             install_qt_ext_path = environment_utils.get_python_qt_ext_dir(
                 major_version, minor_version, alias_version
             )
@@ -553,7 +562,9 @@ def __ensure_python_qt_extension_packages_installed(python_version=None, logger=
 
             # Copy the zip folder. This will be used to check if updates are needed based on file
             # modifiation timestamp
-            logger.debug(f"Coying Qt extension zip package:  {framework_qt_ext_zip} -> {install_qt_ext_zip_path}")
+            logger.debug(
+                f"Coying Qt extension zip package:  {framework_qt_ext_zip} -> {install_qt_ext_zip_path}"
+            )
             shutil.copyfile(framework_qt_ext_zip, install_qt_ext_zip_path)
             # Now extract the files
             with zipfile.ZipFile(install_qt_ext_zip_path, "r") as zip_ref:
