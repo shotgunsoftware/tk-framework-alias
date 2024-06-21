@@ -433,7 +433,7 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
     return lst_file
 
 
-def __ensure_python_c_extension_packages_installed(python_version=None, logger=None):
+def ensure_python_c_extension_packages_installed(python_version=None, logger=None):
     """
     Ensure python C extension packages are unzipped and installed for user.
 
@@ -446,6 +446,10 @@ def __ensure_python_c_extension_packages_installed(python_version=None, logger=N
     :return: True if the packages have beene installed, else False.
     :rtype: bool
     """
+
+    if logger is None:
+        logger = logging.getLogger(__file__)
+        logger.setLevel(logging.DEBUG)
 
     python_versions = environment_utils.get_framework_supported_python_versions()
     if python_version:
@@ -766,7 +770,7 @@ def ensure_plugin_ready(
     # Ensure C extension packages installed for user. Install for all supported Python
     # versions, just in case the python version the framework runs with is different that
     # the current running version.
-    __ensure_python_c_extension_packages_installed(logger=logger)
+    ensure_python_c_extension_packages_installed(logger=logger)
 
     # Get the file path to the .lst file that contains the file path to the Alias Plugin to
     # load at startup with Alias.

@@ -114,7 +114,7 @@ if hasattr(os, "add_dll_directory"):
     alias_bin_path = os.environ.get("ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH")
     if not alias_bin_path:
         raise AliasPythonApiImportError(
-            "Couldn't get Alias bin path: set the environment variable ALIAS_PLUGIN_CLINET_ALIAS_EXECPATH."
+            "Couldn't get Alias bin path: set the environment variable ALIAS_PLUGIN_CLIENT_ALIAS_EXECPATH."
         )
     alias_dll_path = os.path.dirname(alias_bin_path)
     with os.add_dll_directory(alias_dll_path):
