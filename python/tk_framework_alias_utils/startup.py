@@ -496,6 +496,11 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
             zip_ref.extractall(install_c_ext_path)
 
+    # Ensure Qt extension packages are installed for user. Qt extensions are also C
+    # extensions, but Qt version will vary depending on the Alias version, so they
+    # need to be installed separately.
+    __ensure_python_qt_extension_packages_installed(python_version=python_version, logger=logger)
+
     return True
 
 
@@ -514,6 +519,10 @@ def __ensure_python_qt_extension_packages_installed(python_version=None, logger=
     :return: True if the Qt packages have beene installed, else False.
     :rtype: bool
     """
+
+    if logger is None:
+        logger = logging.getLogger(__file__)
+        logger.setLevel(logging.DEBUG)
 
     python_versions = environment_utils.get_framework_supported_python_versions()
     if python_version:
@@ -849,10 +858,6 @@ def ensure_plugin_ready(
     # versions, just in case the python version the framework runs with is different that
     # the current running version.
     ensure_python_c_extension_packages_installed(logger=logger)
-
-    # Ensure Qt extension packages are installed for user. Qt extensions are also C
-    # extensions, but Qt version will vary depending on the Alias version.
-    __ensure_python_qt_extension_packages_installed(logger=logger)
 
     # Get the file path to the .lst file that contains the file path to the Alias Plugin to
     # load at startup with Alias.
