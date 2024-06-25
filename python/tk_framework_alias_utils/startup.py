@@ -499,7 +499,9 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
     # Ensure Qt extension packages are installed for user. Qt extensions are also C
     # extensions, but Qt version will vary depending on the Alias version, so they
     # need to be installed separately.
-    __ensure_python_qt_extension_packages_installed(python_version=python_version, logger=logger)
+    __ensure_python_qt_extension_packages_installed(
+        python_version=python_version, logger=logger
+    )
 
     return True
 
