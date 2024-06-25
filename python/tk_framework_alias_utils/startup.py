@@ -496,6 +496,95 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
         with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
             zip_ref.extractall(install_c_ext_path)
 
+    # Ensure Qt extension packages are installed for user. Qt extensions are also C
+    # extensions, but Qt version will vary depending on the Alias version, so they
+    # need to be installed separately.
+    __ensure_python_qt_extension_packages_installed(
+        python_version=python_version, logger=logger
+    )
+
+    return True
+
+
+def __ensure_python_qt_extension_packages_installed(python_version=None, logger=None):
+    """
+    Ensure python Qt extension packages are unzipped and installed for user.
+
+    This routine will ensure Qt extensions are installed for the given python version, or for
+    all supported Ptyhon versions.
+
+    :param python_version: The python version to install the Qt extensions for. If not
+        specified, the Qt extensions will be installed for all supported python versions.
+    :param logger: Set a logger object to capture output from this operation.
+    :type logger: Logger
+
+    :return: True if the Qt packages have beene installed, else False.
+    :rtype: bool
+    """
+
+    if logger is None:
+        logger = logging.getLogger(__file__)
+        logger.setLevel(logging.DEBUG)
+
+    python_versions = environment_utils.get_framework_supported_python_versions()
+    if python_version:
+        if python_version not in python_versions:
+            # The requested version is not supported
+            return False
+        python_versions = [python_version]
+
+    for major_version, minor_version in python_versions:
+        framework_qt_ext_path = environment_utils.get_python_dist_qt_ext_dir(
+            major_version, minor_version
+        )
+        if not os.path.exists(framework_qt_ext_path):
+            logger.debug(
+                f"No Qt extensions to install for Python {major_version}.{minor_version}"
+            )
+            continue
+
+        for alias_version in os.listdir(framework_qt_ext_path):
+            framework_qt_ext_zip = environment_utils.get_python_dist_qt_ext_zip(
+                major_version, minor_version, alias_version
+            )
+            if not os.path.exists(framework_qt_ext_zip):
+                logger.debug(
+                    f"No Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}"
+                )
+                continue
+
+            logger.debug(
+                f"Installing Qt extensions for Alias {alias_version} Python {major_version}.{minor_version}"
+            )
+            install_qt_ext_path = environment_utils.get_python_qt_ext_dir(
+                major_version, minor_version, alias_version
+            )
+            install_qt_ext_zip_path = f"{install_qt_ext_path}.zip"
+            if os.path.exists(install_qt_ext_zip_path):
+                if verify_file(framework_qt_ext_zip, install_qt_ext_zip_path):
+                    logger.debug(
+                        f"Qt extensions already up to date {install_qt_ext_zip_path}."
+                    )
+                    continue  # Packages already exist and no change.
+
+            # Overwrite existing packages
+            if os.path.exists(install_qt_ext_path):
+                shutil.rmtree(install_qt_ext_path)
+
+            install_qt_ext_dir = os.path.dirname(install_qt_ext_path)
+            if not os.path.exists(install_qt_ext_dir):
+                os.makedirs(install_qt_ext_dir)
+
+            # Copy the zip folder. This will be used to check if updates are needed based on file
+            # modifiation timestamp
+            logger.debug(
+                f"Coying Qt extension zip package:  {framework_qt_ext_zip} -> {install_qt_ext_zip_path}"
+            )
+            shutil.copyfile(framework_qt_ext_zip, install_qt_ext_zip_path)
+            # Now extract the files
+            with zipfile.ZipFile(install_qt_ext_zip_path, "r") as zip_ref:
+                zip_ref.extractall(install_qt_ext_path)
+
     return True
 
 
