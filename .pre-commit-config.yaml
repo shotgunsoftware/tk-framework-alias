@@ -9,8 +9,8 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 # Styles the code properly
-# Exclude the UI files, as they are auto-generated.
-exclude: "ui\/.*py$"
+# Exclude the UI files, as they are auto-generated, and distribution files
+exclude: "ui\/.*py$|^dist/"
 # List of super useful formatters.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
