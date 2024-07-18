@@ -106,9 +106,7 @@ def toolkit_plugin_bootstrap(
         elif "QT_SCREEN_SCALE_FACTORS" in os.environ:
             pass
         else:
-            QtCore.QCoreApplication.setAttribute(
-                QtCore.Qt.AA_EnableHighDpiScaling
-            )
+            QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
     # Create the Qt app
     app_name = "Flow Production Tracking for Alias"
