@@ -90,12 +90,25 @@ def toolkit_plugin_bootstrap(
     engine = sgtk.platform.current_engine()
 
     # After engine bootstrapped, import qt (engine will set up the qt module)
-    from sgtk.platform.qt import QtGui, QtCore
+    from sgtk.platform.qt import QtCore, QtGui
     from sgtk.platform.engine_logging import ToolkitEngineHandler
 
-    # Enable High DPI support in Qt5 (default enabled in Qt6)
     if QtCore.qVersion()[0] == "5":
-        QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+        # Enable High DPI support in Qt5 (default enabled in Qt6)
+        #
+        # Only enable it if none of the Qt environment variables related to
+        # High-DPI are set
+
+        if "QT_AUTO_SCREEN_SCALE_FACTOR" in os.environ:
+            pass
+        elif "QT_SCALE_FACTOR" in os.environ:
+            pass
+        elif "QT_SCREEN_SCALE_FACTORS" in os.environ:
+            pass
+        else:
+            QtCore.QCoreApplication.setAttribute(
+                QtCore.Qt.AA_EnableHighDpiScaling
+            )
 
     # Create the Qt app
     app_name = "Flow Production Tracking for Alias"
