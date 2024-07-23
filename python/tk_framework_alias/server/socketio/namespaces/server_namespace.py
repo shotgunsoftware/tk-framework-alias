@@ -300,7 +300,7 @@ class AliasServerNamespace(socketio.Namespace):
         except Exception as post_process_error:
             self._log_message(
                 sid,
-                "Alias API request post process error\n{post_process_error}",
+                f"Alias API request post process error\n{post_process_error}",
                 logging.ERROR,
             )
             return AliasApiPostProcessRequestError(post_process_error)
