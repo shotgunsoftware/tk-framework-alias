@@ -32,10 +32,9 @@ def execute_in_main_thread(func):
         try:
             invoker = create_invoker()
             return invoker.invoke(func, *args, **kwargs)
-        except QtImportError as qt_error:
-            return QtImportError(qt_error)
         except Exception as error:
-            return Exception(error)
+            # Return (instead of raise) the error to pass it back to the client
+            return error
 
     return wrapper
 

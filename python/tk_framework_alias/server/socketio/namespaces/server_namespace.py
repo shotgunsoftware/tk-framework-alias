@@ -370,6 +370,10 @@ class AliasServerNamespace(socketio.Namespace):
         updated.
         """
 
+        if isinstance(result, Exception):
+            # Do not process post request if there was an error executing the request
+            return
+
         if event == "add_message_handler":
             if result:
                 alias_event_id = data.func_args[0]
