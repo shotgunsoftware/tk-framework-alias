@@ -42,7 +42,7 @@ if not QtCore or not qt_app:
 
 # Verify that QtCore module was imported and exists, and the qt app is accessible
 if not QtCore:
-    raise QtModuleNotFound("QtCore module not found. Failed to import PySide.")
+    raise QtModuleNotFound("Failed to import PySide2 or PySide6.")
 if not qt_app:
     raise QtAppInstanceNotFound(
         f"Qt App instance not found for Qt {QtCore.__version__}"
