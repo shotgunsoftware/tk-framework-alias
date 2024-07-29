@@ -15,6 +15,8 @@ import importlib
 import traceback
 
 from ..api import alias_api
+from ..api.alias_py import AliasPy
+from ..api.base import AliasPyBase
 
 from .. import alias_bridge
 from .api_request import AliasApiRequestWrapper
@@ -180,6 +182,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             "__module_name__": obj.__module__,
             "__class_name__": obj.__class__.__name__,
             "__instance_id__": instance_id,
+            "__dict__": {
+                "name": obj.name if hasattr(obj, "name") else None,
+                "type": obj.type() if hasattr(obj, "type") else None,
+            }
         }
 
     def default(self, obj):
@@ -238,6 +244,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
 
             if self.is_al_object(obj):
                 return self.encode_al_object(obj)
+
+            # if isinstance(obj, (AliasPy, AliasPyBase)):
+            #     mod = self.encode_module(obj)
+            #     return mod
 
             # Fall back to the default encode method.
             return super(AliasServerJSONEncoder, self).default(obj)
@@ -299,6 +309,14 @@ class AliasServerJSONDecoder(json.JSONDecoder):
     def object_hook(self, obj):
         """Decode an object."""
 
+        # try:
+        #     import sys
+        #     sys.path.append("C:\\python_libs")
+        #     import ptvsd
+        #     ptvsd.enable_attach()
+        #     ptvsd.wait_for_attach()
+        # except:
+        #     pass
         # First, try to decode the object into an Alias API request object.
         request = AliasApiRequestWrapper.create_wrapper(obj)
         if request is not None:

@@ -33,8 +33,12 @@ def execute_in_main_thread(func):
             invoker = create_invoker()
             return invoker.invoke(func, *args, **kwargs)
         except Exception as error:
-            # Return (instead of raise) the error to pass it back to the client
             return error
+            # try:
+            #     return func(*args, **kwargs)
+            # except Exception as error2:
+            #     # Return (instead of raise) the error to pass it back to the client
+            #     return error
 
     return wrapper
 

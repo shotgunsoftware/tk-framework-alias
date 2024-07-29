@@ -21,6 +21,15 @@ def toolkit_plugin_bootstrap(
     :param plugin_root_path: Path to the root of the plugin
     """
 
+    # try:
+    #     import sys
+    #     sys.path.append("C:\\python_libs")
+    #     import ptvsd
+    #     ptvsd.enable_attach()
+    #     ptvsd.wait_for_attach()
+    # except:
+    #     pass
+
     from environment_utils import get_plugin_install_dir
     import log
 

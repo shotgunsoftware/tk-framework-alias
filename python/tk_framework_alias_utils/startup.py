@@ -119,6 +119,7 @@ def get_plugin_environment(
 def get_plugin_filename(alias_version, python_major_version, python_minor_version):
     """Return the name of the plugin for the Alias version."""
 
+    # return f"alias_py{python_major_version}.{python_minor_version}"
     if version_cmp(alias_version, "2024") >= 0:
         # Alias >= 2024.0
         return f"alias_py{python_major_version}.{python_minor_version}"
@@ -820,6 +821,7 @@ def ensure_plugin_ready(
         logger.setLevel(logging.DEBUG)
 
     if version_cmp(alias_version, "2024.0") >= 0:
+    # if version_cmp(alias_version, "2022.0") >= 0:
         # Alias >= 2024.0
         # Client will run in a new process, separate from Alias.
         new_process = True

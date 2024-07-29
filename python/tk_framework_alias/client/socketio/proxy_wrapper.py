@@ -71,7 +71,7 @@ class AliasClientObjectProxyWrapper:
             cls.__modules[module_name] = module
 
     @classmethod
-    def get_type(cls, module_name, type_name):
+    def get_proxy_type(cls, module_name, type_name):
         """Return the type for the given module and type name."""
 
         with cls.__types_by_module_lock:
@@ -261,6 +261,8 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
 
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
+        self.__batch_mode = False
+        self.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods
@@ -288,6 +290,11 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     def sio(self):
         """Get the socketio client that this module uses to send and receive messages with Alias."""
         return self.__sio
+
+    @property
+    def batch_mode(self):
+        """Get the flag indicating whether or not the module is executing in batch mode."""
+        return self.__batch_mode
 
     # -------------------------------------------------------------------------------------------------------
     # Public methods
@@ -320,7 +327,7 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
             self.store_module(self.__module_name, module)
 
         return module
-
+    
     def send_request(self, request_name, request_data):
         """
         Send an api request to the server to retrieve the module data.
@@ -362,8 +369,35 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                     kwargs[name] = self.__sanitize_arg(arg)
                 request_data["__function_kwargs__"] = kwargs
 
+        if self.batch_mode:
+            # Defer and store the request to send multiple requests at once
+            self.__batch_requests.append((request_name, request_data))
+            return
+
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
+
+    def batch_requests(self, start=True):
+        """
+        Start or stop batching requests.
+
+        When batching requests, multiple requests can be sent at once, instead of sending
+        each request individually. This is useful when multiple requests are made in quick
+        succession, and it is more efficient to send them all at once.
+
+        On stopping batch requests, the batched requests will be sent to the server.
+
+        :param start: True to start batching requests, False to stop.
+        """
+
+        self.__batch_mode = start
+
+        if not self.__batch_mode:
+            try:
+                self.sio.emit_threadsafe_and_wait("batch_requests", self.__batch_requests)
+            finally:
+                self.__batch_requests = []
+
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
@@ -636,7 +670,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
 
         enum_module_name = data["__module_name__"]
         enum_class_name = data["__class_name__"]
-        enum_type = cls.get_type(enum_module_name, enum_class_name)
+        enum_type = cls.get_proxy_type(enum_module_name, enum_class_name)
         if not enum_type:
             enum_type = type(enum_class_name, (cls,), {})
             cls.store_type(enum_module_name, enum_class_name, enum_type)
@@ -663,6 +697,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         super(AliasClientObjectProxy, self).__init__(data)
 
         self.__unique_id = self.data["__instance_id__"]
+        self.__dict = self.data["__dict__"]
 
     @classmethod
     def required_data(cls):
@@ -678,6 +713,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
                 "__module_name__",
                 "__class_name__",
                 "__instance_id__",
+                "__dict__",
             ]
         )
 
@@ -702,7 +738,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         if not module:
             raise Exception("Module not found")
         proxy_type_name = data["__class_name__"]
-        proxy_type = cls.get_type(proxy_module_name, proxy_type_name)
+        proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
         if not proxy_type:
             lookup_type = getattr(module, proxy_type_name)
             proxy_attributes = lookup_type.__dict__
@@ -719,3 +755,29 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     def unique_id(self):
         """Return the unique id for this object."""
         return self.__unique_id
+
+    def to_dict(self):
+        """Return the dictionary representation of the object."""
+        return self.__dict
+
+    def get_name(self):
+        """
+        Convenience method to get the name of the object.
+
+        This method does not retrieve the name from the server, but instead
+        returns the name from the object's dictionary data. If the name of the
+        object has changed since the object was created, this method will not
+        return the updated name.
+        """
+        return self.__dict.get("name")
+
+    def get_type(self):
+        """
+        Convenience method to get the type of the object.
+
+        This method does not retrieve the type from the server, but instead
+        returns the type from the object's dictionary data. If the type of the
+        object has changed since the object was created, this method will not
+        return the updated type. The object type should not change.
+        """
+        return self.__dict.get("type")

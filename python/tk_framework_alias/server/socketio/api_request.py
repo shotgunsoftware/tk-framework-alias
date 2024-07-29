@@ -35,6 +35,9 @@ class AliasApiRequestWrapper:
     def create_wrapper(cls, data):
         """Create and return a new object of this type from the given data, if possible."""
 
+        if isinstance(data, list):
+            return [cls.create_wrapper(item) for item in data]
+
         if not isinstance(data, dict):
             return None
 
@@ -271,6 +274,12 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         else:
             # Execute the function to make the Alias API request.
             method = getattr(self.instance, self.func_name)
+            # try:
+            #     method = getattr(self.instance, self.func_name)
+            # except AttributeError:
+            #     # FIXME this does not get here when we want to...
+            #     return check_node_has_zero_transform(*self.func_args, **self.func_kwargs)
+
             return method(*self.func_args, **self.func_kwargs)
 
 
@@ -492,3 +501,4 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
 
         self.validate(request_name)
         setattr(self.instance, self.property_name, self.property_value)
+

@@ -97,6 +97,9 @@ class AliasClientJSONDecoder(json.JSONDecoder):
                 # Deserialize a set object
                 return set(obj.get("__value__"))
 
+        if inspect.istraceback(obj):
+            raise Exception(obj)
+
         # Attempt to deserialize the object into an Alias object proxy wrapper
         proxy_obj = AliasClientObjectProxyWrapper.create_proxy(obj)
         if proxy_obj is not None:
