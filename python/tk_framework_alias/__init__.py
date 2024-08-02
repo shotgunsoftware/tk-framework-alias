@@ -9,7 +9,6 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 
-
 # First add our third-party package paths to sys.path
 import sys
 from tk_framework_alias_utils.environment_utils import (

@@ -38,5 +38,5 @@ class ClientRequestContextManager:
         """Exit the context manager."""
         print("Exiting context manager", exc_type, exc_value, traceback)
 
-        # Execute batched requests and 
+        # Execute batched requests and
         self.result = self.__api_module.batch_requests(False)

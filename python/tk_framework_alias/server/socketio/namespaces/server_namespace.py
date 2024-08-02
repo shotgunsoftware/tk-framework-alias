@@ -184,7 +184,7 @@ class AliasServerNamespace(socketio.Namespace):
 
         if self.client_sid is None or sid != self.client_sid:
             return
-        
+
         return alias_api
 
     def on_get_alias_api_info(self, sid):
@@ -293,14 +293,16 @@ class AliasServerNamespace(socketio.Namespace):
         # Make the Alias API call
         request = args[0] if args else None
         if isinstance(request, list):
-            self._log_message(None, f"Batch Excuting {len(request)} requests...", logging.INFO)
+            self._log_message(
+                None, f"Batch Excuting {len(request)} requests...", logging.INFO
+            )
             results = []
             for event_name, request_data in request:
                 results.append(self._handle_api_event(event_name, sid, request_data))
             return results
         else:
             return self._handle_api_event(event, sid, request)
-    
+
     def _handle_api_event(self, event, sid, request):
         """
         An Alias API event was triggered by the client.

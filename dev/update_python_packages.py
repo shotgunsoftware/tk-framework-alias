@@ -42,6 +42,15 @@ def modify_pyside(pyside_path):
         "QtCore.pyi",
         "Qt5Core.dll",  # PySide2
         "Qt6Core.dll",  # PySide6
+        # # TEMP
+        # "QtGui.pyd",
+        # "QtGui.pyi",
+        # "QtWidgets.pyd",
+        # "QtWidgets.pyi",
+        # "Qt5Gui.dll",  # PySide2
+        # "Qt6Gui.dll",  # PySide6
+        # "Qt5Widgets.dll",  # PySide2
+        # "Qt6Widgets.dll",  # PySide6
     ]
     # Required files by file type extension. Files may be ignored if they fall into one of the
     # specified ignore patterns, even if they are one of these required file types

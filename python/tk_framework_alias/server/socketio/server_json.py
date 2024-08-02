@@ -15,8 +15,9 @@ import importlib
 import traceback
 
 from ..api import alias_api
-from ..api.alias_py import AliasPy
-from ..api.base import AliasPyBase
+
+# from ..api.alias_py import AliasPy
+# from ..api.base import AliasPyBase
 
 from .. import alias_bridge
 from .api_request import AliasApiRequestWrapper
@@ -185,7 +186,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             "__dict__": {
                 "name": obj.name if hasattr(obj, "name") else None,
                 "type": obj.type() if hasattr(obj, "type") else None,
-            }
+            },
         }
 
     def default(self, obj):

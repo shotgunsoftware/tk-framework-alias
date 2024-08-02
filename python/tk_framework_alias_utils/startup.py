@@ -821,7 +821,7 @@ def ensure_plugin_ready(
         logger.setLevel(logging.DEBUG)
 
     if version_cmp(alias_version, "2024.0") >= 0:
-    # if version_cmp(alias_version, "2022.0") >= 0:
+        # if version_cmp(alias_version, "2022.0") >= 0:
         # Alias >= 2024.0
         # Client will run in a new process, separate from Alias.
         new_process = True

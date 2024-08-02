@@ -21,6 +21,7 @@ qt_app = None
 # have access to the qt app instance. First try import PySide2:
 try:
     from PySide2 import QtCore
+
     QtCore5 = QtCore
     qt_app = QtCore.QCoreApplication.instance()
 except Exception:
@@ -34,6 +35,7 @@ if not (QtCore and qt_app):
         QtCore = None
     try:
         from PySide6 import QtCore
+
         qt_app = QtCore.QCoreApplication.instance()
     except Exception:
         pass
@@ -43,8 +45,12 @@ if not (QtCore or QtCore5):
     raise QtModuleNotFound("Failed to import Qt for Python.")
 elif not qt_app:
     if QtCore:
-        raise QtAppInstanceNotFound(f"Qt App instance not found for Qt {QtCore.__version__}")
+        raise QtAppInstanceNotFound(
+            f"Qt App instance not found for Qt {QtCore.__version__}"
+        )
     elif QtCore5:
-        raise QtAppInstanceNotFound(f"Qt App instance not found for Qt {QtCore5.__version__}")
+        raise QtAppInstanceNotFound(
+            f"Qt App instance not found for Qt {QtCore5.__version__}"
+        )
     else:
         raise QtModuleNotFound("Qt for Python not found")

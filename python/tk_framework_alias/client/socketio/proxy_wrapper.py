@@ -327,7 +327,7 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
             self.store_module(self.__module_name, module)
 
         return module
-    
+
     def send_request(self, request_name, request_data):
         """
         Send an api request to the server to retrieve the module data.
@@ -394,10 +394,11 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
 
         if not self.__batch_mode:
             try:
-                self.sio.emit_threadsafe_and_wait("batch_requests", self.__batch_requests)
+                return self.sio.emit_threadsafe_and_wait(
+                    "batch_requests", self.__batch_requests
+                )
             finally:
                 self.__batch_requests = []
-
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
@@ -609,6 +610,16 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
         self.__name = data.get("__enum_name__")
         self.__value = data.get("__enum_value__")
 
+    def __str__(self):
+        """Return the string representation of the enum object."""
+
+        return self.__name
+
+    def __repr__(self):
+        """Return the string representation of the enum object."""
+
+        return f"<{self.__class__.__name__}.{self.__name}: {self.__value}>"
+
     def __eq__(self, other):
         """
         Override equality operator for convenience.
@@ -698,6 +709,18 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
 
         self.__unique_id = self.data["__instance_id__"]
         self.__dict = self.data["__dict__"]
+
+    def __str__(self):
+        """Return the string representation of the object."""
+
+        obj_name = self.get_name()
+        if obj_name:
+            return obj_name
+        return super(AliasClientObjectProxy, self).__str__()
+
+    def __repr__(self):
+        """Return the string representation of the object."""
+        return f"<{self.__class__.__name__}: {self.get_name()}>"
 
     @classmethod
     def required_data(cls):

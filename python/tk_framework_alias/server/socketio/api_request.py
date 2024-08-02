@@ -501,4 +501,3 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
 
         self.validate(request_name)
         setattr(self.instance, self.property_name, self.property_value)
-

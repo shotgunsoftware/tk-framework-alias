@@ -91,6 +91,8 @@ class AliasClientJSONDecoder(json.JSONDecoder):
                 exception_instance = exception_class(
                     obj.get("__msg__", "Alias Python API error")
                 )
+                # exception_instance.__base__ = Exception
+
                 return exception_instance
 
             if obj.get("__type__") == "set":
