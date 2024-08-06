@@ -8,6 +8,8 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Optional
+
 import inspect
 import threading
 import types
@@ -377,26 +379,35 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
 
-    def batch_requests(self, start=True):
+    def batch_requests(self, start: Optional[bool] = True, is_async: Optional[bool] = False):
         """
         Start or stop batching requests.
 
-        When batching requests, multiple requests can be sent at once, instead of sending
-        each request individually. This is useful when multiple requests are made in quick
-        succession, and it is more efficient to send them all at once.
+        When batching requests, multiple requests can be sent at once, instead
+        of sending each request individually. This is useful when multiple
+        requests are made in quick succession, and it is more efficient to send
+        them all at once.
 
-        On stopping batch requests, the batched requests will be sent to the server.
+        On stopping batch requests, the batched requests will be sent to the
+        server.
 
         :param start: True to start batching requests, False to stop.
+        :param is_async: True to return immediately without waiting  for the
+            request to return with a result, False to wait and return the result
+            of the batched requests. This is only used when stopping batch
+            mode and executing the requests.
         """
 
         self.__batch_mode = start
 
         if not self.__batch_mode:
             try:
-                return self.sio.emit_threadsafe_and_wait(
-                    "batch_requests", self.__batch_requests
-                )
+                if is_async:
+                    self.sio.emit_threadsafe("batch_requests", self.__batch_requests)
+                else:
+                    return self.sio.emit_threadsafe_and_wait(
+                        "batch_requests", self.__batch_requests
+                    )
             finally:
                 self.__batch_requests = []
 

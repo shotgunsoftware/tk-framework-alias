@@ -8,6 +8,7 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+from typing import Optional
 
 class ClientRequestContextManager:
     """
@@ -19,13 +20,19 @@ class ClientRequestContextManager:
     send them all at once.
     """
 
-    def __init__(self, api_module):
+    def __init__(
+        self,
+        api_module,
+        is_async: Optional[bool] = False
+    ):
         """
         Initialize the context manager.
 
         :param AliasClientModuleProxyWrapper api_module: The Alias api proxy module.
+        :param is_async:
         """
         self.__api_module = api_module
+        self.__is_async = is_async
         self.result = None
 
     def __enter__(self):
@@ -39,4 +46,4 @@ class ClientRequestContextManager:
         print("Exiting context manager", exc_type, exc_value, traceback)
 
         # Execute batched requests and
-        self.result = self.__api_module.batch_requests(False)
+        self.result = self.__api_module.batch_requests(False, is_async=self.__is_async)
