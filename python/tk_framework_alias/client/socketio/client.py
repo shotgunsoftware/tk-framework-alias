@@ -221,6 +221,7 @@ class AliasSocketIoClient(socketio.Client):
             kwargs["namespace"] = self._default_namespace
 
         with self.__message_queue_lock:
+            # TODO handle Timeout and pass timeout param
             return self.call(*args, **kwargs)
 
     @check_server_result
@@ -258,6 +259,9 @@ class AliasSocketIoClient(socketio.Client):
 
         # Wait for the callback to set the event result
         self._wait_for_response(response)
+
+        if not self.connected and not response.get("ack"):
+            raise TimeoutError("Client disconnected while waiting for result from server.")
         return response.get("result")
 
     def emit_threadsafe(self, *args, **kwargs):
@@ -413,7 +417,9 @@ class AliasSocketIoClient(socketio.Client):
         :type response: dict
         """
 
-        while not response.get("ack", False):
+        # FIXME break if client disconnects
+
+        while not response.get("ack", False) and self.connected:
             self._process_events()
 
     def _process_events(self):
