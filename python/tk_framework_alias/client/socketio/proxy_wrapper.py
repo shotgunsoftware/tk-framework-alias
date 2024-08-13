@@ -570,6 +570,16 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
         self.__name = data.get("__enum_name__")
         self.__value = data.get("__enum_value__")
 
+    def __str__(self):
+        """Return the string representation of the enum object."""
+
+        return self.__name
+
+    def __repr__(self):
+        """Return the string representation of the enum object."""
+
+        return f"<{self.__class__.__name__}.{self.__name}: {self.__value}>"
+
     def __eq__(self, other):
         """
         Override equality operator for convenience.
@@ -658,6 +668,17 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         super(AliasClientObjectProxy, self).__init__(data)
 
         self.__unique_id = self.data["__instance_id__"]
+    def __str__(self):
+        """Return the string representation of the object."""
+
+        obj_name = self.get_name()
+        if obj_name:
+            return obj_name
+        return super(AliasClientObjectProxy, self).__str__()
+
+    def __repr__(self):
+        """Return the string representation of the object."""
+        return f"<{self.__class__.__name__}: {self.get_name()}>"
 
     @classmethod
     def required_data(cls):
