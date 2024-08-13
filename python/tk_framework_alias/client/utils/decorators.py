@@ -9,9 +9,10 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 from functools import wraps
+from typing import Callable, Any
 
 
-def check_server_result(func):
+def check_server_result(func: Callable) -> Any:
     """
     A decorator function to check a value returned by a socketio server.
 
@@ -24,19 +25,13 @@ def check_server_result(func):
 
     :param func: The main function to execute. This should be an AliasSocketIoClient method,
         or a function that passes an AliasSocketIoClient as the first argument.
-    :type func: function
 
     :return: The value returned by func.
-    :rtype: any
     """
 
     @wraps(func)
     def wrapper(client, *args, **kwargs):
-        try:
-            result = func(client, *args, **kwargs)
-        except Exception as error:
-            result = error
-
+        result = func(client, *args, **kwargs)
         if isinstance(result, Exception):
             return client._handle_server_error(result)
         return result
