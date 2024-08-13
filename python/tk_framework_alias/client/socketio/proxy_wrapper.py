@@ -8,6 +8,8 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Optional
+
 import inspect
 import threading
 import types
@@ -71,7 +73,7 @@ class AliasClientObjectProxyWrapper:
             cls.__modules[module_name] = module
 
     @classmethod
-    def get_type(cls, module_name, type_name):
+    def get_proxy_type(cls, module_name, type_name):
         """Return the type for the given module and type name."""
 
         with cls.__types_by_module_lock:
@@ -261,6 +263,8 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
 
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
+        self.__batch_mode = False
+        self.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods
@@ -288,6 +292,16 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     def sio(self):
         """Get the socketio client that this module uses to send and receive messages with Alias."""
         return self.__sio
+
+    @property
+    def batch_mode(self):
+        """Get the flag indicating whether or not the module is executing in batch mode."""
+        return self.__batch_mode
+
+    @property
+    def num_pending_requests(self):
+        """Get the number of pending requests that have been batched."""
+        return len(self.__batch_requests)
 
     # -------------------------------------------------------------------------------------------------------
     # Public methods
@@ -357,8 +371,46 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                     kwargs[name] = self.__sanitize_arg(arg)
                 request_data["__function_kwargs__"] = kwargs
 
+        if self.batch_mode:
+            # Defer and store the request to send multiple requests at once
+            self.__batch_requests.append((request_name, request_data))
+            return
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
+
+    def batch_requests(
+        self, start: Optional[bool] = True, is_async: Optional[bool] = False
+    ):
+        """
+        Start or stop batching requests.
+
+        When batching requests, multiple requests can be sent at once, instead
+        of sending each request individually. This is useful when multiple
+        requests are made in quick succession, and it is more efficient to send
+        them all at once.
+
+        On stopping batch requests, the batched requests will be sent to the
+        server.
+
+        :param start: True to start batching requests, False to stop.
+        :param is_async: True to return immediately without waiting  for the
+            request to return with a result, False to wait and return the result
+            of the batched requests. This is only used when stopping batch
+            mode and executing the requests.
+        """
+
+        self.__batch_mode = start
+
+        if not self.__batch_mode:
+            try:
+                if is_async:
+                    self.sio.emit_threadsafe("batch_requests", self.__batch_requests)
+                else:
+                    return self.sio.emit_threadsafe_and_wait(
+                        "batch_requests", self.__batch_requests
+                    )
+            finally:
+                self.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
@@ -641,7 +693,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
 
         enum_module_name = data["__module_name__"]
         enum_class_name = data["__class_name__"]
-        enum_type = cls.get_type(enum_module_name, enum_class_name)
+        enum_type = cls.get_proxy_type(enum_module_name, enum_class_name)
         if not enum_type:
             enum_type = type(enum_class_name, (cls,), {})
             cls.store_type(enum_module_name, enum_class_name, enum_type)
@@ -721,7 +773,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         if not module:
             raise Exception("Module not found")
         proxy_type_name = data["__class_name__"]
-        proxy_type = cls.get_type(proxy_module_name, proxy_type_name)
+        proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
         if not proxy_type:
             lookup_type = getattr(module, proxy_type_name)
             proxy_attributes = lookup_type.__dict__
