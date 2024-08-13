@@ -668,6 +668,8 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         super(AliasClientObjectProxy, self).__init__(data)
 
         self.__unique_id = self.data["__instance_id__"]
+        self.__dict = self.data["__dict__"]
+
     def __str__(self):
         """Return the string representation of the object."""
 
@@ -694,6 +696,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
                 "__module_name__",
                 "__class_name__",
                 "__instance_id__",
+                "__dict__",
             ]
         )
 
@@ -735,3 +738,29 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     def unique_id(self):
         """Return the unique id for this object."""
         return self.__unique_id
+
+    def to_dict(self):
+        """Return the dictionary representation of the object."""
+        return self.__dict
+
+    def get_name(self):
+        """
+        Convenience method to get the name of the object.
+
+        This method does not retrieve the name from the server, but instead
+        returns the name from the object's dictionary data. If the name of the
+        object has changed since the object was created, this method will not
+        return the updated name.
+        """
+        return self.__dict.get("name")
+
+    def get_type(self):
+        """
+        Convenience method to get the type of the object.
+
+        This method does not retrieve the type from the server, but instead
+        returns the type from the object's dictionary data. If the type of the
+        object has changed since the object was created, this method will not
+        return the updated type. The object type should not change.
+        """
+        return self.__dict.get("type")
