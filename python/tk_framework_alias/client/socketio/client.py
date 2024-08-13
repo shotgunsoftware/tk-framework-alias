@@ -313,9 +313,9 @@ class AliasSocketIoClient(socketio.Client):
     #####################################################################################
     # Methods to emit specific events
 
-    def get_alias_api(self):
+    def get_alias_api_module_proxy(self):
         """
-        Get the Alias Python API module.
+        Get the Alias Python API module proxy.
 
         This method will attempt to first load the module from a cache file, if it exists and
         is not stale. Otherwise, it will make a server request to get the api module.
@@ -324,8 +324,8 @@ class AliasSocketIoClient(socketio.Client):
         will get the api module as a JSON object from the server, and create a proxy module
         that can be used on the client side here, as if it were the actual api module itself.
 
-        :return: The Alias Python API module.
-        :rtype: module
+        :return: The Alias Python API module proxy.
+        :rtype: AliasClientModuleProxyWrapper
         """
 
         # Get information about the api module
@@ -364,6 +364,24 @@ class AliasSocketIoClient(socketio.Client):
             # cache requies an update
             shutil.copyfile(api_info["file_path"], cache_api_filepath)
 
+        return module_proxy
+
+    def get_alias_api(self):
+        """
+        Get the Alias Python API module.
+
+        This method will attempt to first load the module from a cache file, if it exists and
+        is not stale. Otherwise, it will make a server request to get the api module.
+
+        The actual Alias Python API module (.pyd) file lives on the server, so this method
+        will get the api module as a JSON object from the server, and create a proxy module
+        that can be used on the client side here, as if it were the actual api module itself.
+
+        :return: The Alias Python API module.
+        :rtype: module
+        """
+
+        module_proxy = self.get_alias_api_module_proxy()
         return module_proxy.get_or_create_module(self)
 
     # -------------------------------------------------------------------------------------------------------
