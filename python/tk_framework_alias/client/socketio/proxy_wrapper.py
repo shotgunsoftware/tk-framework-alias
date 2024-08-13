@@ -343,11 +343,6 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                 "Alias client not found. Cannot send api request."
             )
 
-        if not self.sio.connected:
-            raise AliasClientNotConnected(
-                "Alias client is not connected. Cannot send api reqest."
-            )
-
         # Sanitize special case arguments before passing to api request.
         if request_data:
             if "__function_args__" in request_data:
