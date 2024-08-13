@@ -398,6 +398,11 @@ class AliasSocketIoClient(socketio.Client):
         return the response value. For example, a client may need to ensure the GUI is not
         blocking if Alias needs to perform GUI events during the api request.
 
+        This routine will return once it receieves a response from the server,
+        of if the client disconnects from the server. If the client
+        disconnects, the response object will indicate the request was not
+        acknowledged.
+
         The response object is a dictionary with two key-values:
 
             ack:
@@ -413,7 +418,7 @@ class AliasSocketIoClient(socketio.Client):
         :type response: dict
         """
 
-        while not response.get("ack", False):
+        while not response.get("ack", False) and self.connected:
             self._process_events()
 
     def _process_events(self):
