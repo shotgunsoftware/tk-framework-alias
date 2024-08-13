@@ -23,3 +23,7 @@ class AliasClientNotConnected(AliasClientException):
 
 class AliasClientJSONEncoderError(AliasClientException):
     """Custom exception for reporting Alias client JSON encoder errors."""
+
+
+class AliasClientBatchRequestError(AliasClientException):
+    """Custom exception for reporting Alias client api batch request errors."""
