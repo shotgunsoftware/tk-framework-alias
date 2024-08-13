@@ -16,7 +16,7 @@ import socketio
 import threading
 
 from .client_json import AliasClientJSON
-from ..utils.decorators import check_server_result
+from ..utils.decorators import check_server_result, check_client_connection
 from tk_framework_alias_utils import utils as framework_utils
 from tk_framework_alias_utils import environment_utils as framework_env_utils
 
@@ -203,6 +203,7 @@ class AliasSocketIoClient(socketio.Client):
     # Methods to emitting events
 
     @check_server_result
+    @check_client_connection
     def call_threadsafe(self, *args, **kwargs):
         """
         Emit an event to the server and wait for the response in a thread-safe way.
@@ -224,6 +225,7 @@ class AliasSocketIoClient(socketio.Client):
             return self.call(*args, **kwargs)
 
     @check_server_result
+    @check_client_connection
     def emit_threadsafe_and_wait(self, *args, **kwargs):
         """
         Call the emit method in a thread-safe and non-GUI blocking way.
@@ -258,8 +260,24 @@ class AliasSocketIoClient(socketio.Client):
 
         # Wait for the callback to set the event result
         self._wait_for_response(response)
+
+        # Check that client is still connected. It is possible that it timed out
+        # waiting for the server response, in which case it will disconnect.
+        if not self.connected and not response.get("ack"):
+            raise TimeoutError(
+                (
+                    "Client disconnected while waiting for the server "
+                    "response. Server will finish executing the request, and "
+                    "the client will attempt to reconnect once the server "
+                    "is ready."
+                )
+            )
+
+        # Return the result from the server
         return response.get("result")
 
+    @check_server_result
+    @check_client_connection
     def emit_threadsafe(self, *args, **kwargs):
         """
         Call the emit method in a thread-safe way.
