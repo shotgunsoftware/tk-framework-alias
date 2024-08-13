@@ -27,7 +27,7 @@ class ClientRequestContextManager:
     def __init__(
         self,
         api_module_proxy: AliasClientModuleProxyWrapper,
-        is_async: Optional[bool] = False
+        is_async: Optional[bool] = False,
     ):
         """
         Initialize the context manager.
@@ -74,7 +74,9 @@ class ClientRequestContextManager:
 
         # Execute batched requests. Result is expected to be a list of values,
         # one for each request made.
-        self.result = self.__api_module_proxy.batch_requests(False, is_async=self.__is_async)
+        self.result = self.__api_module_proxy.batch_requests(
+            False, is_async=self.__is_async
+        )
 
         # No result will be returned when executing async
         if self.__is_async:
