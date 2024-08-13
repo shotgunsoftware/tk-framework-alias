@@ -12,6 +12,7 @@ from .exceptions import QtModuleNotFound, QtAppInstanceNotFound
 
 
 QtCore = None
+QtCore5 = None
 qt_app = None
 
 # Determine the Qt version to import.
@@ -21,13 +22,13 @@ qt_app = None
 try:
     from PySide2 import QtCore
 
-    if QtCore:
-        qt_app = QtCore.QCoreApplication.instance()
+    QtCore5 = QtCore
+    qt_app = QtCore.QCoreApplication.instance()
 except Exception:
     pass
 
 # Check if Qt was import successfully, if not try PySide6.
-if not QtCore or not qt_app:
+if not (QtCore and qt_app):
     if QtCore:
         # Reset QtCore if it was previously imported
         del QtCore
@@ -35,15 +36,21 @@ if not QtCore or not qt_app:
     try:
         from PySide6 import QtCore
 
-        if QtCore:
-            qt_app = QtCore.QCoreApplication.instance()
+        qt_app = QtCore.QCoreApplication.instance()
     except Exception:
         pass
 
-# Verify that QtCore module was imported and exists, and the qt app is accessible
-if not QtCore:
-    raise QtModuleNotFound("QtCore module not found. Failed to import PySide.")
-if not qt_app:
-    raise QtAppInstanceNotFound(
-        f"Qt App instance not found for Qt {QtCore.__version__}"
-    )
+# Verify that Qt was imported, and the qt app is accessible
+if not (QtCore or QtCore5):
+    raise QtModuleNotFound("Failed to import Qt for Python.")
+elif not qt_app:
+    if QtCore:
+        raise QtAppInstanceNotFound(
+            f"Qt App instance not found for Qt {QtCore.__version__}"
+        )
+    elif QtCore5:
+        raise QtAppInstanceNotFound(
+            f"Qt App instance not found for Qt {QtCore5.__version__}"
+        )
+    else:
+        raise QtModuleNotFound("Qt for Python not found")
