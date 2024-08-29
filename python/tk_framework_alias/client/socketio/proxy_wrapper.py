@@ -721,18 +721,19 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
 
         self.__unique_id = self.data["__instance_id__"]
         self.__dict = self.data["__dict__"]
+        self.__name_dirty = False
 
     def __str__(self):
         """Return the string representation of the object."""
 
-        obj_name = self.get_name()
+        obj_name = self.name
         if obj_name:
             return obj_name
         return super(AliasClientObjectProxy, self).__str__()
 
     def __repr__(self):
         """Return the string representation of the object."""
-        return f"<{self.__class__.__name__}: {self.get_name()}>"
+        return f"<{self.__class__.__name__}: {self.name}>"
 
     @classmethod
     def required_data(cls):
@@ -777,10 +778,21 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         if not proxy_type:
             lookup_type = getattr(module, proxy_type_name)
             proxy_attributes = lookup_type.__dict__
-            proxy_attributes = {
-                k: v for k, v in proxy_attributes.items() if not k.startswith("__")
-            }
-            proxy_type = type(proxy_type_name, (cls,), proxy_attributes)
+
+            # Skip any private members, and modify any attributes that conflict
+            # with the proxy class. The proxy class may want to override the
+            # attribute to provide additional functionality.
+            modified_attributes = {}
+            for attr_name, attr_value in proxy_attributes.items():
+                if attr_name.startswith("__"):
+                    continue
+                if hasattr(cls, attr_name):
+                    modified_attr_name = f"_{attr_name}"
+                    modified_attributes[modified_attr_name] = attr_value
+                else:
+                    modified_attributes[attr_name] = attr_value
+
+            proxy_type = type(proxy_type_name, (cls,), modified_attributes)
             cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
 
         # Return an actual instance of the proxy type, not just the type object (like other classes do)
@@ -791,28 +803,47 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         """Return the unique id for this object."""
         return self.__unique_id
 
-    def to_dict(self):
-        """Return the dictionary representation of the object."""
-        return self.__dict
-
-    def get_name(self):
+    @property
+    def name(self):
         """
-        Convenience method to get the name of the object.
+        Return the name of the object.
 
         This method does not retrieve the name from the server, but instead
         returns the name from the object's dictionary data. If the name of the
         object has changed since the object was created, this method will not
-        return the updated name.
+        return the updated name. To get the updated name, the object must be
+        queried from the server again.
         """
-        return self.__dict.get("name")
+        attr_name = inspect.currentframe().f_code.co_name
+        if self.__name_dirty:
+            # Query the server to get the property name
+            modified_attr_name = f"_{attr_name}"
+            attr_value = getattr(self, modified_attr_name)
+            self.__dict[attr_name] = attr_value
+            self.__name_dirty = False
+        return self.__dict.get(attr_name)
 
-    def get_type(self):
+    @name.setter
+    def name(self, value):
+        # Get this property name from the calling method
+        attr_name = inspect.currentframe().f_code.co_name
+        # Get the modified property name, to call the original property setter
+        # method
+        modified_attr_name = f"_{attr_name}"
+        # Call the original property setter method
+        setattr(self, modified_attr_name, value)
+        # Flag the name as dirty, so that the next time the name is retrieved
+        # it will be retrieved from the server
+        self.__name_dirty = True
+
+    def type(self):
         """
-        Convenience method to get the type of the object.
+        Return the type of the object.
 
         This method does not retrieve the type from the server, but instead
         returns the type from the object's dictionary data. If the type of the
         object has changed since the object was created, this method will not
         return the updated type. The object type should not change.
         """
+
         return self.__dict.get("type")
