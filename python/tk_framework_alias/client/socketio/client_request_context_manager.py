@@ -38,7 +38,12 @@ class ClientRequestContextManager:
 
         self.__api_module_proxy = api_module_proxy
         self.__is_async = is_async
-        self.result = None
+        self.__result = []
+
+    @property
+    def result(self):
+        """The result of the batched requests."""
+        return self.__result
 
     def __enter__(self):
         """
@@ -49,12 +54,10 @@ class ClientRequestContextManager:
         manager.
         """
 
-        if not self.__api_module_proxy:
-            return
-
-        # Start batched mode: defer requests until we signal to execute all at
-        # once
-        self.__api_module_proxy.batch_requests(True)
+        if self.__api_module_proxy:
+            # Start batched mode: defer requests until we signal to execute all at
+            # once
+            self.__api_module_proxy.batch_requests(True)
 
         return self
 
@@ -74,7 +77,7 @@ class ClientRequestContextManager:
 
         # Execute batched requests. Result is expected to be a list of values,
         # one for each request made.
-        self.result = self.__api_module_proxy.batch_requests(
+        self.__result = self.__api_module_proxy.batch_requests(
             False, is_async=self.__is_async
         )
 
@@ -83,10 +86,10 @@ class ClientRequestContextManager:
             return
 
         # Check that the result was returned successfully
-        if self.result is None:
-            self.result = []
+        if self.__result is None:
+            self.__result = []
             raise AliasClientBatchRequestError("Expected a result but None returned.")
-        elif len(self.result) != num_requests:
+        elif len(self.__result) != num_requests:
             raise AliasClientBatchRequestError(
-                f"Expected {num_requests} results, but got {len(self.result)} results."
+                f"Expected {num_requests} results, but got {len(self.__result)} results."
             )
