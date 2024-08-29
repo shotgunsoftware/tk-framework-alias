@@ -14,7 +14,7 @@ import inspect
 import threading
 import types
 
-from ..utils.exceptions import AliasClientNotConnected, AliasClientNotFound
+from ..utils.exceptions import AliasClientNotFound
 
 
 class AliasClientObjectProxyWrapper:

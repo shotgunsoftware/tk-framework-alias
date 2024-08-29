@@ -11,6 +11,8 @@
 from functools import wraps
 from typing import Callable, Any
 
+from .exceptions import AliasClientNotConnected
+
 
 def check_server_result(func: Callable) -> Any:
     """
@@ -59,7 +61,7 @@ def check_client_connection(func: Callable) -> Any:
     @wraps(func)
     def wrapper(client, *args, **kwargs):
         if not client.connected:
-            raise ConnectionError(
+            raise AliasClientNotConnected(
                 (
                     "Client disconnected from server and cannot send request. "
                     "Client will automatically attempt to reconnect, but if "
