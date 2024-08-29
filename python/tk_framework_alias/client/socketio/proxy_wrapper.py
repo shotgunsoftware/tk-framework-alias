@@ -847,3 +847,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         """
 
         return self.__dict.get("type")
+
+    def to_dict(self):
+        """Return the dictionary representation of the object."""
+        return dict(self.__dict)
