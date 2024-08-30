@@ -538,6 +538,7 @@ def get_framework_supported_python_versions():
         (3, 7),
         (3, 9),
         (3, 10),
+        (3, 11),
     ]
 
 
