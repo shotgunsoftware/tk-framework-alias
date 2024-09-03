@@ -6,3 +6,4 @@ Alias Python API
 
    module_summary
    reference
+   changes
