@@ -19,6 +19,8 @@
       al_is_valid
       apply_iterator_to_dag_nodes
       apply_iterator_to_shaders
+      assign_children_to_parent_layer
+      assign_nodes_to_layer
       cleanup_geometry_model
       clear_pick_list
       clear_queued_events
@@ -28,6 +30,7 @@
       copy_object_cleanup
       create_alternative
       create_construction_plane
+      create_group_for_layer
       create_layer
       create_layer_folder
       create_layered_shader
@@ -40,11 +43,17 @@
       create_switch_shader
       create_texture_node
       current_window
+      delete_all
       delete_all_construction_entities
+      delete_all_construction_history
       delete_all_locators
       delete_construction_history
+      delete_dag_nodes_by_name
       delete_history
+      delete_layers_by_name
       delete_null_nodes
+      delete_sets_by_name
+      do_updates
       expand_instances
       export_by_layer
       export_by_layer_sequentially
@@ -71,15 +80,20 @@
       get_current_path
       get_current_pick_item
       get_current_stage
+      get_dag_nodes_by_name
       get_empty_layers
+      get_empty_sets
       get_layer_by_name
       get_layer_by_number
       get_layered_shader_by_name
       get_layered_shader_by_node
       get_layered_shaders
       get_layers
+      get_layers_by_name
       get_layers_using_multiple_shaders
       get_locator_by_name
+      get_locators
+      get_locators_by_name
       get_main_window_id
       get_nesting_groups
       get_perspective_camera_by_name
@@ -91,8 +105,11 @@
       get_reference_by_path
       get_reference_by_uuid
       get_references
+      get_references_by_name
+      get_sets_by_name
       get_shader_by_name
       get_shaders
+      get_shaders_by_name
       get_shaders_by_node
       get_stages
       get_switch_shader_by_name
@@ -133,7 +150,15 @@
       node_first_shader
       node_switch_shader
       open_file
+      pick
+      pick_all_layers
+      pick_all_locators
       pick_by_name
+      pick_layers
+      pick_locators
+      pick_nodes
+      pick_nodes_assigned_to_layers
+      pick_nodes_assigned_to_shaders
       pop_pick_list
       prev_pick_item
       push_pick_list
@@ -142,7 +167,9 @@
       remove_message_handler
       remove_message_handlers
       remove_reference
+      remove_references
       reset
+      reset_pivots
       reset_stages
       retrieve
       retrieve_options
@@ -157,6 +184,8 @@
       search_node_is_template
       search_node_layer_does_not_match_parent_layer
       search_node_unused_curves_on_surface
+      search_node_unused_curves_on_surface_with_history
+      set_layer_symmetry
       set_parent_window
       set_retrieve_options
       set_store_options
@@ -173,6 +202,9 @@
       tessellate_uniform
       traverse_dag
       ungroup
+      unpick
+      unpick_all_layers
+      unpick_all_locators
       update_reference
       zero_transform
       zero_transform_top_level

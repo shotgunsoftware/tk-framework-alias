@@ -26,6 +26,9 @@
         <div class="wy-side-nav-search" >
             <a href="index.html" class="icon icon-home"> Alias Python API
           </a>
+              <div class="version">
+                4.4.0
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -36,7 +39,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_summary.html">Module Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 </ul>
 
         </div>
@@ -98,6 +101,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference.html#alias_api.AlGroupNode.add_child_node">add_child_node() (alias_api.AlGroupNode method)</a>
+</li>
+      <li><a href="reference.html#alias_api.AlGroupNode.add_children">add_children() (alias_api.AlGroupNode method)</a>
 </li>
       <li><a href="reference.html#alias_api.Menu.add_command">add_command() (alias_api.Menu method)</a>
 </li>
@@ -233,7 +238,7 @@
     alias_api
 
       <ul>
-        <li><a href="_autosummary/alias_api.html#module-alias_api">module</a>, <a href="reference.html#module-alias_api">[1]</a>
+        <li><a href="_autosummary/alias_api.html#module-alias_api">module</a>, <a href="changes.html#module-alias_api">[1]</a>, <a href="reference.html#module-alias_api">[2]</a>
 </li>
       </ul></li>
       <li><a href="reference.html#alias_api.AliasCompatibilityException">AliasCompatibilityException</a>
@@ -534,7 +539,11 @@
 </li>
       <li><a href="reference.html#alias_api.AlLayer.assign_child">assign_child() (alias_api.AlLayer method)</a>
 </li>
+      <li><a href="reference.html#alias_api.assign_children_to_parent_layer">assign_children_to_parent_layer() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlMesh.assign_layered_shader">assign_layered_shader() (alias_api.AlMesh method)</a>
+</li>
+      <li><a href="reference.html#alias_api.assign_nodes_to_layer">assign_nodes_to_layer() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlLayer.assign_parent">assign_parent() (alias_api.AlLayer method)</a>
 </li>
@@ -818,6 +827,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference.html#alias_api.TraverseDagOutputData.count">count (alias_api.TraverseDagOutputData property)</a>
+</li>
       <li><a href="reference.html#alias_api.VectorAlTangentType.count">count() (alias_api.VectorAlTangentType method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlAngleLocator.create">create() (alias_api.AlAngleLocator method)</a>
@@ -887,6 +898,8 @@
       <li><a href="reference.html#alias_api.AlCurve.create_ellipse">create_ellipse() (alias_api.AlCurve method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlLayer.create_folder">create_folder() (alias_api.AlLayer method)</a>
+</li>
+      <li><a href="reference.html#alias_api.create_group_for_layer">create_group_for_layer() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlCurve.create_hyperbola">create_hyperbola() (alias_api.AlCurve method)</a>
 </li>
@@ -974,7 +987,11 @@
         <li><a href="reference.html#alias_api.AlCurveOnSurface.degree">(alias_api.AlCurveOnSurface method)</a>
 </li>
       </ul></li>
+      <li><a href="reference.html#alias_api.delete_all">delete_all() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.delete_all_construction_entities">delete_all_construction_entities() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.delete_all_construction_history">delete_all_construction_history() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.delete_all_locators">delete_all_locators() (in module alias_api)</a>
 </li>
@@ -982,9 +999,13 @@
 </li>
       <li><a href="reference.html#alias_api.delete_construction_history">delete_construction_history() (in module alias_api)</a>
 </li>
+      <li><a href="reference.html#alias_api.delete_dag_nodes_by_name">delete_dag_nodes_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.delete_history">delete_history() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlParamAction.delete_keyframe_range">delete_keyframe_range() (alias_api.AlParamAction method)</a>
+</li>
+      <li><a href="reference.html#alias_api.delete_layers_by_name">delete_layers_by_name() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.delete_null_nodes">delete_null_nodes() (in module alias_api)</a>
 </li>
@@ -1056,6 +1077,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference.html#alias_api.delete_sets_by_name">delete_sets_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlDeviationLocator.deviation">deviation() (alias_api.AlDeviationLocator method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlDeviationLocator.deviation_components">deviation_components() (alias_api.AlDeviationLocator method)</a>
@@ -1072,6 +1095,8 @@
         <li><a href="reference.html#alias_api.AlCurveCV.do_updates">(alias_api.AlCurveCV method)</a>
 </li>
         <li><a href="reference.html#alias_api.AlDagNode.do_updates">(alias_api.AlDagNode method)</a>
+</li>
+        <li><a href="reference.html#alias_api.do_updates">(in module alias_api)</a>
 </li>
       </ul></li>
       <li><a href="reference.html#alias_api.AlLayer.draw_instances">draw_instances (alias_api.AlLayer property)</a>
@@ -1280,7 +1305,11 @@
 </li>
       <li><a href="reference.html#alias_api.AlCurve.get_cv">get_cv() (alias_api.AlCurve method)</a>
 </li>
+      <li><a href="reference.html#alias_api.get_dag_nodes_by_name">get_dag_nodes_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.get_empty_layers">get_empty_layers() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.get_empty_sets">get_empty_sets() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlSwitchShader.get_first_inactive_shader">get_first_inactive_shader() (alias_api.AlSwitchShader method)</a>
 </li>
@@ -1308,16 +1337,22 @@
 </li>
       <li><a href="reference.html#alias_api.get_layers">get_layers() (in module alias_api)</a>
 </li>
+      <li><a href="reference.html#alias_api.get_layers_by_name">get_layers_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.get_layers_using_multiple_shaders">get_layers_using_multiple_shaders() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.get_locator_by_name">get_locator_by_name() (in module alias_api)</a>
 </li>
-      <li><a href="reference.html#alias_api.get_main_window_id">get_main_window_id() (in module alias_api)</a>
+      <li><a href="reference.html#alias_api.get_locators">get_locators() (in module alias_api)</a>
 </li>
-      <li><a href="reference.html#alias_api.get_nesting_groups">get_nesting_groups() (in module alias_api)</a>
+      <li><a href="reference.html#alias_api.get_locators_by_name">get_locators_by_name() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.get_main_window_id">get_main_window_id() (in module alias_api)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference.html#alias_api.get_nesting_groups">get_nesting_groups() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlSwitchShader.get_next_inactive_shader">get_next_inactive_shader() (alias_api.AlSwitchShader method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlLayeredShader.get_next_shader">get_next_shader() (alias_api.AlLayeredShader method)</a>
@@ -1346,7 +1381,11 @@
         <li><a href="reference.html#alias_api.get_references">(in module alias_api)</a>
 </li>
       </ul></li>
+      <li><a href="reference.html#alias_api.get_references_by_name">get_references_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlWindow.get_resolution">get_resolution() (alias_api.AlWindow method)</a>
+</li>
+      <li><a href="reference.html#alias_api.get_sets_by_name">get_sets_by_name() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.get_shader_by_name">get_shader_by_name() (in module alias_api)</a>
 </li>
@@ -1356,6 +1395,8 @@
         <li><a href="reference.html#alias_api.get_shaders">(in module alias_api)</a>
 </li>
       </ul></li>
+      <li><a href="reference.html#alias_api.get_shaders_by_name">get_shaders_by_name() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.get_shaders_by_node">get_shaders_by_node() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.get_stages">get_stages() (in module alias_api)</a>
@@ -1734,7 +1775,7 @@
     module
 
       <ul>
-        <li><a href="_autosummary/alias_api.html#module-alias_api">alias_api</a>, <a href="reference.html#module-alias_api">[1]</a>
+        <li><a href="_autosummary/alias_api.html#module-alias_api">alias_api</a>, <a href="changes.html#module-alias_api">[1]</a>, <a href="reference.html#module-alias_api">[2]</a>
 </li>
       </ul></li>
       <li><a href="reference.html#alias_api.AlCurveCV.multiplicity">multiplicity() (alias_api.AlCurveCV method)</a>
@@ -1859,10 +1900,10 @@
 </li>
       <li><a href="reference.html#alias_api.AlClusterMember.next_cluster_member_d">next_cluster_member_d() (alias_api.AlClusterMember method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference.html#alias_api.next_construction_entity">next_construction_entity() (in module alias_api)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference.html#alias_api.AlCurveOnSurface.next_curve_on_surface">next_curve_on_surface() (alias_api.AlCurveOnSurface method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlFace.next_face">next_face() (alias_api.AlFace method)</a>
@@ -1915,9 +1956,13 @@
       </ul></li>
       <li><a href="reference.html#alias_api.node_first_shader">node_first_shader() (in module alias_api)</a>
 </li>
+      <li><a href="reference.html#alias_api.TraverseDagInputData.node_names">node_names (alias_api.TraverseDagInputData property)</a>
+</li>
       <li><a href="reference.html#alias_api.node_switch_shader">node_switch_shader() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.TraverseDagInputData.node_types">node_types (alias_api.TraverseDagInputData property)</a>
+</li>
+      <li><a href="reference.html#alias_api.TraverseDagInputData.nodeNamesInclusive">nodeNamesInclusive (alias_api.TraverseDagInputData property)</a>
 </li>
       <li><a href="reference.html#alias_api.TraverseDagOutputData.nodes">nodes (alias_api.TraverseDagOutputData property)</a>
 </li>
@@ -2074,12 +2119,30 @@
 </li>
         <li><a href="reference.html#alias_api.AlPickable.pick">(alias_api.AlPickable method)</a>
 </li>
+        <li><a href="reference.html#alias_api.pick">(in module alias_api)</a>
+</li>
       </ul></li>
+      <li><a href="reference.html#alias_api.pick_all_layers">pick_all_layers() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.pick_all_locators">pick_all_locators() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.pick_by_name">pick_by_name() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.pick_layers">pick_layers() (in module alias_api)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference.html#alias_api.pick_locators">pick_locators() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlLayer.pick_nodes">pick_nodes() (alias_api.AlLayer method)</a>
+
+      <ul>
+        <li><a href="reference.html#alias_api.pick_nodes">(in module alias_api)</a>
+</li>
+      </ul></li>
+      <li><a href="reference.html#alias_api.pick_nodes_assigned_to_layers">pick_nodes_assigned_to_layers() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.pick_nodes_assigned_to_shaders">pick_nodes_assigned_to_shaders() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlAnnotationLocator.point">point() (alias_api.AlAnnotationLocator method)</a>
 </li>
@@ -2199,15 +2262,17 @@
         <li><a href="reference.html#alias_api.AlSettable.remove_from_set">(alias_api.AlSettable method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference.html#alias_api.AlDagNode.remove_joint">remove_joint() (alias_api.AlDagNode method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference.html#alias_api.remove_message_handler">remove_message_handler() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.remove_message_handlers">remove_message_handlers() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.remove_reference">remove_reference() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.remove_references">remove_references() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlLayeredShader.remove_shader">remove_shader() (alias_api.AlLayeredShader method)</a>
 
@@ -2228,6 +2293,8 @@
       <li><a href="reference.html#alias_api.AlCurve.replace">replace() (alias_api.AlCurve method)</a>
 </li>
       <li><a href="reference.html#alias_api.reset">reset() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.reset_pivots">reset_pivots() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.reset_stages">reset_stages() (in module alias_api)</a>
 </li>
@@ -2303,6 +2370,8 @@
 </li>
       <li><a href="reference.html#alias_api.search_node_unused_curves_on_surface">search_node_unused_curves_on_surface() (in module alias_api)</a>
 </li>
+      <li><a href="reference.html#alias_api.search_node_unused_curves_on_surface_with_history">search_node_unused_curves_on_surface_with_history() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlConstructionPlane.second">second() (alias_api.AlConstructionPlane method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlDagNode.send_geometry_modified_message">send_geometry_modified_message() (alias_api.AlDagNode method)</a>
@@ -2368,6 +2437,8 @@
       <li><a href="reference.html#alias_api.AlCurve.set_knot_vector">set_knot_vector() (alias_api.AlCurve method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlDagNode.set_layer">set_layer() (alias_api.AlDagNode method)</a>
+</li>
+      <li><a href="reference.html#alias_api.set_layer_symmetry">set_layer_symmetry() (in module alias_api)</a>
 </li>
       <li><a href="reference.html#alias_api.AlAnnotationLocator.set_left_justify">set_left_justify() (alias_api.AlAnnotationLocator method)</a>
 
@@ -2840,9 +2911,15 @@
 </li>
         <li><a href="reference.html#alias_api.AlPickable.unpick">(alias_api.AlPickable method)</a>
 </li>
+        <li><a href="reference.html#alias_api.unpick">(in module alias_api)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference.html#alias_api.unpick_all_layers">unpick_all_layers() (in module alias_api)</a>
+</li>
+      <li><a href="reference.html#alias_api.unpick_all_locators">unpick_all_locators() (in module alias_api)</a>
+</li>
       <li><a href="reference.html#alias_api.AlPerspectiveCamera.up">up() (alias_api.AlPerspectiveCamera method)</a>
 </li>
       <li><a href="reference.html#alias_api.AlLight.up_node">up_node() (alias_api.AlLight method)</a>
