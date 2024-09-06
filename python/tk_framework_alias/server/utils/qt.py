@@ -43,14 +43,13 @@ if not (QtCore and qt_app):
 # Verify that Qt was imported, and the qt app is accessible
 if not (QtCore or QtCore5):
     raise QtModuleNotFound("Failed to import Qt for Python.")
-elif not qt_app:
+
+if not qt_app:
     if QtCore:
         raise QtAppInstanceNotFound(
             f"Qt App instance not found for Qt {QtCore.__version__}"
         )
-    elif QtCore5:
+    else:
         raise QtAppInstanceNotFound(
             f"Qt App instance not found for Qt {QtCore5.__version__}"
         )
-    else:
-        raise QtModuleNotFound("Qt for Python not found")
