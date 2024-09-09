@@ -10,4 +10,6 @@
 
 from .socketio.client import AliasSocketIoClient
 from .socketio.client_namespace import AliasClientNamespace
+from .socketio.client_request_context_manager import ClientRequestContextManager
+from .socketio.proxy_wrapper import AliasClientModuleProxyWrapper
 from .utils import exceptions
