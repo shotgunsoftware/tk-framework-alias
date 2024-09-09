@@ -35,6 +35,9 @@ class AliasApiRequestWrapper:
     def create_wrapper(cls, data):
         """Create and return a new object of this type from the given data, if possible."""
 
+        if isinstance(data, list):
+            return [cls.create_wrapper(item) for item in data]
+
         if not isinstance(data, dict):
             return None
 

@@ -99,7 +99,7 @@ class AliasServerNamespace(socketio.Namespace):
                 return event_method(sid, *args)
 
         # No event method found, treat this event as an api request.
-        return self._handle_api_event(event, sid, *args)
+        return self._trigger_api_event(event, sid, *args)
 
     def on_connect(self, sid, environ):
         """
@@ -266,7 +266,7 @@ class AliasServerNamespace(socketio.Namespace):
         log_msg = f"Server [client={sid}, namespace={self.namespace}] {msg}"
         self.server.logger.log(level, log_msg)
 
-    def _handle_api_event(self, event, sid, *args):
+    def _trigger_api_event(self, event, sid, *args):
         """
         An Alias API event was triggered by the client.
 
@@ -289,8 +289,41 @@ class AliasServerNamespace(socketio.Namespace):
         if self.client_sid is None or sid != self.client_sid:
             return
 
-        # Make the Alias API call
+        # Execute the Alias API request
         request = args[0] if args else None
+        if isinstance(request, list):
+            # Handle multiple requests at once. Return a list of results.
+            total_requests = len(request)
+            results = []
+            for i, (event_name, request_data) in enumerate(request, start=1):
+                self._log_message(
+                    None, f"Request ({i} of {total_requests})...", logging.INFO
+                )
+                results.append(self._handle_api_event(event_name, sid, request_data))
+            return results
+        else:
+            # Make a signle request and return the result.
+            return self._handle_api_event(event, sid, request)
+
+    def _handle_api_event(self, event, sid, request):
+        """
+        An Alias API event was triggered by the client.
+
+        Execute the Alias API request from the given data. The event should match an api
+        function (e.g. module function, instance method), and the data contains all the
+        necesasry information to execute the api request.
+
+        :param event: The event corresponding to an api request.
+        :type event: str
+        :param sid: The session id of the client that triggered the event.
+        :type sid: str
+        :param *args: The data list to pass on to the event handler method.
+        :type *args: List[any]
+
+        :return: The return value of the api request.
+        :rtype: any
+        """
+
         self._log_message(None, f"Excuting Alias API request: {request}", logging.INFO)
         result = self._execute_request(event, request)
 
@@ -300,7 +333,7 @@ class AliasServerNamespace(socketio.Namespace):
         except Exception as post_process_error:
             self._log_message(
                 sid,
-                "Alias API request post process error\n{post_process_error}",
+                f"Alias API request post process error\n{post_process_error}",
                 logging.ERROR,
             )
             return AliasApiPostProcessRequestError(post_process_error)
@@ -369,6 +402,10 @@ class AliasServerNamespace(socketio.Namespace):
         If there are other ways to add/remove message handlers, this method needs to be
         updated.
         """
+
+        if isinstance(result, Exception):
+            # Do not process post request if there was an error executing the request
+            return
 
         if event == "add_message_handler":
             if result:

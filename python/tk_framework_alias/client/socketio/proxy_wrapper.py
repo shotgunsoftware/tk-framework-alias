@@ -8,11 +8,13 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Optional
+
 import inspect
 import threading
 import types
 
-from ..utils.exceptions import AliasClientNotConnected, AliasClientNotFound
+from ..utils.exceptions import AliasClientNotFound
 
 
 class AliasClientObjectProxyWrapper:
@@ -71,7 +73,7 @@ class AliasClientObjectProxyWrapper:
             cls.__modules[module_name] = module
 
     @classmethod
-    def get_type(cls, module_name, type_name):
+    def get_proxy_type(cls, module_name, type_name):
         """Return the type for the given module and type name."""
 
         with cls.__types_by_module_lock:
@@ -261,6 +263,8 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
 
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
+        self.__batch_mode = False
+        self.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods
@@ -288,6 +292,16 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     def sio(self):
         """Get the socketio client that this module uses to send and receive messages with Alias."""
         return self.__sio
+
+    @property
+    def batch_mode(self):
+        """Get the flag indicating whether or not the module is executing in batch mode."""
+        return self.__batch_mode
+
+    @property
+    def num_pending_requests(self):
+        """Get the number of pending requests that have been batched."""
+        return len(self.__batch_requests)
 
     # -------------------------------------------------------------------------------------------------------
     # Public methods
@@ -343,11 +357,6 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                 "Alias client not found. Cannot send api request."
             )
 
-        if not self.sio.connected:
-            raise AliasClientNotConnected(
-                "Alias client is not connected. Cannot send api reqest."
-            )
-
         # Sanitize special case arguments before passing to api request.
         if request_data:
             if "__function_args__" in request_data:
@@ -362,8 +371,46 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                     kwargs[name] = self.__sanitize_arg(arg)
                 request_data["__function_kwargs__"] = kwargs
 
+        if self.batch_mode:
+            # Defer and store the request to send multiple requests at once
+            self.__batch_requests.append((request_name, request_data))
+            return
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
+
+    def batch_requests(
+        self, start: Optional[bool] = True, is_async: Optional[bool] = False
+    ):
+        """
+        Start or stop batching requests.
+
+        When batching requests, multiple requests can be sent at once, instead
+        of sending each request individually. This is useful when multiple
+        requests are made in quick succession, and it is more efficient to send
+        them all at once.
+
+        On stopping batch requests, the batched requests will be sent to the
+        server.
+
+        :param start: True to start batching requests, False to stop.
+        :param is_async: True to return immediately without waiting  for the
+            request to return with a result, False to wait and return the result
+            of the batched requests. This is only used when stopping batch
+            mode and executing the requests.
+        """
+
+        self.__batch_mode = start
+
+        if not self.__batch_mode:
+            try:
+                if is_async:
+                    self.sio.emit_threadsafe("batch_requests", self.__batch_requests)
+                else:
+                    return self.sio.emit_threadsafe_and_wait(
+                        "batch_requests", self.__batch_requests
+                    )
+            finally:
+                self.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
@@ -575,6 +622,16 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
         self.__name = data.get("__enum_name__")
         self.__value = data.get("__enum_value__")
 
+    def __str__(self):
+        """Return the string representation of the enum object."""
+
+        return self.__name
+
+    def __repr__(self):
+        """Return the string representation of the enum object."""
+
+        return f"<{self.__class__.__name__}.{self.__name}: {self.__value}>"
+
     def __eq__(self, other):
         """
         Override equality operator for convenience.
@@ -636,7 +693,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
 
         enum_module_name = data["__module_name__"]
         enum_class_name = data["__class_name__"]
-        enum_type = cls.get_type(enum_module_name, enum_class_name)
+        enum_type = cls.get_proxy_type(enum_module_name, enum_class_name)
         if not enum_type:
             enum_type = type(enum_class_name, (cls,), {})
             cls.store_type(enum_module_name, enum_class_name, enum_type)
@@ -663,6 +720,20 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         super(AliasClientObjectProxy, self).__init__(data)
 
         self.__unique_id = self.data["__instance_id__"]
+        self.__dict = self.data["__dict__"]
+        self.__name_dirty = False
+
+    def __str__(self):
+        """Return the string representation of the object."""
+
+        obj_name = self.name
+        if obj_name:
+            return obj_name
+        return super(AliasClientObjectProxy, self).__str__()
+
+    def __repr__(self):
+        """Return the string representation of the object."""
+        return f"<{self.__class__.__name__}: {self.name}>"
 
     @classmethod
     def required_data(cls):
@@ -678,6 +749,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
                 "__module_name__",
                 "__class_name__",
                 "__instance_id__",
+                "__dict__",
             ]
         )
 
@@ -702,14 +774,25 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         if not module:
             raise Exception("Module not found")
         proxy_type_name = data["__class_name__"]
-        proxy_type = cls.get_type(proxy_module_name, proxy_type_name)
+        proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
         if not proxy_type:
             lookup_type = getattr(module, proxy_type_name)
             proxy_attributes = lookup_type.__dict__
-            proxy_attributes = {
-                k: v for k, v in proxy_attributes.items() if not k.startswith("__")
-            }
-            proxy_type = type(proxy_type_name, (cls,), proxy_attributes)
+
+            # Skip any private members, and modify any attributes that conflict
+            # with the proxy class. The proxy class may want to override the
+            # attribute to provide additional functionality.
+            modified_attributes = {}
+            for attr_name, attr_value in proxy_attributes.items():
+                if attr_name.startswith("__"):
+                    continue
+                if hasattr(cls, attr_name):
+                    modified_attr_name = f"_{attr_name}"
+                    modified_attributes[modified_attr_name] = attr_value
+                else:
+                    modified_attributes[attr_name] = attr_value
+
+            proxy_type = type(proxy_type_name, (cls,), modified_attributes)
             cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
 
         # Return an actual instance of the proxy type, not just the type object (like other classes do)
@@ -719,3 +802,52 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     def unique_id(self):
         """Return the unique id for this object."""
         return self.__unique_id
+
+    @property
+    def name(self):
+        """
+        Return the name of the object.
+
+        This method does not retrieve the name from the server, but instead
+        returns the name from the object's dictionary data. If the name of the
+        object has changed since the object was created, this method will not
+        return the updated name. To get the updated name, the object must be
+        queried from the server again.
+        """
+        attr_name = inspect.currentframe().f_code.co_name
+        if self.__name_dirty:
+            # Query the server to get the property name
+            modified_attr_name = f"_{attr_name}"
+            attr_value = getattr(self, modified_attr_name)
+            self.__dict[attr_name] = attr_value
+            self.__name_dirty = False
+        return self.__dict.get(attr_name)
+
+    @name.setter
+    def name(self, value):
+        # Get this property name from the calling method
+        attr_name = inspect.currentframe().f_code.co_name
+        # Get the modified property name, to call the original property setter
+        # method
+        modified_attr_name = f"_{attr_name}"
+        # Call the original property setter method
+        setattr(self, modified_attr_name, value)
+        # Flag the name as dirty, so that the next time the name is retrieved
+        # it will be retrieved from the server
+        self.__name_dirty = True
+
+    def type(self):
+        """
+        Return the type of the object.
+
+        This method does not retrieve the type from the server, but instead
+        returns the type from the object's dictionary data. If the type of the
+        object has changed since the object was created, this method will not
+        return the updated type. The object type should not change.
+        """
+
+        return self.__dict.get("type")
+
+    def to_dict(self):
+        """Return the dictionary representation of the object."""
+        return dict(self.__dict)
