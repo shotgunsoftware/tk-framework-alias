@@ -63,7 +63,7 @@ def toolkit_plugin_bootstrap(
         "powershell"
     ):
         powershell_command = f"""
-        $process = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", "Get-Content -Path '{log_file_path}' -Wait -Tail 2" -PassThru
+        $process = Start-Process -FilePath "powershell.exe" "-Command", "Get-Content -Path '{log_file_path}' -Wait -Tail 2" -PassThru
         $process.Id
         """
         # Start the PowerShell process and get the PID
