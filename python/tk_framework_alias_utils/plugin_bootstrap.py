@@ -43,12 +43,12 @@ def toolkit_plugin_bootstrap(
     tk_core_python_path = manifest.get_sgtk_pythonpath(plugin_root_path)
     sys.path.insert(0, tk_core_python_path)
     import sgtk
-
+    
+    # ---- setup logging
     logger = sgtk.LogManager.get_logger(__name__)
     logger.debug("Imported sgtk core from '%s'" % tk_core_python_path)
 
-    # ---- setup logging
-    log_handler = log.get_sgtk_logger(sgtk)
+    log_handler, log_file_path = log.get_sgtk_logger(sgtk)
     logger.debug("Added bootstrap log hander to root logger...")
 
     # TODO  For standalone workflows, need to handle authentication here

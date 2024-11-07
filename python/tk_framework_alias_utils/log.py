@@ -37,7 +37,7 @@ def get_sgtk_logger(sgtk):
 
     :param sgtk: An sgtk module reference.
 
-    :returns: A log handler.
+    :returns: A Tuple: (1) log handler (2) log file path.
     """
     # add a custom handler to the root logger so that all toolkit log messages
     # are forwarded back to python via the communicator
@@ -57,9 +57,9 @@ def get_sgtk_logger(sgtk):
     # if the engine is unknown to the current environment, it will just log
     # into the frameworks own log-file
     log_name = os.getenv("SGTK_ENGINE", "tk-framework-alias")
-    # log_name = "tk-alias"
 
     # initializes the file where logging output will go
-    sgtk.LogManager().initialize_base_file_handler(log_name)
+    log_manager = sgtk.LogManager()
+    log_manager.initialize_base_file_handler(log_name)
 
-    return bootstrap_log_handler
+    return bootstrap_log_handler, log_manager.log_file
