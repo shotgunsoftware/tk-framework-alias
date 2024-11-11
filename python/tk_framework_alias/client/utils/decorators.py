@@ -9,9 +9,12 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 from functools import wraps
+from typing import Callable, Any
+
+from .exceptions import AliasClientNotConnected
 
 
-def check_server_result(func):
+def check_server_result(func: Callable) -> Any:
     """
     A decorator function to check a value returned by a socketio server.
 
@@ -24,21 +27,49 @@ def check_server_result(func):
 
     :param func: The main function to execute. This should be an AliasSocketIoClient method,
         or a function that passes an AliasSocketIoClient as the first argument.
-    :type func: function
 
     :return: The value returned by func.
-    :rtype: any
     """
 
     @wraps(func)
     def wrapper(client, *args, **kwargs):
-        try:
-            result = func(client, *args, **kwargs)
-        except Exception as error:
-            result = error
-
+        result = func(client, *args, **kwargs)
         if isinstance(result, Exception):
             return client._handle_server_error(result)
         return result
+
+    return wrapper
+
+
+def check_client_connection(func: Callable) -> Any:
+    """
+    A decorator function to check if the client is connected to the server.
+
+    It takes a function that is an AliasSocketIoClient method (or a function that passes an
+    AliasSocketIoClient object as the first argument) and returns a function that executes the
+    main function only if the client is connected to the server.
+
+    This is meant to be used to check if the client is connected to the server before executing
+    a function that requires a connection.
+
+    :param func: The main function to execute. This should be an AliasSocketIoClient method,
+        or a function that passes an AliasSocketIoClient as the first argument.
+
+    :return: The value returned by func.
+    """
+
+    @wraps(func)
+    def wrapper(client, *args, **kwargs):
+        if not client.connected:
+            raise AliasClientNotConnected(
+                (
+                    "Client disconnected from server and cannot send request. "
+                    "Client will automatically attempt to reconnect, but if "
+                    "the issue persists you can reload the Alias FPT Plugin "
+                    "from the Alias Utilities > Plug-in Manager to try and "
+                    "resolve the problem."
+                )
+            )
+        return func(client, *args, **kwargs)
 
     return wrapper

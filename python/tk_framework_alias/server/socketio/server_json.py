@@ -180,6 +180,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             "__module_name__": obj.__module__,
             "__class_name__": obj.__class__.__name__,
             "__instance_id__": instance_id,
+            "__dict__": {
+                "name": obj.name if hasattr(obj, "name") else None,
+                "type": obj.type() if hasattr(obj, "type") else None,
+            },
         }
 
     def default(self, obj):

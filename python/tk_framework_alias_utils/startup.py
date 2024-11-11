@@ -165,7 +165,7 @@ def get_plugin_file_path(alias_version, python_major_version, python_minor_versi
     )
     if plugin_file_path is None or not os.path.exists(plugin_file_path):
         raise Exception(
-            f"Alias Plugin not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}"
+            f"Alias Plugin not found for Alias {alias_version} Python {python_major_version}.{python_minor_version}\nPlugin path: {plugin_file_path}"
         )
 
     return plugin_file_path

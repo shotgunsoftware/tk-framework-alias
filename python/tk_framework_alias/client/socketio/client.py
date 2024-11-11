@@ -16,7 +16,7 @@ import socketio
 import threading
 
 from .client_json import AliasClientJSON
-from ..utils.decorators import check_server_result
+from ..utils.decorators import check_server_result, check_client_connection
 from tk_framework_alias_utils import utils as framework_utils
 from tk_framework_alias_utils import environment_utils as framework_env_utils
 
@@ -203,6 +203,7 @@ class AliasSocketIoClient(socketio.Client):
     # Methods to emitting events
 
     @check_server_result
+    @check_client_connection
     def call_threadsafe(self, *args, **kwargs):
         """
         Emit an event to the server and wait for the response in a thread-safe way.
@@ -224,6 +225,7 @@ class AliasSocketIoClient(socketio.Client):
             return self.call(*args, **kwargs)
 
     @check_server_result
+    @check_client_connection
     def emit_threadsafe_and_wait(self, *args, **kwargs):
         """
         Call the emit method in a thread-safe and non-GUI blocking way.
@@ -258,8 +260,24 @@ class AliasSocketIoClient(socketio.Client):
 
         # Wait for the callback to set the event result
         self._wait_for_response(response)
+
+        # Check that client is still connected. It is possible that it timed out
+        # waiting for the server response, in which case it will disconnect.
+        if not self.connected and not response.get("ack"):
+            raise TimeoutError(
+                (
+                    "Client disconnected while waiting for the server "
+                    "response. Server will finish executing the request, and "
+                    "the client will attempt to reconnect once the server "
+                    "is ready."
+                )
+            )
+
+        # Return the result from the server
         return response.get("result")
 
+    @check_server_result
+    @check_client_connection
     def emit_threadsafe(self, *args, **kwargs):
         """
         Call the emit method in a thread-safe way.
@@ -295,9 +313,9 @@ class AliasSocketIoClient(socketio.Client):
     #####################################################################################
     # Methods to emit specific events
 
-    def get_alias_api(self):
+    def get_alias_api_module_proxy(self):
         """
-        Get the Alias Python API module.
+        Get the Alias Python API module proxy.
 
         This method will attempt to first load the module from a cache file, if it exists and
         is not stale. Otherwise, it will make a server request to get the api module.
@@ -306,8 +324,8 @@ class AliasSocketIoClient(socketio.Client):
         will get the api module as a JSON object from the server, and create a proxy module
         that can be used on the client side here, as if it were the actual api module itself.
 
-        :return: The Alias Python API module.
-        :rtype: module
+        :return: The Alias Python API module proxy.
+        :rtype: AliasClientModuleProxyWrapper
         """
 
         # Get information about the api module
@@ -346,6 +364,24 @@ class AliasSocketIoClient(socketio.Client):
             # cache requies an update
             shutil.copyfile(api_info["file_path"], cache_api_filepath)
 
+        return module_proxy
+
+    def get_alias_api(self):
+        """
+        Get the Alias Python API module.
+
+        This method will attempt to first load the module from a cache file, if it exists and
+        is not stale. Otherwise, it will make a server request to get the api module.
+
+        The actual Alias Python API module (.pyd) file lives on the server, so this method
+        will get the api module as a JSON object from the server, and create a proxy module
+        that can be used on the client side here, as if it were the actual api module itself.
+
+        :return: The Alias Python API module.
+        :rtype: module
+        """
+
+        module_proxy = self.get_alias_api_module_proxy()
         return module_proxy.get_or_create_module(self)
 
     # -------------------------------------------------------------------------------------------------------
@@ -380,6 +416,11 @@ class AliasSocketIoClient(socketio.Client):
         return the response value. For example, a client may need to ensure the GUI is not
         blocking if Alias needs to perform GUI events during the api request.
 
+        This routine will return once it receieves a response from the server,
+        of if the client disconnects from the server. If the client
+        disconnects, the response object will indicate the request was not
+        acknowledged.
+
         The response object is a dictionary with two key-values:
 
             ack:
@@ -395,7 +436,7 @@ class AliasSocketIoClient(socketio.Client):
         :type response: dict
         """
 
-        while not response.get("ack", False):
+        while not response.get("ack", False) and self.connected:
             self._process_events()
 
     def _process_events(self):

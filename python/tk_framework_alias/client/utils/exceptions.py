@@ -17,9 +17,13 @@ class AliasClientNotFound(AliasClientException):
     """Custom exception for reporting Alias client not found."""
 
 
-class AliasClientNotConnected(AliasClientException):
-    """Custom exception for reporting Alias client not connected."""
-
-
 class AliasClientJSONEncoderError(AliasClientException):
     """Custom exception for reporting Alias client JSON encoder errors."""
+
+
+class AliasClientBatchRequestError(AliasClientException):
+    """Custom exception for reporting Alias client api batch request errors."""
+
+
+class AliasClientNotConnected(ConnectionError):
+    """Custom exception for reporting Alias client not connected."""
