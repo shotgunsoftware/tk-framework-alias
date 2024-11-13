@@ -480,7 +480,7 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
         if os.path.exists(install_c_ext_zip_path):
             if verify_file(framework_c_ext_zip, install_c_ext_zip_path):
                 logger.debug(
-                    "C extensions already up to date at {install_c_ext_zip_path}."
+                    f"C extensions already up to date at {install_c_ext_zip_path}."
                 )
                 continue  # Packages already exist and no change.
 
