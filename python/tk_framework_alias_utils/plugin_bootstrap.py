@@ -80,7 +80,7 @@ def toolkit_plugin_bootstrap(
             logger.error(f"Error: {stderr}")
 
     logger.info(
-        "Launching Flow Production Tracking Alias Engine...\nThis may take some time, please wait..."
+        "Launching Flow Production Tracking Alias Engine...\nThis may take a moment, please wait..."
     )
 
     # TODO  For standalone workflows, need to handle authentication here
