@@ -505,6 +505,7 @@ class AliasBridge(metaclass=Singleton):
             eventlet.wsgi.server(self.__server_socket, self.__app, log=wsgi_logger)
         except Exception as e:
             wsgi_logger.error(f"Failed to start WSGI server: {e}")
+        wsgi_logger.info("WSGI server exited")
 
     def __log(self, msg, level=logging.INFO):
         """
