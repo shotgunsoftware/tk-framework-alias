@@ -10,6 +10,8 @@
 
 import os
 import sys
+import shutil
+import subprocess
 
 
 def toolkit_plugin_bootstrap(
@@ -44,12 +46,42 @@ def toolkit_plugin_bootstrap(
     sys.path.insert(0, tk_core_python_path)
     import sgtk
 
+    # ---- setup logging
     logger = sgtk.LogManager.get_logger(__name__)
     logger.debug("Imported sgtk core from '%s'" % tk_core_python_path)
 
-    # ---- setup logging
-    log_handler = log.get_sgtk_logger(sgtk)
+    log_handler, log_file_path = log.get_sgtk_logger(sgtk)
     logger.debug("Added bootstrap log hander to root logger...")
+
+    # Toolkit bootstrap may take some time when many bundles need to be
+    # downloaded and cached. When not in debug mode, launch a PowerShell
+    # window to indicate to the user that the plugin is bootstrapping. At this
+    # point we do not have a Qt app running, so we cannot pop up a Qt dialog.
+    powershell_parent_process = None
+    powershell_pid = None
+    if os.environ.get("ALIAS_PLUGIN_CLIENT_DEBUG") != "1" and shutil.which(
+        "powershell"
+    ):
+        powershell_command = f"""
+        $process = Start-Process -FilePath "powershell.exe" "-Command", "Get-Content -Path '{log_file_path}' -Wait -Tail 2" -PassThru
+        $process.Id
+        """
+        # Start the PowerShell process and get the PID
+        powershell_parent_process = subprocess.Popen(
+            ["powershell.exe", "-Command", powershell_command],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        stdout, stderr = powershell_parent_process.communicate()
+        if stdout:
+            powershell_pid = int(stdout.strip())
+        if stderr:
+            logger.error(f"Error: {stderr}")
+
+    logger.info(
+        "Launching Flow Production Tracking Alias Engine...\nThis may take a moment, please wait..."
+    )
 
     # TODO  For standalone workflows, need to handle authentication here
     #       this includes workflows for logging in and out (see maya plugin).
@@ -57,57 +89,76 @@ def toolkit_plugin_bootstrap(
     #       Also, need to check that the SHOTGUN_SITE env var matches
     #       the currently logged in site.
 
-    # ---- set up the toolkit bootstrap manager
-    toolkit_mgr = sgtk.bootstrap.ToolkitManager()
-    # run the default init which sets plugin id, base config and bundle cache path
-    logger.debug("Initializing Toolkit Manager: %s" % toolkit_mgr)
-    manifest.initialize_manager(toolkit_mgr, plugin_root_path)
-
-    # Set the pipeline configuration id to use, if given
-    if pipeline_config_id:
-        toolkit_mgr.pipeline_configuration = int(pipeline_config_id)
-
-    entity = toolkit_mgr.get_entity_from_environment()
-    logger.debug("Will launch the engine with entity: %s" % entity)
-
-    logger.info("Bootstrapping toolkit...")
     try:
+        # ---- set up the toolkit bootstrap manager
+        toolkit_mgr = sgtk.bootstrap.ToolkitManager()
+        # run the default init which sets plugin id, base config and bundle cache path
+        logger.debug("Initializing Toolkit Manager: %s" % toolkit_mgr)
+        manifest.initialize_manager(toolkit_mgr, plugin_root_path)
+
+        # Set the pipeline configuration id to use, if given
+        if pipeline_config_id:
+            toolkit_mgr.pipeline_configuration = int(pipeline_config_id)
+
+        entity = toolkit_mgr.get_entity_from_environment()
+        logger.debug("Will launch the engine with entity: %s" % entity)
+
         toolkit_mgr.bootstrap_engine("tk-alias", entity=entity)
+        logger.info("Alias Engine running!")
+
+        # ---- tear down logging
+        sgtk.LogManager().root_logger.removeHandler(log_handler)
+        logger.debug("Removed bootstrap log handler from root logger...")
+
+        # core may have been swapped. import sgtk
+        import sgtk
+
+        # get a handle on the newly bootstrapped engine
+        engine = sgtk.platform.current_engine()
+
+        # After engine bootstrapped, import qt (engine will set up the qt module)
+        from sgtk.platform.qt import QtGui
+        from sgtk.platform.engine_logging import ToolkitEngineHandler
+
+        # Create the Qt app
+        app_name = "Flow Production Tracking for Alias"
+        app = QtGui.QApplication([app_name])
+        app.setApplicationName(app_name)
+        app.setQuitOnLastWindowClosed(False)
+        QtGui.QApplication.instance().aboutToQuit.connect(
+            lambda: QtGui.QApplication.processEvents()
+        )
+
+        # Finish the engine initialization that requries the Qt app instance to be created, but before
+        # the event loop starts.
+        engine.post_qt_init()
+
+        # Log message to Alias prompt indicating that Flow Production Tracking is ready
+        engine.alias_py.log_to_prompt("Flow Production Tracking initialized")
     except Exception as e:
-        logger.exception("Error bootstrapping toolkit: %s" % e)
+        # There are no specific exceptions that are expected, so catch all and
+        # log the error so that the Alias plugin does not crash, or fail
+        # silently.
+        logger.exception(f"Error bootstrapping Toolkit: {e}")
         return -1
-
-    # ---- tear down logging
-    sgtk.LogManager().root_logger.removeHandler(log_handler)
-    logger.debug("Removed bootstrap log handler from root logger...")
-
-    logger.info("Toolkit Bootstrapped!")
-
-    # core may have been swapped. import sgtk
-    import sgtk
-
-    # get a handle on the newly bootstrapped engine
-    engine = sgtk.platform.current_engine()
-
-    # After engine bootstrapped, import qt (engine will set up the qt module)
-    from sgtk.platform.qt import QtGui
-    from sgtk.platform.engine_logging import ToolkitEngineHandler
-
-    # Create the Qt app
-    app_name = "Flow Production Tracking for Alias"
-    app = QtGui.QApplication([app_name])
-    app.setApplicationName(app_name)
-    app.setQuitOnLastWindowClosed(False)
-    QtGui.QApplication.instance().aboutToQuit.connect(
-        lambda: QtGui.QApplication.processEvents()
-    )
-
-    # Finish the engine initialization that requries the Qt app instance to be created, but before
-    # the event loop starts.
-    engine.post_qt_init()
-
-    # Log message to Alias prompt indicating that Flow Production Tracking is ready
-    engine.alias_py.log_to_prompt("Flow Production Tracking initialized")
+    finally:
+        # Clean up spawned processes
+        if powershell_parent_process:
+            try:
+                powershell_parent_process.kill()
+            except Exception as e:
+                # Catch all exceptions, we can't force kill the process, but we
+                # don't want to fail the bootstrap because of this.
+                logger.error(
+                    f"Error killing spawned process: {powershell_parent_process.pid}"
+                )
+        if powershell_pid:
+            try:
+                subprocess.run(["taskkill", "/PID", str(powershell_pid), "/F"])
+            except Exception as e:
+                # Catch all exceptions, we can't force kill the process, but we
+                # don't want to fail the bootstrap because of this.
+                logger.error(f"Error killing spawned process: {powershell_pid}")
 
     # This will block and not return until Flow Production Tracking app exits.
     ret = app.exec_()

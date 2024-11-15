@@ -501,7 +501,11 @@ class AliasBridge(metaclass=Singleton):
         # is single threaded (e.g. can only access the socketio server from the thread it was
         # created in).
         wsgi_logger = framework_utils.get_logger(self.__class__.__name__, "wsgi")
-        eventlet.wsgi.server(self.__server_socket, self.__app, log=wsgi_logger)
+        try:
+            eventlet.wsgi.server(self.__server_socket, self.__app, log=wsgi_logger)
+        except Exception as e:
+            wsgi_logger.error(f"Failed to start WSGI server: {e}")
+        wsgi_logger.info("WSGI server exited")
 
     def __log(self, msg, level=logging.INFO):
         """
