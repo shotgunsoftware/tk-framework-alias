@@ -72,7 +72,7 @@ class AliasBridge(metaclass=Singleton):
             aysnc_mode="eventlet",
             logger=server_sio_logger,
             engineio_logger=server_sio_logger,
-            ping_timeout=60 * 3,
+            ping_timeout=60 * 5,
             ping_interval=30,
             json=AliasServerJSON,
         )
