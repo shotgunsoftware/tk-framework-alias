@@ -64,11 +64,15 @@ class AliasClientNamespace(socketio.ClientNamespace):
 
         self._log_message(f"Connection failed\n{data}")
 
+        # Check if the data contains specific error information.
+        if "[WinError 10061]" in data:
+            # Server exited: No connection could be made because the target machine actively refused it
+            self.client.cleanup()
+
     def on_disconnect(self):
         """Disconnect event."""
 
         self._log_message("Disconnected from server")
-        self.client.cleanup()
 
     def on_shutdown(self):
         """Shutdown event."""
