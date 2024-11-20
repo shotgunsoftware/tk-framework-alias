@@ -9,7 +9,7 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 certifi==2023.11.17
-cryptography==41.0.7
+cryptography==42.0.0
 eventlet==0.34.3
 idna==3.6
 python-engineio==4.8.2
