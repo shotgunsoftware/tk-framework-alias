@@ -35,16 +35,9 @@ class AliasApiRequestWrapper:
     def create_wrapper(cls, data):
         """Create and return a new object of this type from the given data, if possible."""
 
-        if isinstance(data, list):
-            return [cls.create_wrapper(item) for item in data]
-
-        if not isinstance(data, dict):
-            return None
-
         for subclass in cls.__subclasses__():
             if subclass.needs_wrapping(data):
                 return subclass(data)
-
         return None
 
     @classmethod
@@ -198,6 +191,8 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         :rtype: bool
         """
 
+        if not isinstance(value, dict):
+            return False
         return cls.required_data().issubset(set(value.keys()))
 
     # ----------------------------------------------------------------------------------------
@@ -330,6 +325,8 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
         :rtype: bool
         """
 
+        if not isinstance(value, dict):
+            return False
         return cls.required_data() == set(value.keys())
 
     # ----------------------------------------------------------------------------------------
@@ -439,6 +436,8 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
         :rtype: bool
         """
 
+        if not isinstance(value, dict):
+            return False
         return cls.required_data() == set(value.keys())
 
     # ----------------------------------------------------------------------------------------
