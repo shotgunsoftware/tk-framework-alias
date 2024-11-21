@@ -67,16 +67,26 @@ class AliasApiRequestWrapper:
 
         raise NotImplementedError("Subclass must implement")
 
-    @classmethod
-    def _create(cls, data):
+    # ----------------------------------------------------------------------------------------
+    # Public methods
+
+    def validate(self, request_name):
         """
-        Create and return a new object of this type from the given data, if possible.
+        Validate the request against this wrapper.
 
-        :param data: The data to create the object from.
-        :type data: dict
+        :param request_name: The name of the api request.
+        :type request_name: str
+        :raises: AliasApiRequestNotValid if request not valid.
+        """
 
-        :return: An instance of this class.
-        :rtype: AliasApiRequestWrapper
+        raise NotImplementedError("Subclass must implement")
+
+    def execute(self, request_name):
+        """
+        Execute the api request for this wrapper object.
+
+        :param request: The api request name.
+        :type request: str
         """
 
         raise NotImplementedError("Subclass must implement")
