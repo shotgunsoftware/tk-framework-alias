@@ -91,6 +91,63 @@ class AliasApiRequestWrapper:
 
         raise NotImplementedError("Subclass must implement")
 
+
+class AliasApiRequestListWrapper(AliasApiRequestWrapper):
+    """A wrapper for a list of Alias API requests."""
+
+    def __init__(self, data):
+        """Initialize the wrapper data."""
+
+        self.__requests = data
+
+    def __str__(self) -> str:
+        """Return a string representation for the Alias Api request object."""
+
+        return f"[{', '.join([str(r[1]) for r in self.__requests])}]"
+
+    # ----------------------------------------------------------------------------------------
+    # Class methods
+
+    @classmethod
+    def required_data(cls):
+        """
+        Return the set of required data dictionary keys to create an instance of this class.
+
+        :return: The set of required keys.
+        :rtype: set
+        """
+
+        # No required data, the list wrapper is a list of wrappers
+        return set()
+
+    @classmethod
+    def needs_wrapping(cls, value):
+        """
+        Check if the value represents an object that needs to be wrapped by this proxy class.
+
+        :param value: The value to check if needs wrapping.
+        :type value: any
+
+        :return: True if the value should be wrapped by this class, else False.
+        :rtype: bool
+        """
+
+        # The list wrapper expects a list of values which are each a list
+        # containing (1) request name and (2) the AliasApiRequestWrapper object
+        # corresponding to the request name
+        if not isinstance(value, list):
+            return False
+        for item in value:
+            if not isinstance(item, list):
+                return False
+            if not len(item) == 2:
+                return False
+            if not isinstance(item[0], str):
+                return False
+            if not isinstance(item[1], AliasApiRequestWrapper):
+                return False
+        return True
+
     # ----------------------------------------------------------------------------------------
     # Public methods
 
@@ -102,17 +159,26 @@ class AliasApiRequestWrapper:
         :type request_name: str
         """
 
-        raise NotImplementedError("Subclass must implement")
+        return request_name == "batch_requests"
 
     def execute(self, request_name):
         """
-        Execute the api request for this wrapper object.
+        Execute the Alias API request to execute the api function.
 
-        :param request: The api request name.
-        :type request: str
+        :param request_name: The api request name.
+        :type request_name: str
+
+        :return: The return value api function.
+        :rtype: any
         """
 
-        raise NotImplementedError("Subclass must implement")
+        self.validate(request_name)
+
+        results = []
+        for request_object_name, request_object in self.__requests:
+            result = request_object.execute(request_object_name)
+            results.append(result)
+        return results
 
 
 class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
