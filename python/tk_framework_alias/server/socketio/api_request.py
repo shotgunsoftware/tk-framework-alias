@@ -248,7 +248,6 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             raise AliasApiRequestNotValid(
                 f"Requested '{request_name}' but should be '{self.func_name}'"
             )
-        return True
 
     def execute(self, request_name):
         """
@@ -366,7 +365,6 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
             raise AliasApiRequestNotValid(
                 f"Requested '{request_name}' but should be '{self.property_name}'"
             )
-        return True
 
     def execute(self, request_name):
         """
@@ -481,7 +479,6 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
             raise AliasApiRequestNotValid(
                 f"Requested '{request_name}' but should be '{self.property_name}'"
             )
-        return True
 
     def execute(self, request_name):
         """
