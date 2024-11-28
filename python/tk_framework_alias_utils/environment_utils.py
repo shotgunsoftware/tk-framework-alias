@@ -115,9 +115,9 @@ def get_python_packages_dir(major_version, minor_version):
     return os.path.join(get_python_dir(major_version, minor_version), "packages")
 
 
-def get_python_c_ext_dir(major_version, minor_version):
+def get_installed_python_packages_dir(major_version, minor_version):
     """
-    Get the directory to install python C extension packages for the user.
+    Get the directory to install the 'dist' python packages for the user.
 
     :param major_version: The python major version to install for.
     :type major_version: int
@@ -128,9 +128,7 @@ def get_python_c_ext_dir(major_version, minor_version):
     :rtype: str
     """
 
-    return os.path.join(
-        get_python_packages_dir(major_version, minor_version), "c_extensions"
-    )
+    return os.path.join(get_python_packages_dir(major_version, minor_version), "pkgs")
 
 
 def get_python_qt_ext_dir(py_major_version, py_minor_version, alias_version=None):
@@ -268,23 +266,6 @@ def get_python_dist_packages_zip(major_version, minor_version):
 
     packages_path = get_python_dist_packages_dir(major_version, minor_version)
     return os.path.normpath(os.path.join(packages_path, "pkgs.zip"))
-
-
-def get_python_dist_c_ext_zip(major_version, minor_version):
-    """
-    Get the framework distribution for the Python C extension modules.
-
-    :param major_version: The python major version to get the zip for.
-    :type major_version: int
-    :param minor_version: The python minor version to get the zip for.
-    :type minor_version: int
-
-    :return: The C extensions zip file path.
-    :rtype: str
-    """
-
-    python_dist_path = get_python_dist_packages_dir(major_version, minor_version)
-    return os.path.normpath(os.path.join(python_dist_path, "c_extensions.zip"))
 
 
 def get_python_dist_qt_ext_dir(py_major_version, py_minor_version):
@@ -461,17 +442,12 @@ def get_framework_python_site_packages_paths(
     if os.path.exists(installed_packages_path):
         package_paths.append(installed_packages_path)
 
-    # Check the framework distribution folder for packages
-    dist_packages_path = get_python_dist_packages_zip(
+    # Check the user local install directory for the 'dist' packages
+    installed_dist_packages_path = get_installed_python_packages_dir(
         py_major_version, py_minor_version
     )
-    if os.path.exists(dist_packages_path):
-        package_paths.append(dist_packages_path)
-
-    # Check the framework distribution folder for C extension packages
-    c_ext_path = get_python_c_ext_dir(py_major_version, py_minor_version)
-    if os.path.exists(c_ext_path):
-        package_paths.append(c_ext_path)
+    if os.path.exists(installed_dist_packages_path):
+        package_paths.append(installed_dist_packages_path)
 
     # Check the framework distribution folder for Qt extension packages
     alias_qt_ext_path = get_framework_python_qt_site_packages_path(
