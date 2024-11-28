@@ -8,11 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+cffi
 cryptography
 eventlet
 python-socketio
 requests
 websocket-client
-
-# Updating to 2.6.1 causes ModuleNotFoundError: No module named 'cryptography.hazmat.bindings._rust'
-dnspython==2.5.0
