@@ -433,12 +433,12 @@ def get_plugin_lst(alias_version, python_major_version, python_minor_version, lo
     return lst_file
 
 
-def ensure_python_c_extension_packages_installed(python_version=None, logger=None):
+def ensure_python_packages_installed(python_version=None, logger=None):
     """
-    Ensure python C extension packages are unzipped and installed for user.
+    Ensure python packages are unzipped and installed for user.
 
-    This routine will ensure C extensions are installed for the given python version, or for
-    all supported Ptyhon versions
+    Packages need to be unzipped for any C extensions (e.g. .pyd files) to be
+    available to the user.
 
     :param logger: Set a logger object to capture output from this operation.
     :type logger: Logger
@@ -459,11 +459,11 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
         python_versions = [python_version]
 
     for major_version, minor_version in python_versions:
-        framework_c_ext_zip = environment_utils.get_python_dist_c_ext_zip(
+        framework_pkgs_zip = environment_utils.get_python_dist_packages_zip(
             major_version, minor_version
         )
-        if not os.path.exists(framework_c_ext_zip):
-            logger.debug(f"No C extensions found to install {framework_c_ext_zip}")
+        if not os.path.exists(framework_pkgs_zip):
+            logger.debug(f"No python packages found to install {framework_pkgs_zip}")
             continue
 
         python_packages_path = environment_utils.get_python_packages_dir(
@@ -473,28 +473,28 @@ def ensure_python_c_extension_packages_installed(python_version=None, logger=Non
             logger.debug(f"Creating Python packages directory {python_packages_path}")
             os.makedirs(python_packages_path)
 
-        install_c_ext_path = environment_utils.get_python_c_ext_dir(
+        install_packages_path = environment_utils.get_installed_python_packages_dir(
             major_version, minor_version
         )
-        install_c_ext_zip_path = f"{install_c_ext_path}.zip"
-        if os.path.exists(install_c_ext_zip_path):
-            if verify_file(framework_c_ext_zip, install_c_ext_zip_path):
+        install_packages_zip_path = f"{install_packages_path}.zip"
+        if os.path.exists(install_packages_zip_path):
+            if verify_file(framework_pkgs_zip, install_packages_zip_path):
                 logger.debug(
-                    f"C extensions already up to date at {install_c_ext_zip_path}."
+                    f"Python pacakges already up to date at {install_packages_zip_path}."
                 )
                 continue  # Packages already exist and no change.
 
-        if os.path.exists(install_c_ext_path):
-            shutil.rmtree(install_c_ext_path)
+        if os.path.exists(install_packages_path):
+            shutil.rmtree(install_packages_path)
 
         # Copy the zip folder. This will be used to check if updates are needed based on file
         # modifiation timestamp
-        logger.debug(f"Coying C extension zip package to {install_c_ext_zip_path}")
-        shutil.copyfile(framework_c_ext_zip, install_c_ext_zip_path)
+        logger.debug(f"Coying Python pacakges zip to {install_packages_zip_path}")
+        shutil.copyfile(framework_pkgs_zip, install_packages_zip_path)
         # Now extract the files
-        logger.debug("Unzipping C extension packages...")
-        with zipfile.ZipFile(install_c_ext_zip_path, "r") as zip_ref:
-            zip_ref.extractall(install_c_ext_path)
+        logger.debug(f"Unzipping Python packages to {install_packages_path}")
+        with zipfile.ZipFile(install_packages_zip_path, "r") as zip_ref:
+            zip_ref.extractall(install_packages_path)
 
     # Ensure Qt extension packages are installed for user. Qt extensions are also C
     # extensions, but Qt version will vary depending on the Alias version, so they
@@ -856,10 +856,13 @@ def ensure_plugin_ready(
         # Do not set the server python, this is not used by Alias < 2024.0
         server_python_exe = None
 
-    # Ensure C extension packages installed for user. Install for all supported Python
-    # versions, just in case the python version the framework runs with is different that
-    # the current running version.
-    ensure_python_c_extension_packages_installed(logger=logger)
+    # Ensure python packages installed for user. The pacakges must be unzipped
+    # to access any C extensions (e.g. .pyd files) that are included in the
+    # packages.
+    # Install for all supported Python versions, for cases where the python
+    # version the framework runs with is different that the current running
+    # version.
+    ensure_python_packages_installed(logger=logger)
 
     # Get the file path to the .lst file that contains the file path to the Alias Plugin to
     # load at startup with Alias.

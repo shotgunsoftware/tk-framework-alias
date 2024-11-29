@@ -21,10 +21,15 @@ import shutil
 def zip_recursively(zip_file, root_dir, folder_name):
     """Zip the files at the given folder recursively."""
 
-    for root, _, files in os.walk(root_dir / folder_name):
-        for f in files:
-            full_file_path = Path(os.path.join(root, f))
-            zip_file.write(full_file_path, full_file_path.relative_to(root_dir))
+    path = root_dir / folder_name
+    if path.is_dir():
+        # for root, _, files in os.walk(root_dir / folder_name):
+        for root, _, files in os.walk(path):
+            for f in files:
+                full_file_path = Path(os.path.join(root, f))
+                zip_file.write(full_file_path, full_file_path.relative_to(root_dir))
+    else:
+        zip_file.write(path, path.relative_to(root_dir))
 
 
 def modify_pyside(pyside_path):
@@ -165,42 +170,15 @@ def install_common_python_packages(python_dist_dir):
         # assert len(package_names) == nb_dependencies
         assert len(package_names) >= nb_dependencies
 
-        # TODO auto-detect C extension modules (and other dynamic modules)
-        c_extension_modules = [
-            "greenlet",
-        ]
-
         # Write out the zip file for python packages. Compress the zip file with ZIP_DEFLATED. Note
         # that this requires zlib to decompress when importing. Compression also causes import to
         # be slower, but the file size is simply too large to not be compressed
         pkgs_zip_path = os.path.join(packages_dist_dir, "pkgs.zip")
         pkgs_zip = zipfile.ZipFile(pkgs_zip_path, "w", zipfile.ZIP_DEFLATED)
-        # Write out the zip file for c extension pacakges. These are handled separately, since they
-        # need to be unzipped at runtime in order to be imported.
-        c_extension_path = os.path.join(packages_dist_dir, "c_extensions")
-        c_extension_zip_path = os.path.join(packages_dist_dir, "c_extensions.zip")
-        c_ext_zip = zipfile.ZipFile(c_extension_zip_path, "w", zipfile.ZIP_DEFLATED)
 
         for package_name in package_names:
             print(f"Zipping {package_name}...")
-
-            full_package_path = temp_dir_path / package_name
-
-            if package_name in c_extension_modules:
-                # Cannot include C extension modules in zip. These module types cannot be imported
-                # from a zip file. Instead, put them in a separate folder
-                full_c_extension_path = os.path.join(c_extension_path, package_name)
-                zip_recursively(c_ext_zip, temp_dir_path, package_name)
-            else:
-                # If we have a .py file to zip, simple write it
-                # full_package_path = temp_dir_path / package_name
-                if full_package_path.suffix == ".py":
-                    pkgs_zip.write(
-                        full_package_path, full_package_path.relative_to(temp_dir)
-                    )
-                else:
-                    # Otherwise zip package folders recursively.
-                    zip_recursively(pkgs_zip, temp_dir_path, package_name)
+            zip_recursively(pkgs_zip, temp_dir_path, package_name)
 
 
 def install_qt_packages(python_dist_dir):

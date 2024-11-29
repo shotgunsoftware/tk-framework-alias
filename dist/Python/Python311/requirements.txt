@@ -13,6 +13,3 @@ eventlet
 python-socketio
 requests
 websocket-client
-
-# Updating to 2.6.1 causes ModuleNotFoundError: No module named 'cryptography.hazmat.bindings._rust'
-dnspython==2.5.0
