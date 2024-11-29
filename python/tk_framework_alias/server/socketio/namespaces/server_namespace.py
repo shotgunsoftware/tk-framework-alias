@@ -289,41 +289,15 @@ class AliasServerNamespace(socketio.Namespace):
         if self.client_sid is None or sid != self.client_sid:
             return
 
-        # Execute the Alias API request
+        # Get the request data from the args
         request = args[0] if args else None
+
+        # For multiple requests, create a wrapper to ensure all requests are
+        # invoked in a single Qt event
         if isinstance(request, list):
-            # Handle multiple requests at once. Return a list of results.
-            total_requests = len(request)
-            results = []
-            for i, (event_name, request_data) in enumerate(request, start=1):
-                self._log_message(
-                    None, f"Request ({i} of {total_requests})...", logging.INFO
-                )
-                results.append(self._handle_api_event(event_name, sid, request_data))
-            return results
-        else:
-            # Make a signle request and return the result.
-            return self._handle_api_event(event, sid, request)
+            request = AliasApiRequestWrapper.create_wrapper(request)
 
-    def _handle_api_event(self, event, sid, request):
-        """
-        An Alias API event was triggered by the client.
-
-        Execute the Alias API request from the given data. The event should match an api
-        function (e.g. module function, instance method), and the data contains all the
-        necesasry information to execute the api request.
-
-        :param event: The event corresponding to an api request.
-        :type event: str
-        :param sid: The session id of the client that triggered the event.
-        :type sid: str
-        :param *args: The data list to pass on to the event handler method.
-        :type *args: List[any]
-
-        :return: The return value of the api request.
-        :rtype: any
-        """
-
+        # Execute the request(s)
         self._log_message(None, f"Excuting Alias API request: {request}", logging.INFO)
         result = self._execute_request(event, request)
 
