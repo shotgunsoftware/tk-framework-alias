@@ -11,12 +11,15 @@
 import logging
 import pprint
 import os
+import json
+import shutil
+import filecmp
 import socketio
-
+from tk_framework_alias_utils import environment_utils as framework_env_utils
 from ...api import alias_api
-
 from ..api_request import AliasApiRequestWrapper
 from ... import alias_bridge
+from ..server_json import AliasServerJSON
 from ...utils.invoker import execute_in_main_thread
 from ...utils.exceptions import (
     AliasApiRequestException,
@@ -185,6 +188,50 @@ class AliasServerNamespace(socketio.Namespace):
             return
 
         return alias_api
+
+    def on_get_alias_api_json(self, sid):
+        """
+        JSON-serialize the Alias API module and store it on disk.
+
+        :param sid: The client session id that made the request.
+        :type sid: str
+
+        :return: The file path to the JSON-serialized Alias API module.
+        :rtype: str
+        """
+
+        if self.client_sid is None or sid != self.client_sid:
+            return
+
+        # Check if the api module has been JSON-serialized and cached
+        api_info = self.on_get_alias_api_info(sid)
+        filename = os.path.basename(api_info["file_path"]).split(".")[0]
+        cache_filepath = framework_env_utils.get_alias_api_cache_file_path(
+            filename, api_info["alias_version"], api_info["python_version"]
+        )
+        cache_dir = os.path.dirname(cache_filepath)
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+
+        api_ext = os.path.splitext(api_info["file_path"])[1]
+        cache_api_filepath = os.path.join(
+            os.path.dirname(cache_filepath),
+            f"{os.path.splitext(cache_filepath)[0]}{api_ext}",
+        )
+
+        if (
+            not os.path.exists(cache_filepath)
+            or not os.path.exists(cache_api_filepath)
+            or not filecmp.cmp(api_info["file_path"], cache_api_filepath)
+        ):
+            # The cache does not exist, or it does but it is out of date, so create a new cache
+            with open(cache_filepath, "w") as fp:
+                json.dump(alias_api, fp=fp, cls=AliasServerJSON.encoder_class())
+            # Copy the api module to the cache folder in order to determine next time if the
+            # cache requies an update
+            shutil.copyfile(api_info["file_path"], cache_api_filepath)
+
+        return cache_filepath
 
     def on_get_alias_api_info(self, sid):
         """

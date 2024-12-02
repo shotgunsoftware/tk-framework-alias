@@ -10,6 +10,7 @@
 
 import filecmp
 import json
+import logging
 import os
 import shutil
 import socketio
@@ -328,43 +329,17 @@ class AliasSocketIoClient(socketio.Client):
         :rtype: AliasClientModuleProxyWrapper
         """
 
-        # Get information about the api module
-        api_info = self.call_threadsafe("get_alias_api_info")
-
-        # Get the cached files for the api module
-        filename = os.path.basename(api_info["file_path"]).split(".")[0]
-        cache_filepath = framework_env_utils.get_alias_api_cache_file_path(
-            filename, api_info["alias_version"], api_info["python_version"]
+        # The server will JSON-serialize the Alias Python API module to a local
+        # file on disk. The server will return the path to this file for this
+        # client to read and load the module from. This is done to avoid sending
+        # the entire module over the network, which can be slow.
+        module_filepath = self.call_threadsafe(
+            "get_alias_api_json", timeout=self.__timeout
         )
-        api_ext = os.path.splitext(api_info["file_path"])[1]
-        cache_api_filepath = os.path.join(
-            os.path.dirname(cache_filepath),
-            f"{os.path.splitext(cache_filepath)[0]}{api_ext}",
-        )
-
-        cache_loaded = False
-        if os.path.exists(cache_filepath) and os.path.exists(cache_api_filepath):
-            # The cache exists, check if it requires updating before using it.
-            if filecmp.cmp(api_info["file_path"], cache_api_filepath):
-                # The cache is still up to date, load it in.
-                with open(cache_filepath, "r") as fp:
-                    module_proxy = json.load(fp, cls=self.get_json_decoder())
-                    cache_loaded = True
-
-        if not cache_loaded:
-            cache_folder = os.path.dirname(cache_filepath)
-            if not os.path.exists(cache_folder):
-                os.mkdir(cache_folder)
-            # The api was not loaded from cache, make a server request to get the api module,
-            # and cache it
-            module_proxy = self.call_threadsafe("get_alias_api")
-            with open(cache_filepath, "w") as fp:
-                json.dump(module_proxy, fp=fp, cls=self.get_json_encoder())
-            # Copy the api module to the cache folder in order to determine next time if the
-            # cache requies an update
-            shutil.copyfile(api_info["file_path"], cache_api_filepath)
-
-        return module_proxy
+        with open(module_filepath, "r") as fp:
+            module_proxy = json.load(fp, cls=self.get_json_decoder())
+            self.logger.log(logging.DEBUG, module_proxy)
+            return module_proxy
 
     def get_alias_api(self):
         """
