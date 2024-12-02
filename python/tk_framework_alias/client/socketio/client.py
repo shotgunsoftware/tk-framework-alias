@@ -8,11 +8,8 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-import filecmp
 import json
 import logging
-import os
-import shutil
 import socketio
 import threading
 
