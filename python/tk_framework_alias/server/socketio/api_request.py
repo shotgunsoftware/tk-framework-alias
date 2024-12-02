@@ -91,6 +91,21 @@ class AliasApiRequestWrapper:
 
         raise NotImplementedError("Subclass must implement")
 
+    # ----------------------------------------------------------------------------------------
+    # Private methods
+
+    def __execute_async(self, func, *args, **kwargs):
+        """
+        Execute the given function asynchronously.
+
+        If the Alias Python API module does not have the async functionality,
+        this method will be called to execute the function synchronously.
+        """
+
+        if hasattr(alias_api, "add_async_task"):
+            return alias_api.add_async_task(func, *args, **kwargs)
+        return func(*args, **kwargs)
+
 
 class AliasApiRequestListWrapper(AliasApiRequestWrapper):
     """A wrapper for a list of Alias API requests."""
@@ -340,11 +355,11 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             # constructor directly
             class_instance = self.func_args[0]
             args = self.func_args[1:]
-            return class_instance(*args, *self.func_kwargs)
+            return self.__execute_async(class_instance, *args, **self.func_kwargs)
         else:
             # Execute the function to make the Alias API request.
             method = getattr(self.instance, self.func_name)
-            return method(*self.func_args, **self.func_kwargs)
+            return self.__execute_async(method, *self.func_args, **self.func_kwargs)
 
 
 class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
@@ -451,7 +466,7 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
         """
 
         self.validate(request_name)
-        return getattr(self.instance, self.property_name)
+        return self.__execute_async(getattr, self.instance, self.property_name)
 
 
 class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
@@ -566,4 +581,6 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
         """
 
         self.validate(request_name)
-        setattr(self.instance, self.property_name, self.property_value)
+        return self.__execute_async(
+            setattr, self.instance, self.property_name, self.property_value
+        )
