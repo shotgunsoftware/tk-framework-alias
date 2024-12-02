@@ -37,6 +37,7 @@ def get_plugin_environment(
     port=None,
     debug="0",
     new_process=False,
+    api_async=None,
 ):
     """
     Return a dictionary containing the env vars required to launch the plugin.
@@ -112,6 +113,9 @@ def get_plugin_environment(
 
     if port is not None:
         env["ALIAS_PLUGIN_CLIENT_SIO_PORT"] = str(port)
+
+    if api_async:
+        env["ALIAS_API_ASYNC"] = "1"
 
     return env
 
@@ -758,6 +762,7 @@ def ensure_plugin_ready(
     entity_id=None,
     debug=None,
     logger=None,
+    api_async=None,
 ):
     """
     Do the necessary work to ensure the Alias plugin can be loaded with Alias at launch.
@@ -887,6 +892,7 @@ def ensure_plugin_ready(
         debug=debug,
         server_python_exe=server_python_exe,
         new_process=new_process,
+        api_async=api_async,
     )
     logger.debug(f"Alias Plugin environment\n{pprint.pformat(plugin_env)}")
 
