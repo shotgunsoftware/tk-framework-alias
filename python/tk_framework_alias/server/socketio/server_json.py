@@ -26,12 +26,22 @@ class AliasServerJSON:
     """A custom json module to handle serializing Alias API objects to JSON."""
 
     @staticmethod
+    def encoder_class():
+        """Return the encoder class used by this JSON module."""
+        return AliasServerJSONEncoder
+
+    @staticmethod
+    def decoder_class():
+        """Return the decoder class used by this JSON module."""
+        return AliasServerJSONDecoder
+
+    @staticmethod
     def dumps(obj, *args, **kwargs):
-        return json.dumps(obj, cls=AliasServerJSONEncoder, *args, **kwargs)
+        return json.dumps(obj, cls=AliasServerJSON.encoder_class(), *args, **kwargs)
 
     @staticmethod
     def loads(obj, *args, **kwargs):
-        return json.loads(obj, cls=AliasServerJSONDecoder, *args, **kwargs)
+        return json.loads(obj, cls=AliasServerJSON.decoder_class(), *args, **kwargs)
 
 
 class AliasServerJSONEncoder(json.JSONEncoder):
