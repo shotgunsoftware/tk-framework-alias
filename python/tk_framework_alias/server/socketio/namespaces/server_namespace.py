@@ -8,15 +8,20 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import filecmp
 import logging
+import json
 import pprint
 import os
+import shutil
 import socketio
 
-from ...api import alias_api
+from tk_framework_alias_utils import environment_utils
 
-from ..api_request import AliasApiRequestWrapper
 from ... import alias_bridge
+from ...api import alias_api
+from ..api_request import AliasApiRequestWrapper
+from ..server_json import AliasServerJSON
 from ...utils.invoker import execute_in_main_thread
 from ...utils.exceptions import (
     AliasApiRequestException,
@@ -172,7 +177,7 @@ class AliasServerNamespace(socketio.Namespace):
         """
         Get the Alias API module.
 
-        The module will be JSON-serialized before returning to the client.
+        The module will be JSON-serialized and returned to the client.
 
         :param sid: The client session id that made the request.
         :type sid: str
@@ -185,6 +190,70 @@ class AliasServerNamespace(socketio.Namespace):
             return
 
         return alias_api
+
+    def on_load_alias_api(self, sid):
+        """
+        Load the Alias API and JSON-serialize the module to file on disk.
+
+        This is an alternative method to getting the Alias API module
+        and returning the module directly to the client. In this method, the
+        module is JSON-serialized, saved locally to disk, and the file path
+        to the JSON-serialized module is returned to the client. The client
+        can then load the JSON-serialized module from the file.
+
+        This is a more efficient way for the client to obtain the Alias API
+        module because the module data is not sent over the network, which will
+        only become slower as the Alias API module grows (e.g. new functionality
+        is added).
+
+        :param sid: The client session id that made the request.
+        :type sid: str
+        :return: The file path to the JSON-serialized Alias API module.
+        :rtype: str
+        """
+
+        if self.client_sid is None or sid != self.client_sid:
+            return
+
+        # Get the directory and path to the Alias API cached file. The cache
+        # file name will have format:
+        # {alias_api_module_name}{alias_version}_{python_version}.json
+        api_info = self.on_get_alias_api_info(sid)
+        api_filename, api_ext = os.path.splitext(
+            os.path.basename(api_info["file_path"])
+        )
+        cache_filepath = environment_utils.get_alias_api_cache_file_path(
+            api_filename, api_info["alias_version"], api_info["python_version"]
+        )
+        cache_dir = os.path.dirname(cache_filepath)
+
+        # Get the path to the Alias API module (.pyd) that was used to create
+        # the cache. The cache module file name will have format:
+        # {alias_api_module_name}{alias_version}_{python_version}.pyd
+        base_cache_module_filename, _ = os.path.splitext(
+            os.path.basename(cache_filepath)
+        )
+        cache_module_filename = f"{base_cache_module_filename}.{api_ext}"
+        cache_module_filepath = os.path.join(cache_dir, cache_module_filename)
+
+        # Check if the cache is up-to-date. If not, create a new cache
+        if (
+            not os.path.exists(cache_filepath)
+            or not os.path.exists(cache_module_filepath)
+            or not filecmp.cmp(api_info["file_path"], cache_module_filepath)
+        ):
+            # Ensure the cache directory exists
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir)
+            # Create the Alias API cache
+            with open(cache_filepath, "w") as fp:
+                json.dump(alias_api, fp=fp, cls=AliasServerJSON.encoder_class())
+            # Copy the module to the cache folder in order to determine next time if the
+            # cache requies an update
+            shutil.copyfile(api_info["file_path"], cache_module_filepath)
+
+        # Return the path to the Alias API cache file
+        return cache_filepath
 
     def on_get_alias_api_info(self, sid):
         """
