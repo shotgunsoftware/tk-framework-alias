@@ -8,6 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+# TODO: remove once all support Alias Python API versions provide the add_async_task function
+# The add_async_task function removes this PySide dependency
+
 from .exceptions import QtModuleNotFound, QtAppInstanceNotFound
 
 

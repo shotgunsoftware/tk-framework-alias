@@ -8,12 +8,15 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+import os
+
 from functools import wraps
 import threading
 
-from .exceptions import QtImportError
+from ..api import alias_api
 
 
+# TODO: remove once all support Alias Python API versions provide the add_async_task function
 def execute_in_main_thread(func):
     """
     Decorator function to ensure function is executed in main thread.
@@ -30,6 +33,13 @@ def execute_in_main_thread(func):
         # which point the inovker is no longer safe to access from the thread executing to
         # invoke the function with the invoker
         try:
+            if hasattr(alias_api, "add_async_task") and not os.getenv(
+                "DISABLE_ALIAS_API_ASYNC_TASK"
+            ):
+                return func(*args, **kwargs)
+            # Alias API does not provide the function to run the api call in the
+            # main thread, we need to do this ourselves on the python side
+            # with PySide.
             invoker = create_invoker()
             return invoker.invoke(func, *args, **kwargs)
         except Exception as error:
