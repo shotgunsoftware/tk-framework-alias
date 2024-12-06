@@ -217,7 +217,9 @@ class AliasServerNamespace(socketio.Namespace):
 
         # Get the directory and path to the Alias API cached file
         api_info = self.on_get_alias_api_info(sid)
-        api_filename, api_ext = os.path.basename(api_info["file_path"]).split(".")
+        api_filename, api_ext = os.path.splitext(
+            os.path.basename(api_info["file_path"])
+        )
         cache_filepath = environment_utils.get_alias_api_cache_file_path(
             api_filename, api_info["alias_version"], api_info["python_version"]
         )
@@ -225,7 +227,9 @@ class AliasServerNamespace(socketio.Namespace):
 
         # Get the path to the Alias API module (.pyd) that was used to create
         # the cache
-        base_cache_module_filename = os.path.basename(cache_filepath).split(".")[0]
+        base_cache_module_filename, _ = os.path.splitext(
+            os.path.basename(cache_filepath)
+        )
         cache_module_filename = f"{base_cache_module_filename}.{api_ext}"
         cache_module_filepath = os.path.join(cache_dir, cache_module_filename)
 
