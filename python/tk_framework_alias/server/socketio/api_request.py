@@ -8,6 +8,8 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+import os
+
 from ..api import alias_api
 
 from .. import alias_bridge
@@ -81,6 +83,11 @@ class AliasApiRequestWrapper:
 
         raise NotImplementedError("Subclass must implement")
 
+    def get_exec_func(self):
+        """Return a function that will execute the request."""
+
+        raise NotImplementedError("Subclass must implement")
+
     def execute(self, request_name):
         """
         Execute the api request for this wrapper object.
@@ -89,7 +96,19 @@ class AliasApiRequestWrapper:
         :type request: str
         """
 
-        raise NotImplementedError("Subclass must implement")
+        self.validate(request_name)
+
+        request_func = self.get_exec_func()
+
+        # Execute the Alias API request using the `add_async_task` method if
+        # available. This executes the request mroe properly through the Alias
+        # application events queue.
+        if hasattr(alias_api, "add_async_task"):
+            return alias_api.add_async_task(request_func)
+
+        # The Alias API does not support async tasks, so execute the request
+        # directly.
+        return request_func()
 
 
 class AliasApiRequestListWrapper(AliasApiRequestWrapper):
@@ -157,28 +176,28 @@ class AliasApiRequestListWrapper(AliasApiRequestWrapper):
 
         :param request_name: The name of the api request.
         :type request_name: str
+        raise NotImplementedError("Subclass must implement")
         """
 
         return request_name == "batch_requests"
 
-    def execute(self, request_name):
-        """
-        Execute the Alias API request to execute the api function.
+    def get_exec_func(self):
+        """Return a function that will execute the request."""
 
-        :param request_name: The api request name.
-        :type request_name: str
-
-        :return: The return value api function.
-        :rtype: any
-        """
-
-        self.validate(request_name)
-
-        results = []
+        # For a list of requests, get all request functions from the request
+        # objects, and return a function that will execute all requests.
+        requests = []
         for request_object_name, request_object in self.__requests:
-            result = request_object.execute(request_object_name)
-            results.append(result)
-        return results
+            request_object.validate(request_object_name)
+            requests.append(request_object.get_exec_func())
+
+        def __execute_all(request_list):
+            result = []
+            for r in request_list:
+                result.append(r())
+            return result
+
+        return lambda: __execute_all(requests)
 
 
 class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
@@ -320,31 +339,17 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
                 f"Requested '{request_name}' but should be '{self.func_name}'"
             )
 
-    def execute(self, request_name):
-        """
-        Execute the Alias API request to execute the api function.
-
-        :param request_name: The api request name.
-        :type request_name: str
-
-        :return: The return value api function.
-        :rtype: any
-        """
-
-        self.validate(request_name)
+    def get_exec_func(self):
+        """Return a function that will execute the request."""
 
         if self.func_name == "__new__":
-            # NOTE pybind11 does not support calling cls.__new__(cls, args, kwargs)
-            # until the python api is updated to provide a trampoline class to allow
-            # calling __new__ method, we will just intercept this method and call the
-            # constructor directly
             class_instance = self.func_args[0]
             args = self.func_args[1:]
-            return class_instance(*args, *self.func_kwargs)
+            return lambda: class_instance(*args, *self.func_kwargs)
         else:
             # Execute the function to make the Alias API request.
             method = getattr(self.instance, self.func_name)
-            return method(*self.func_args, **self.func_kwargs)
+            return lambda: method(*self.func_args, **self.func_kwargs)
 
 
 class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
@@ -439,19 +444,10 @@ class AliasApiRequestPropertyGetterWrapper(AliasApiRequestWrapper):
                 f"Requested '{request_name}' but should be '{self.property_name}'"
             )
 
-    def execute(self, request_name):
-        """
-        Execute the Alias API request to get the value of the property this object wraps.
+    def get_exec_func(self):
+        """Return a function that will execute the request."""
 
-        :param request_name: The api request name.
-        :type request_name: str
-
-        :return: The property value
-        :rtype: any
-        """
-
-        self.validate(request_name)
-        return getattr(self.instance, self.property_name)
+        return lambda: getattr(self.instance, self.property_name)
 
 
 class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
@@ -555,15 +551,7 @@ class AliasApiRequestPropertySetterWrapper(AliasApiRequestWrapper):
                 f"Requested '{request_name}' but should be '{self.property_name}'"
             )
 
-    def execute(self, request_name):
-        """
-        Execute the Alias API request to set the value of the property this object wraps.
+    def get_exec_func(self):
+        """Return a function that will execute the request."""
 
-        No value is returned.
-
-        :param request_name: The api request name.
-        :type request_name: str
-        """
-
-        self.validate(request_name)
-        setattr(self.instance, self.property_name, self.property_value)
+        return lambda: setattr(self.instance, self.property_name, self.property_value)
