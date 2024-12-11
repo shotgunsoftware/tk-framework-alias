@@ -8,6 +8,9 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Inc.
 
+# NOTE: remove invoker entirely when all support Alias versions have
+# `addAsyncTask` functionality (>= 2026.0)
+
 from .exceptions import QtModuleNotFound, QtAppInstanceNotFound
 
 
