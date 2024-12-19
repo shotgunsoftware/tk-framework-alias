@@ -183,18 +183,12 @@ class AliasApiRequestListWrapper(AliasApiRequestWrapper):
 
         # For a list of requests, get all request functions from the request
         # objects, and return a function that will execute all requests.
-        requests = []
+        request_funcs = []
         for request_object_name, request_object in self.__requests:
             request_object.validate(request_object_name)
-            requests.append(request_object.get_exec_func())
+            request_funcs.append(request_object.get_exec_func())
 
-        def __execute_all(request_list):
-            result = []
-            for r in request_list:
-                result.append(r())
-            return result
-
-        return lambda: __execute_all(requests)
+        return lambda: [fn() for fn in request_funcs]
 
 
 class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
