@@ -10,10 +10,11 @@
 
 from functools import wraps
 import threading
+from ..api import alias_api
 
-from .exceptions import QtImportError
 
-
+# NOTE: remove this function and the invoker entirely when all supported Alias
+# versions have `addAsyncTask` functionality (>= 2026.0)
 def execute_in_main_thread(func):
     """
     Decorator function to ensure function is executed in main thread.
@@ -26,10 +27,18 @@ def execute_in_main_thread(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # We need to create the invoker each time, because it gets moved to the main thread, at
-        # which point the inovker is no longer safe to access from the thread executing to
-        # invoke the function with the invoker
         try:
+            # Use the Alias API `add_async_task` to execute the api request
+            # through the Alias application events queue (which will be on the
+            # main thread). If the `add_async_task` function is not available,
+            # then we will use the invoker to execute the function in the main
+            # thread.
+            if hasattr(alias_api, "add_async_task"):
+                return func(*args, **kwargs)
+
+            # We need to create the invoker each time, because it gets moved to the main thread, at
+            # which point the inovker is no longer safe to access from the thread executing to
+            # invoke the function with the invoker
             invoker = create_invoker()
             return invoker.invoke(func, *args, **kwargs)
         except Exception as error:
