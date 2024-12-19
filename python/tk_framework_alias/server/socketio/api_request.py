@@ -174,7 +174,6 @@ class AliasApiRequestListWrapper(AliasApiRequestWrapper):
 
         :param request_name: The name of the api request.
         :type request_name: str
-        raise NotImplementedError("Subclass must implement")
         """
 
         return request_name == "batch_requests"
