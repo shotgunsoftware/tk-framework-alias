@@ -9,7 +9,6 @@
 # not expressly granted therein are reserved by Autodesk Inc.
 
 from functools import wraps
-import os
 import threading
 from ..api import alias_api
 
