@@ -267,9 +267,7 @@ class AliasServerJSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
 
-        super().__init__(
-            object_hook=self.object_hook, *args, **kwargs
-        )
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     @staticmethod
     def create_callback(callback_id):
