@@ -24,7 +24,7 @@ class AliasEventsClientNamespace(socketio.ClientNamespace):
         """Initialize the namespace."""
 
         namespace = AliasEventsServerNamespace.get_namespace()
-        super(AliasEventsClientNamespace, self).__init__(namespace)
+        super().__init__(namespace)
 
     # ----------------------------------------------------------------------------------------
     # Event callback methods for namespace

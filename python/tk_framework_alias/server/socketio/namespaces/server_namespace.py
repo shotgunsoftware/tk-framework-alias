@@ -56,7 +56,7 @@ class AliasServerNamespace(socketio.Namespace):
         if sub_namespace:
             namespace = f"{namespace}-{sub_namespace}"
 
-        super(AliasServerNamespace, self).__init__(namespace)
+        super().__init__(namespace)
 
     # ----------------------------------------------------------------------------------------
     # Properties

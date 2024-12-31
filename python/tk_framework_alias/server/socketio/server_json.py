@@ -50,7 +50,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def __init__(self, *args, **kwargs):
         """Initialize the encoder."""
 
-        super(AliasServerJSONEncoder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def is_al_object(obj):
@@ -254,7 +254,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
                 return self.encode_al_object(obj)
 
             # Fall back to the default encode method.
-            return super(AliasServerJSONEncoder, self).default(obj)
+            return super().default(obj)
 
         except Exception as encode_error:
             # Catch any errors from encoding and return the exception encoded.
@@ -267,7 +267,7 @@ class AliasServerJSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
 
-        super(AliasServerJSONDecoder, self).__init__(
+        super().__init__(
             object_hook=self.object_hook, *args, **kwargs
         )
 

@@ -45,7 +45,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
     def __init__(self, *args, **kwargs):
         """Initialize the encoder."""
 
-        super(AliasClientJSONEncoder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def default(self, obj):
         """Return a serializable object for obj."""
@@ -67,7 +67,7 @@ class AliasClientJSONEncoder(json.JSONEncoder):
             # cannot be accessed here, functions must be encoded before getting to this stage.
             raise AliasClientJSONEncoderError("Functions should already be encoded.")
 
-        return super(AliasClientJSONEncoder, self).default(obj)
+        return super().default(obj)
 
 
 class AliasClientJSONDecoder(json.JSONDecoder):
@@ -76,9 +76,7 @@ class AliasClientJSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         """Initialize the decoder."""
 
-        super(AliasClientJSONDecoder, self).__init__(
-            object_hook=self.object_hook, *args, **kwargs
-        )
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
         """Decode the JSON serialized object obj to a Python object."""
