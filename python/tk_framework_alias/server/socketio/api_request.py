@@ -243,7 +243,7 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             return f"{self.instance}.{func_str}"
         except:
             # Do not fail on trying to return a string representation.
-            return super(AliasApiRequestFunctionWrapper, self).__str__()
+            return super().__str__()
 
     # ----------------------------------------------------------------------------------------
     # Class methods

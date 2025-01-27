@@ -58,7 +58,7 @@ class AliasSocketIoClient(socketio.Client):
         # The connection timeout in seconds
         self.__timeout = kwargs.pop("timeout", 20)
 
-        super(AliasSocketIoClient, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # The callbacks registry. Callback functions passed to the server are stored in the
         # client by their id, such that they can be looked up and executed when the server

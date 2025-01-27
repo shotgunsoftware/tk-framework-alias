@@ -259,7 +259,7 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     def __init__(self, module_data):
         """Initialize"""
 
-        super(AliasClientModuleProxyWrapper, self).__init__(module_data, module=self)
+        super().__init__(module_data, module=self)
 
         self.__module_name = module_data["__module_name__"]
         self.__sio = None
@@ -507,7 +507,7 @@ class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
     def __init__(self, data):
         """Initialize"""
 
-        super(AliasClientFunctionProxyWrapper, self).__init__(data)
+        super().__init__(data)
 
         self.__func_name = data.get("__function_name__")
         self.__is_instance_method = data.get("__is_method__", False)
@@ -575,7 +575,7 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
     def __init__(self, data):
         """Initialize"""
 
-        super(AliasClientClassProxyWrapper, self).__init__(data)
+        super().__init__(data)
 
         self.__class_name = self.data["__class_name__"]
 
@@ -617,7 +617,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
     def __init__(self, data):
         """Initialize the enum object."""
 
-        super(AliasClientEnumProxyWrapper, self).__init__(data)
+        super().__init__(data)
 
         self.__name = data.get("__enum_name__")
         self.__value = data.get("__enum_value__")
@@ -717,7 +717,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
     def __init__(self, data):
         """Initialize"""
 
-        super(AliasClientObjectProxy, self).__init__(data)
+        super().__init__(data)
 
         self.__unique_id = self.data["__instance_id__"]
         self.__dict = self.data["__dict__"]
@@ -729,7 +729,7 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         obj_name = self.name
         if obj_name:
             return obj_name
-        return super(AliasClientObjectProxy, self).__str__()
+        return super().__str__()
 
     def __repr__(self):
         """Return the string representation of the object."""

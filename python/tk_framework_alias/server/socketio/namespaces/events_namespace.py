@@ -31,7 +31,7 @@ class AliasEventsServerNamespace(socketio.Namespace):
 
         self.__client_sid = None
 
-        super(AliasEventsServerNamespace, self).__init__(self.get_namespace())
+        super().__init__(self.get_namespace())
 
     # ----------------------------------------------------------------------------------------
     # Class methods
