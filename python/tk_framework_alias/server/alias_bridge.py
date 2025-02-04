@@ -11,6 +11,7 @@
 import logging
 import os
 import subprocess
+import requests
 import sys
 import threading
 import pprint
