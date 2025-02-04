@@ -86,8 +86,14 @@ class AliasBridge(metaclass=Singleton):
         client_sio_logger = framework_utils.get_logger(
             self.__class__.__name__, "sio_client"
         )
+        # Proxy handling
+        session = requests.Session()
+        session.trust_env = False
+        # Create the client to handle Alias events
         self.__alias_events_client_sio = socketio.Client(
-            logger=client_sio_logger, engineio_logger=client_sio_logger
+            logger=client_sio_logger,
+            engineio_logger=client_sio_logger,
+            http_session=session,
         )
         self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
