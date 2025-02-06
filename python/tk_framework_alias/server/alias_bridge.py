@@ -93,12 +93,7 @@ class AliasBridge(metaclass=Singleton):
             "logger": client_sio_logger,
             "engineio_logger": client_sio_logger,
         }
-        if os.environ.get("SGTK_ENFORCE_PROXY_LOCALHOST", "0").strip().lower() not in [
-            "1",
-            "true",
-            "y",
-            "yes",
-        ]:
+        if os.environ.get("ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV"):
             # Set up a session object to disable proxy
             session = requests.Session()
             session.trust_env = False
