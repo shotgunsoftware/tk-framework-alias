@@ -89,7 +89,10 @@ class AliasBridge(metaclass=Singleton):
         )
 
         # Set up kwargs to pass to socketio Client
-        client_kwargs = {}
+        client_kwargs = {
+            "logger": client_sio_logger,
+            "engineio_logger": client_sio_logger,
+        }
         if os.environ.get("SGTK_ENFORCE_PROXY_LOCALHOST", "0").strip().lower() not in [
             "1",
             "true",
@@ -102,11 +105,7 @@ class AliasBridge(metaclass=Singleton):
             client_kwargs["http_session"] = session
 
         # Create the client to handle Alias events
-        self.__alias_events_client_sio = socketio.Client(
-            logger=client_sio_logger,
-            engineio_logger=client_sio_logger,
-            **client_kwargs,
-        )
+        self.__alias_events_client_sio = socketio.Client(**client_kwargs)
         self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
 
