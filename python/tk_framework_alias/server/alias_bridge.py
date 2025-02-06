@@ -56,6 +56,9 @@ class AliasBridge(metaclass=Singleton):
         self.__default_port = 8000
         self.__max_retry_count = 25
         self.__server_socket = None
+        self.__proxy_trust_env = bool(
+            os.environ.get("ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV")
+        )
 
         # Track the clients registered to the socketio server
         self.__clients = {}
@@ -93,8 +96,9 @@ class AliasBridge(metaclass=Singleton):
             "logger": client_sio_logger,
             "engineio_logger": client_sio_logger,
         }
-        if os.environ.get("ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV"):
-            # Set up a session object to disable proxy
+        if not self.__proxy_trust_env:
+            # Set up a session object to ignore any proxy settings specified in
+            # environment variables
             session = requests.Session()
             session.trust_env = False
             client_kwargs["http_session"] = session
