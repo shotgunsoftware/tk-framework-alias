@@ -11,6 +11,7 @@
 import logging
 import os
 import subprocess
+import requests
 import sys
 import threading
 import pprint
@@ -55,6 +56,9 @@ class AliasBridge(metaclass=Singleton):
         self.__default_port = 8000
         self.__max_retry_count = 25
         self.__server_socket = None
+        self.__proxy_trust_env = bool(
+            os.environ.get("ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV")
+        )
 
         # Track the clients registered to the socketio server
         self.__clients = {}
@@ -86,9 +90,21 @@ class AliasBridge(metaclass=Singleton):
         client_sio_logger = framework_utils.get_logger(
             self.__class__.__name__, "sio_client"
         )
-        self.__alias_events_client_sio = socketio.Client(
-            logger=client_sio_logger, engineio_logger=client_sio_logger
-        )
+
+        # Set up kwargs to pass to socketio Client
+        client_kwargs = {
+            "logger": client_sio_logger,
+            "engineio_logger": client_sio_logger,
+        }
+        if not self.__proxy_trust_env:
+            # Set up a session object to ignore any proxy settings specified in
+            # environment variables
+            session = requests.Session()
+            session.trust_env = False
+            client_kwargs["http_session"] = session
+
+        # Create the client to handle Alias events
+        self.__alias_events_client_sio = socketio.Client(**client_kwargs)
         self.__alias_events_client_sio.register_namespace(AliasEventsClientNamespace())
         self.__server_sio.register_namespace(AliasEventsServerNamespace())
 

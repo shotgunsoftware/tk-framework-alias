@@ -35,6 +35,7 @@ def get_plugin_environment(
     entity_id=None,
     hostname=None,
     port=None,
+    proxy_trust_env=False,
     debug="0",
     new_process=False,
 ):
@@ -64,6 +65,8 @@ def get_plugin_environment(
             for the Toolkit Manager to bootstrap the engine
         ALIAS_PLUGIN_CLIENT_SIO_HOSTNAME - the host for the socketio server to connect to
         ALIAS_PLUGIN_CLIENT_SIO_PORT - the port number for the socketio server to connect to
+        ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV - set to trust the proxy environment variables else do not set to
+            ignore env variables for proxy settings
 
     :param alias_version: The Alias version that the plugin is running with.
     :type alias_version: str
@@ -76,6 +79,8 @@ def get_plugin_environment(
     :param python_exe: Option to specify a python.exe to run the client app with. Defaults
         to the sys.executable
     :type python_exe: str
+    :param proxy_trust_env: True to trust env vars for proxy settings else False to ignore
+    :type proxy_trust_env: bool
     :param debug: Set to "1" to run in debug mode, else "0" for non-debug mode.
     :type debug: str
 
@@ -112,6 +117,9 @@ def get_plugin_environment(
 
     if port is not None:
         env["ALIAS_PLUGIN_CLIENT_SIO_PORT"] = str(port)
+
+    if proxy_trust_env:
+        env["ALIAS_PLUGIN_CLIENT_PROXY_TRUST_ENV"] = "1"
 
     return env
 
@@ -756,6 +764,7 @@ def ensure_plugin_ready(
     pipeline_config_id=None,
     entity_type=None,
     entity_id=None,
+    proxy_trust_env=None,
     debug=None,
     logger=None,
 ):
@@ -807,6 +816,8 @@ def ensure_plugin_ready(
     :param entity_id: If the client is running within Flow Production Tracking, set the entity id used by
         the Toolkit Manager to bootstrap the engine from the plugin.
     :type entity_id: int
+    :param proxy_trust_env: True to use env vars for proxy settings else False to ignore
+    :type proxy_trust_env: bool
     :param debug: Set to True to turn on debugging for the plugin, else False.
     :type debug: bool
     :param logger: Set a logger object to capture output from this operation.
@@ -884,6 +895,7 @@ def ensure_plugin_ready(
         pipeline_config_id=pipeline_config_id,
         entity_type=entity_type,
         entity_id=entity_id,
+        proxy_trust_env=proxy_trust_env,
         debug=debug,
         server_python_exe=server_python_exe,
         new_process=new_process,
