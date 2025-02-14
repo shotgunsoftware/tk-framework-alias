@@ -1,7 +1,7 @@
 bidict==0.22.1
-certifi==2023.11.17
+certifi==2025.1.31
 cffi==1.15.1
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
 cryptography==42.0.0
 dnspython==2.3.0
 eventlet==0.34.3
