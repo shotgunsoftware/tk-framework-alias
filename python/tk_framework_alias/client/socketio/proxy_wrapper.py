@@ -542,7 +542,8 @@ class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
 
     def __get_method(self):
         """
-        Return a function that acts as a method that sends an api request from the proxy data."""
+        Return a function that acts as a method that sends an api request from the proxy data.
+        """
 
         def __method(instance, *args, **kwargs):
             data = {
