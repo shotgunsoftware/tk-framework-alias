@@ -79,6 +79,11 @@ class AliasBridge(metaclass=Singleton):
             ping_timeout=60 * 5,
             ping_interval=30,
             json=AliasServerJSON,
+            max_http_buffer_size=1000000
+            * 5,  # 5MB max buffer size for incoming messages
+        )
+        self.__log(
+            f"Server-side max HTTP buffer size: {self.__server_sio.eio.max_http_buffer_size} bytes"
         )
 
         # Create a SocketIO client to handle Alias events triggered in the main thread, which
