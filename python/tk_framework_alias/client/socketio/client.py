@@ -57,6 +57,7 @@ class AliasSocketIoClient(socketio.Client):
 
         # The connection timeout in seconds
         self.__timeout = kwargs.pop("timeout", 20)
+        kwargs["request_timeout"] = self.__timeout
 
         super().__init__(*args, **kwargs)
 
