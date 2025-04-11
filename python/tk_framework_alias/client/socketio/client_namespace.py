@@ -69,10 +69,10 @@ class AliasClientNamespace(socketio.ClientNamespace):
             # Server exited: No connection could be made because the target machine actively refused it
             self.client.cleanup()
 
-    def on_disconnect(self):
+    def on_disconnect(self, reason=None):
         """Disconnect event."""
 
-        self._log_message("Disconnected from server")
+        self._log_message(f"Disconnected from server. Reason: {reason}")
 
     def on_shutdown(self):
         """Shutdown event."""
