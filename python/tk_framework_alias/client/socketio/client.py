@@ -15,6 +15,7 @@ import threading
 
 from .client_json import AliasClientJSON
 from ..utils.decorators import check_server_result, check_client_connection
+from ..utils.exceptions import AliasClientException
 from tk_framework_alias_utils import utils as framework_utils
 
 
@@ -262,14 +263,20 @@ class AliasSocketIoClient(socketio.Client):
         # Check that client is still connected. It is possible that it timed out
         # waiting for the server response, in which case it will disconnect.
         if not self.connected and not response.get("ack"):
-            raise TimeoutError(
-                (
-                    "Client disconnected while waiting for the server "
-                    "response. Server will finish executing the request, and "
-                    "the client will attempt to reconnect once the server "
-                    "is ready."
-                )
+            # Common reasons for disconnection: client timed out waiting for the server
+            # response, or client message size was too large for the server to handle.
+            request_name = args[0] if args else "unknown"
+            request_data = args[1] if len(args) > 1 else {}
+            msg_data = self.__json.dumps(request_data)
+            msg_size = len(msg_data) if msg_data else 0
+            error_message = (
+                "Client disconnected while waiting for the server response. "
+                "Server will finish executing the request, and the client will "
+                "attempt to reconnect once the server is ready.\n"
+                f"Client attempted to emit event {request_name} with message size {msg_size} bytes."
             )
+            self.logger.log(logging.ERROR, error_message)
+            raise AliasClientException(error_message)
 
         # Return the result from the server
         return response.get("result")
