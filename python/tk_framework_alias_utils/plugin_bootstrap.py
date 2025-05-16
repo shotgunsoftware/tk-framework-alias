@@ -53,6 +53,16 @@ def toolkit_plugin_bootstrap(
     log_handler, log_file_path = log.get_sgtk_logger(sgtk)
     logger.debug("Added bootstrap log hander to root logger...")
 
+    # Override the global exception hook for catching and reporting uncaught
+    # exceptions
+    def global_exception_hook(exctype, value, tb):
+        # Log the error with the sgtk logger (e.g. write to tk-alias.log)
+        logger.error("Uncaught Exception", exc_info=(exctype, value, tb))
+        # Call the python default exception handler
+        sys.__excepthook__(exctype, value, tb)
+
+    sys.excepthook = global_exception_hook
+
     # Toolkit bootstrap may take some time when many bundles need to be
     # downloaded and cached. When not in debug mode, launch a PowerShell
     # window to indicate to the user that the plugin is bootstrapping. At this
@@ -135,6 +145,7 @@ def toolkit_plugin_bootstrap(
 
         # Log message to Alias prompt indicating that Flow Production Tracking is ready
         engine.alias_py.log_to_prompt("Flow Production Tracking initialized")
+
     except Exception as e:
         # There are no specific exceptions that are expected, so catch all and
         # log the error so that the Alias plugin does not crash, or fail
