@@ -150,7 +150,6 @@ def get_logger(
         logging.handlers.TimedRotatingFileHandler for possible values). Default is days.
     :param rotate_interval: The interval at which files are rotated. Default is 1.
     :param rotate_backups: The number of backup log files kept. Default is 7.
-    :param console_logger: True to log to stdout.
 
     :return: The logger object.
     """
