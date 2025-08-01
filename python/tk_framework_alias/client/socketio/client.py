@@ -8,7 +8,10 @@
 # agreement to the ShotGrid Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Optional
+
 import json
+import os
 import logging
 import socketio
 import threading
@@ -318,7 +321,7 @@ class AliasSocketIoClient(socketio.Client):
     #####################################################################################
     # Methods to emit specific events
 
-    def get_alias_api_module_proxy(self):
+    def get_alias_api_module_proxy(self, api_extensions_path: Optional[str] = None):
         """
         Get the Alias Python API module proxy.
 
@@ -329,6 +332,10 @@ class AliasSocketIoClient(socketio.Client):
         will get the api module as a JSON object from the server, and create a proxy module
         that can be used on the client side here, as if it were the actual api module itself.
 
+        :param api_extensions_path: Path to a file containing only functions that will be loaded
+            by the server and added as extensions to the Alias Python API module. They will be
+            available through the alias_api by the class AliasApiExtensions.
+
         :return: The Alias Python API module proxy.
         :rtype: AliasClientModuleProxyWrapper
         """
@@ -337,13 +344,19 @@ class AliasSocketIoClient(socketio.Client):
         # file on disk. The server will return the path to this file for this
         # client to read and load the module from. This is done to avoid sending
         # the entire module over the network, which can be slow.
-        module_filepath = self.call_threadsafe("load_alias_api", timeout=self.__timeout)
+        module_filepath = self.call_threadsafe(
+            "load_alias_api", api_extensions_path, timeout=self.__timeout
+        )
+        if not os.path.exists(module_filepath):
+            raise AliasClientException(
+                f"Alias Python API module file not found at: {module_filepath}"
+            )
         with open(module_filepath, "r") as fp:
             module_proxy = json.load(fp, cls=self.get_json_decoder())
             self.logger.log(logging.DEBUG, module_proxy)
             return module_proxy
 
-    def get_alias_api(self):
+    def get_alias_api(self, api_extensions_path: Optional[str] = None):
         """
         Get the Alias Python API module.
 
@@ -354,11 +367,17 @@ class AliasSocketIoClient(socketio.Client):
         will get the api module as a JSON object from the server, and create a proxy module
         that can be used on the client side here, as if it were the actual api module itself.
 
+        :param api_extensions_path: Path to a file containing only functions that will be loaded
+            by the server and added as extensions to the Alias Python API module. They will be
+            available through the alias_api by the class AliasApiExtensions.
+
         :return: The Alias Python API module.
         :rtype: module
         """
 
-        module_proxy = self.get_alias_api_module_proxy()
+        module_proxy = self.get_alias_api_module_proxy(
+            api_extensions_path=api_extensions_path
+        )
         return module_proxy.get_or_create_module(self)
 
     # -------------------------------------------------------------------------------------------------------
