@@ -68,8 +68,9 @@ class AliasBridge(metaclass=Singleton):
         self.__data_model = AliasDataModel()
 
         # Create the SocketIO server, long-polling is the default transport but websocket
-        # transport will be used if possible
-        server_sio_logger = framework_utils.get_logger(
+        # transport will be used if possible. The logger will capture stdout (e.g. print()
+        # statements will be written to the logger).
+        server_sio_logger = framework_utils.StdoutCaptureLogger.get_logger(
             self.__class__.__name__, "sio_server"
         )
         self.__server_sio = socketio.Server(

@@ -8,8 +8,10 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+from typing import Optional
 import hashlib
 import os
+import sys
 import logging
 import logging.handlers
 
@@ -126,13 +128,13 @@ def decrypt_from_str(value):
 
 
 def get_logger(
-    log_module,
-    log_name,
-    log_level=logging.DEBUG,
-    rotate_when="D",
-    rotate_interval=1,
-    rotate_backups=7,
-):
+    log_module: str,
+    log_name: str,
+    log_level: Optional[int] = logging.DEBUG,
+    rotate_when: Optional[str] = "D",
+    rotate_interval: Optional[int] = 1,
+    rotate_backups: Optional[int] = 7,
+) -> logging.Logger:
     """
     Return a rotating event logger.
 
@@ -141,22 +143,16 @@ def get_logger(
 
     :param log_module: The module that this logger will be used for. This is used to create
         the logger name identifier.
-    :param log_module: str
     :param log_name: The name used to create the logger name identifier, as well as the log
         file, e.g. {log_name}.log
-    :param log_name: str
     :param log_level: The lowest logging level that this logger will handle. Default is debug.
-    :param log_level: int (e.g. logging.INFO)
     :param rotate_when: When the log file will be rotated (see
         logging.handlers.TimedRotatingFileHandler for possible values). Default is days.
-    :param rotate_when: str
     :param rotate_interval: The interval at which files are rotated. Default is 1.
-    :param rotate_interval: int
     :param rotate_backups: The number of backup log files kept. Default is 7.
-    :param rotate_backups: int
+    :param console_logger: True to log to stdout.
 
     :return: The logger object.
-    :rtype: Logger
     """
 
     name = f"{log_module}.{log_name}"
@@ -201,3 +197,98 @@ def verify_file(src_file, verify_to_file):
     src_hex = get_md5_hex_string(src_file)
     file_hex = get_md5_hex_string(verify_to_file)
     return src_hex == file_hex
+
+
+class StdoutCaptureLogger:
+    """A class to manage a logger that captures stdout."""
+
+    class _LoggerStream:
+        """A stream that redirects print output to a logger."""
+
+        def __init__(self, logger: logging.Logger, level: Optional[int] = logging.INFO):
+            """
+            Initialize the LoggerStream.
+
+            :param logger: The logger to write to.
+            :param level: The level to log at. Default is logging.INFO.
+            """
+            self.logger = logger
+            self.level = level
+
+        def write(self, message: str):
+            """
+            Write a message to the logger.
+
+            :param message: The message to log.
+            """
+            if message.rstrip() != "":
+                self.logger.log(self.level, message.rstrip())
+
+        def flush(self):
+            """Flush the stream."""
+            pass
+
+    def __init__(
+        self,
+        log_module: str,
+        log_name: str,
+        log_level: Optional[int] = logging.DEBUG,
+        rotate_when: Optional[str] = "D",
+        rotate_interval: Optional[int] = 1,
+        rotate_backups: Optional[int] = 7,
+        level: Optional[int] = logging.INFO,
+    ):
+        """
+        Initialize the StdoutCaptureLogger.
+
+        :param log_module: The module that this logger will be used for. This is used to create
+            the logger name identifier.
+        :param log_name: The name used to create the logger name identifier, as well as the log
+            file, e.g. {log_name}.log
+        :param log_level: The lowest logging level that this logger will handle. Default is debug.
+        :param rotate_when: When the log file will be rotated (see
+            logging.handlers.TimedRotatingFileHandler for possible values). Default is days.
+        :param rotate_interval: The interval at which files are rotated. Default is 1.
+        :param rotate_backups: The number of backup log files kept. Default is 7.
+        :param level: The level to log at. Default is logging.INFO.
+        """
+
+        # Create the logger object
+        self.logger = get_logger(
+            log_module,
+            log_name,
+            log_level,
+            rotate_when,
+            rotate_interval,
+            rotate_backups,
+        )
+        # Store the original sys.stdout to restore (if needed) and redirect the
+        # stdout to the logger
+        self.__original_stdout = sys.stdout
+        sys.stdout = self._LoggerStream(self.logger, level)
+
+    @staticmethod
+    def get_logger(
+        log_module: str,
+        log_name: str,
+        log_level: Optional[int] = logging.DEBUG,
+        rotate_when: Optional[str] = "D",
+        rotate_interval: Optional[int] = 1,
+        rotate_backups: Optional[int] = 7,
+    ) -> logging.Logger:
+        """
+        Get a logger that captures stdout.
+        """
+        stdout_capture_logger = StdoutCaptureLogger(
+            log_module,
+            log_name,
+            log_level,
+            rotate_when,
+            rotate_interval,
+            rotate_backups,
+        )
+        return stdout_capture_logger.logger
+
+    def restore_stdout(self):
+        """Restore the original stdout stream."""
+        sys.stdout = self.__original_stdout
