@@ -94,39 +94,47 @@ def get_alias_api_extensions_class_type(api_extensions_path: str) -> type:
     # If the path is a directory, get all python files in it
     if os.path.isdir(api_extensions_path):
         # Get all .py files in the directory
-        py_files = [f for f in os.listdir(api_extensions_path) if f.endswith(".py")]
+        py_files = [
+            os.path.join(api_extensions_path, f)
+            for f in os.listdir(api_extensions_path)
+            if f.endswith(".py")
+        ]
     else:
-        py_files = [os.path.basename(api_extensions_path)]
+        py_files = [api_extensions_path]
 
     # Load each file as a module and add its functions to the AliasApiExtensions class
-    for py_file in py_files:
-        file_path = os.path.join(api_extensions_path, py_file)
-        if os.path.isfile(file_path):
-            module_name = os.path.splitext(py_file)[0]
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            if spec is None:
-                raise ImportError(f"Could not load spec from {file_path}")
-            # Get the module from the file path spec and inject the alias_api
-            # into the module's globals so that the class methods have access to
-            # alias_api
-            module = importlib.util.module_from_spec(spec)
-            module.__dict__["alias_api"] = alias_api
-            try:
-                spec.loader.exec_module(module)
-            except Exception as e:
-                raise ImportError(
-                    f"Failed to execute module {module_name} from {file_path}: {e}"
-                )
-            # Add the user-defined functions as methods to the AliasApiExtensions class
-            for module_attr_name in dir(module):
-                module_attr = getattr(module, module_attr_name)
-                if not callable(module_attr) or module_attr_name.startswith("_"):
-                    continue
-                # Create the wrapped method and add it to the AliasApiExtensions class
-                method_func = create_method_wrapper(
-                    module_attr, AliasApiExtensionsClassType.__name__
-                )
-                setattr(AliasApiExtensionsClassType, module_attr_name, method_func)
+    for file_path in py_files:
+        if not os.path.isfile(file_path):
+            continue
+
+        file_name = os.path.basename(file_path)
+        module_name = os.path.splitext(file_name)[0]
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        if spec is None:
+            raise ImportError(f"Could not load spec from {file_path}")
+
+        # Get the module from the file path spec and inject the alias_api
+        # into the module's globals so that the class methods have access to
+        # alias_api
+        module = importlib.util.module_from_spec(spec)
+        module.__dict__["alias_api"] = alias_api
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            raise ImportError(
+                f"Failed to execute module {module_name} from {file_path}: {e}"
+            )
+
+        # Add the user-defined functions as methods to the AliasApiExtensions class
+        for module_attr_name in dir(module):
+            module_attr = getattr(module, module_attr_name)
+            if not callable(module_attr) or module_attr_name.startswith("_"):
+                continue
+            # Create the wrapped method and add it to the AliasApiExtensions class
+            method_func = create_method_wrapper(
+                module_attr, AliasApiExtensionsClassType.__name__
+            )
+            setattr(AliasApiExtensionsClassType, module_attr_name, method_func)
 
     return AliasApiExtensionsClassType
 
