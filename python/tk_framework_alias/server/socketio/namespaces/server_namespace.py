@@ -367,7 +367,7 @@ class AliasServerNamespace(socketio.Namespace):
             request = AliasApiRequestWrapper.create_wrapper(request)
 
         # Execute the request(s)
-        self._log_message(None, f"Excuting Alias API request: {request}", logging.INFO)
+        self._log_message(None, f"Executing Alias API request: {request}", logging.INFO)
         result = self._execute_request(event, request)
 
         try:
