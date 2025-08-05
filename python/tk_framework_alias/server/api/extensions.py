@@ -91,14 +91,14 @@ def get_alias_api_extensions_class_type(api_extensions_path: str) -> type:
     if not api_extensions_path:
         return AliasApiExtensionsClassType
 
-    # If the path is a directory, get all python files in it
+    # If the path is a directory, recursively get all python files in it
     if os.path.isdir(api_extensions_path):
-        # Get all .py files in the directory
-        py_files = [
-            os.path.join(api_extensions_path, f)
-            for f in os.listdir(api_extensions_path)
-            if f.endswith(".py")
-        ]
+        # Recursively get all .py files in the directory and subdirectories
+        py_files = []
+        for root, dirs, files in os.walk(api_extensions_path):
+            for f in files:
+                if f.endswith(".py"):
+                    py_files.append(os.path.join(root, f))
     else:
         py_files = [api_extensions_path]
 
