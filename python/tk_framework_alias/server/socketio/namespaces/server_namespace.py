@@ -258,6 +258,7 @@ class AliasServerNamespace(socketio.Namespace):
             api_info["python_version"],
             file_ext="zip",
         )
+        has_cached_extensions = os.path.exists(cache_extensions_zip_filepath)
         cache_extensions_dir = os.path.dirname(cache_extensions_zip_filepath)
         os.makedirs(cache_extensions_dir, exist_ok=True)
 
@@ -287,9 +288,9 @@ class AliasServerNamespace(socketio.Namespace):
                         )
 
                 # Compare with current cache; update if cache doesn't exist or differs
-                extensions_updated = not os.path.exists(
-                    cache_extensions_zip_filepath
-                ) or not filecmp.cmp(temp_zip_file_path, cache_extensions_zip_filepath)
+                extensions_updated = not has_cached_extensions or not filecmp.cmp(
+                    temp_zip_file_path, cache_extensions_zip_filepath
+                )
 
                 # If extensions have changed, overwrite the cache
                 if extensions_updated:
@@ -299,6 +300,10 @@ class AliasServerNamespace(socketio.Namespace):
                 # Clean up the temporary file
                 if os.path.exists(temp_zip_file_path):
                     os.unlink(temp_zip_file_path)
+        elif has_cached_extensions:
+            # If there is a cached extensions zip file, but no api extensions path,
+            # then the extensions have been removed, so update the cache.
+            extensions_updated = True
 
         # Check if the cache is up-to-date. If not, create a new cache. Creating
         # a new cache is expensive and should only be done if the api or
