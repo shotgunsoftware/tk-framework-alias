@@ -28,7 +28,7 @@ class AliasApiExtensionsBase:
     #     )
 
 
-def create_alias_api_class(base_class, new_name):
+def create_alias_api_class(base_class: type, new_name: str):
     """
     Create a new class type that inherits from the base class.
 
