@@ -150,7 +150,8 @@ def add_alias_api_extensions_to_module(
     in the module.
 
     :param api_extensions_path: The file path to load user-defined Alias API
-        extension functions.
+                                extension functions.
+    :param module: The module to add the AliasApiExtensions class type to.
     """
 
     # Create the AliasApiExtensions class type and assign it to the module
