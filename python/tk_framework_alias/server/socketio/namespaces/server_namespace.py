@@ -265,7 +265,9 @@ class AliasServerNamespace(socketio.Namespace):
         extensions_updated = False
         if api_extensions_path and os.path.exists(api_extensions_path):
             # Create a temporary zip file to compare with the current cache
-            temp_zip_file_path = tempfile.mktemp(suffix=".zip")
+            temp_zip_file = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+            temp_zip_file_path = temp_zip_file.name
+            temp_zip_file.close()
             try:
                 # Create the zip file
                 with zipfile.ZipFile(
