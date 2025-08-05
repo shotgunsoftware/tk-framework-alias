@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+from typing import Optional
 import filecmp
 import logging
 import json
@@ -15,11 +16,16 @@ import pprint
 import os
 import shutil
 import socketio
+import zipfile
+import tempfile
 
 from tk_framework_alias_utils import environment_utils
 
 from ... import alias_bridge
 from ...api import alias_api
+from ...api.extensions import (
+    add_alias_api_extensions_to_module,
+)
 from ..api_request import AliasApiRequestWrapper
 from ..server_json import AliasServerJSON
 from ...utils.invoker import execute_in_main_thread
@@ -191,7 +197,9 @@ class AliasServerNamespace(socketio.Namespace):
 
         return alias_api
 
-    def on_load_alias_api(self, sid):
+    def on_load_alias_api(
+        self, sid: str, api_extensions_path: Optional[str] = None
+    ) -> str:
         """
         Load the Alias API and JSON-serialize the module to file on disk.
 
@@ -207,9 +215,12 @@ class AliasServerNamespace(socketio.Namespace):
         is added).
 
         :param sid: The client session id that made the request.
-        :type sid: str
+        :param api_extensions_path: Path to a file containing only functions
+            that will be loaded and added as extensions to the Alias Python API
+            module. They will be available through the alias_api by the class
+            AliasApiExtensions.
+
         :return: The file path to the JSON-serialized Alias API module.
-        :rtype: str
         """
 
         if self.client_sid is None or sid != self.client_sid:
@@ -226,6 +237,7 @@ class AliasServerNamespace(socketio.Namespace):
             api_filename, api_info["alias_version"], api_info["python_version"]
         )
         cache_dir = os.path.dirname(cache_filepath)
+        os.makedirs(cache_dir, exist_ok=True)
 
         # Get the path to the Alias API module (.pyd) that was used to create
         # the cache. The cache module file name will have format:
@@ -236,18 +248,87 @@ class AliasServerNamespace(socketio.Namespace):
         cache_module_filename = f"{base_cache_module_filename}.{api_ext}"
         cache_module_filepath = os.path.join(cache_dir, cache_module_filename)
 
-        # Check if the cache is up-to-date. If not, create a new cache
+        # Get any Alias API extensions that should be loaded with the API.
+        add_alias_api_extensions_to_module(api_extensions_path, alias_api)
+
+        # Get the cached extensions (if any)
+        cache_extensions_zip_filepath = environment_utils.get_alias_api_cache_file_path(
+            "api_extensions_cache",
+            api_info["alias_version"],
+            api_info["python_version"],
+            file_ext="zip",
+        )
+        has_cached_extensions = os.path.exists(cache_extensions_zip_filepath)
+        cache_extensions_dir = os.path.dirname(cache_extensions_zip_filepath)
+        os.makedirs(cache_extensions_dir, exist_ok=True)
+
+        # Check if the extensions have changed
+        extensions_updated = False
+        if api_extensions_path and os.path.exists(api_extensions_path):
+            # Create a temporary zip file to compare with the current cache
+            temp_zip_file = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+            temp_zip_file_path = temp_zip_file.name
+            temp_zip_file.close()
+            try:
+                # Create the zip file
+                with zipfile.ZipFile(
+                    temp_zip_file_path, "w", zipfile.ZIP_DEFLATED
+                ) as zipf:
+                    if os.path.isdir(api_extensions_path):
+                        for root, dirs, files in os.walk(api_extensions_path):
+                            for f in files:
+                                file_path = os.path.join(root, f)
+                                arcname = os.path.relpath(
+                                    file_path, api_extensions_path
+                                )
+                                zipf.write(file_path, arcname)
+                    else:
+                        zipf.write(
+                            api_extensions_path, os.path.basename(api_extensions_path)
+                        )
+
+                # Compare with current cache; update if cache doesn't exist or differs
+                extensions_updated = not has_cached_extensions or not filecmp.cmp(
+                    temp_zip_file_path, cache_extensions_zip_filepath
+                )
+
+                # If extensions have changed, overwrite the cache
+                if extensions_updated:
+                    shutil.copyfile(temp_zip_file_path, cache_extensions_zip_filepath)
+
+            finally:
+                # Clean up the temporary file
+                if os.path.exists(temp_zip_file_path):
+                    os.unlink(temp_zip_file_path)
+        elif has_cached_extensions:
+            # If there is a cached extensions zip file, but no api extensions path,
+            # then the extensions have been removed, so update the cache.
+            extensions_updated = True
+
+        # Check if the cache is up-to-date. If not, create a new cache. Creating
+        # a new cache is expensive and should only be done if the api or
+        # extensions have changed
         if (
             not os.path.exists(cache_filepath)
             or not os.path.exists(cache_module_filepath)
             or not filecmp.cmp(api_info["file_path"], cache_module_filepath)
+            or extensions_updated
         ):
-            # Ensure the cache directory exists
-            if not os.path.exists(cache_dir):
-                os.makedirs(cache_dir)
-            # Create the Alias API cache
-            with open(cache_filepath, "w") as fp:
-                json.dump(alias_api, fp=fp, cls=AliasServerJSON.encoder_class())
+            try:
+                # Create the Alias API cache
+                with open(cache_filepath, "w") as fp:
+                    json.dump(alias_api, fp=fp, cls=AliasServerJSON.encoder_class())
+            except Exception as e:
+                error_message = (
+                    f"Failed to create Alias API cache file {cache_filepath}: {e}"
+                )
+                self._log_message(
+                    sid,
+                    error_message,
+                    logging.ERROR,
+                )
+                raise AliasApiRequestException(error_message)
+
             # Copy the module to the cache folder in order to determine next time if the
             # cache requies an update
             shutil.copyfile(api_info["file_path"], cache_module_filepath)
@@ -367,7 +448,7 @@ class AliasServerNamespace(socketio.Namespace):
             request = AliasApiRequestWrapper.create_wrapper(request)
 
         # Execute the request(s)
-        self._log_message(None, f"Excuting Alias API request: {request}", logging.INFO)
+        self._log_message(None, f"Executing Alias API request: {request}", logging.INFO)
         result = self._execute_request(event, request)
 
         try:
@@ -415,6 +496,13 @@ class AliasServerNamespace(socketio.Namespace):
                 None, f"Alias API request error\n{api_error}", logging.ERROR
             )
             return api_error
+        except alias_api.AliasPythonException as c_error:
+            self._log_message(
+                None,
+                f"C++ exception occurred while executing request {request_name}\n{c_error}",
+                logging.ERROR,
+            )
+            return AliasApiRequestException(c_error)
         except Exception as general_error:
             # Report a general error that occurred trying to execute the api request.
             self._log_message(

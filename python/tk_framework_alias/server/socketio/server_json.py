@@ -120,6 +120,19 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         return AliasServerJSONEncoder.encode_function(obj)
 
     @staticmethod
+    def is_unbound_method(obj):
+        """Check if a function is an unbound method (defined within a class)."""
+
+        if not inspect.isfunction(obj):
+            return False
+
+        # Check if the function has a qualified name indicating it's from a class
+        if hasattr(obj, "__qualname__") and "." in obj.__qualname__:
+            return True
+
+        return False
+
+    @staticmethod
     def encode_function(obj, is_method=False):
         """Encode a function such that is JSON serializable."""
 
@@ -227,6 +240,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
                 return result
 
             if inspect.ismethod(obj):
+                return self.encode_function(obj, is_method=True)
+
+            if self.is_unbound_method(obj):
+                # If the function is an unbound method, encode it as a method.
                 return self.encode_function(obj, is_method=True)
 
             if inspect.isfunction(obj):

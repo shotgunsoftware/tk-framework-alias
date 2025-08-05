@@ -1,3 +1,4 @@
+from typing import Optional
 import os
 import sys
 
@@ -459,27 +460,29 @@ def get_framework_python_site_packages_paths(
     return package_paths
 
 
-def get_alias_api_cache_file_path(filename, alias_version, python_version):
+def get_alias_api_cache_file_path(
+    filename: str,
+    alias_version: str,
+    python_version: str,
+    file_ext: Optional[str] = "json",
+) -> str:
     """
     Return the file path to the cached api .json file.
 
     The cache is for the specified Alias and Python version.
 
     :param filename: The cache file name.
-    :type filename: str
     :param alias_version: The Alias version to get the cache for.
-    :type alias_version: str
     :param python_version: The python version to get the cache for.
-    :type python_version: str
+    :param file_ext: The file extension for the cache file, defaults to 'json'.
 
     :return: The file name for the embeddable python package.
-    :rtype: str
     """
 
     return os.path.join(
         get_alias_app_data_dir(),
         "api",
-        f"{filename}{alias_version}_py{python_version}.json",
+        f"{filename}{alias_version}_py{python_version}.{file_ext}",
     )
 
 
