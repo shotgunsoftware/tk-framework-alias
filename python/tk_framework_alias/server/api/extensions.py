@@ -19,7 +19,7 @@ from . import alias_api
 class AliasApiExtensionsBase:
     """Base class for defining extension functions to the Alias API module."""
 
-    # TODO: add some base extension functions
+    # NOTE: placeholder for base extension functions
     # def log_to_prompt_extension(self):
     #     """Placeholder function to demonstrate an extension function."""
 
