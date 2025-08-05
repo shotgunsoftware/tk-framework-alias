@@ -265,40 +265,38 @@ class AliasServerNamespace(socketio.Namespace):
         extensions_updated = False
         if api_extensions_path and os.path.exists(api_extensions_path):
             # Create a temporary zip file to compare with the current cache
-            with tempfile.NamedTemporaryFile(
-                suffix=".zip", delete=False
-            ) as temp_zip_file:
-                temp_zip_path = temp_zip_file.name
-                try:
-                    with zipfile.ZipFile(
-                        temp_zip_path, "w", zipfile.ZIP_DEFLATED
-                    ) as zipf:
-                        if os.path.isdir(api_extensions_path):
-                            for root, dirs, files in os.walk(api_extensions_path):
-                                for f in files:
-                                    file_path = os.path.join(root, f)
-                                    arcname = os.path.relpath(
-                                        file_path, api_extensions_path
-                                    )
-                                    zipf.write(file_path, arcname)
-                        else:
-                            zipf.write(
-                                api_extensions_path,
-                                os.path.basename(api_extensions_path),
-                            )
+            temp_zip_file_path = tempfile.mktemp(suffix=".zip")
+            try:
+                # Create the zip file
+                with zipfile.ZipFile(
+                    temp_zip_file_path, "w", zipfile.ZIP_DEFLATED
+                ) as zipf:
+                    if os.path.isdir(api_extensions_path):
+                        for root, dirs, files in os.walk(api_extensions_path):
+                            for f in files:
+                                file_path = os.path.join(root, f)
+                                arcname = os.path.relpath(
+                                    file_path, api_extensions_path
+                                )
+                                zipf.write(file_path, arcname)
+                    else:
+                        zipf.write(
+                            api_extensions_path, os.path.basename(api_extensions_path)
+                        )
 
-                    # Compare with current cache; update if cache doesn't exist or differs
-                    extensions_updated = not os.path.exists(
-                        cache_extensions_zip_filepath
-                    ) or not filecmp.cmp(temp_zip_path, cache_extensions_zip_filepath)
+                # Compare with current cache; update if cache doesn't exist or differs
+                extensions_updated = not os.path.exists(
+                    cache_extensions_zip_filepath
+                ) or not filecmp.cmp(temp_zip_file_path, cache_extensions_zip_filepath)
 
-                    # If extensions have changed, overwrite the cache
-                    if extensions_updated:
-                        shutil.copyfile(temp_zip_path, cache_extensions_zip_filepath)
+                # If extensions have changed, overwrite the cache
+                if extensions_updated:
+                    shutil.copyfile(temp_zip_file_path, cache_extensions_zip_filepath)
 
-                finally:
-                    if os.path.exists(temp_zip_path):
-                        os.unlink(temp_zip_path)
+            finally:
+                # Clean up the temporary file
+                if os.path.exists(temp_zip_file_path):
+                    os.unlink(temp_zip_file_path)
 
         # Check if the cache is up-to-date. If not, create a new cache. Creating
         # a new cache is expensive and should only be done if the api or
