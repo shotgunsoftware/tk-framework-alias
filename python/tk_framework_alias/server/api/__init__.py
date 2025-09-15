@@ -84,11 +84,15 @@ def get_alias_api_module():
         api_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(api_module)
     except Exception as e:
-        info_msg = (
-            "Running: Alias v{alias_version}, Python v{py_major}.{py_minor}.{py_micro}.\n\n"
-            "Attempted to import Alias Python API {apa_name}.pyd from: {apa_path}\n\n"
-            "Failed import may be caused by a mismatch between the running Alias or Python version and "
-            "the versions used to compile the Alias Python API."
+        warn_msg = (
+            "*****WARNING***** failed to import Alias Python API\n"
+            "Running: Alias v{alias_version}, Python v{py_major}.{py_minor}.{py_micro}. "
+            "Attempted to import Alias Python API {apa_name}.pyd from: {apa_path}\n"
+            "Possible reasons for module import failure:\n"
+            "\t- Mismatch between the running Alias version and the version used to compile the Alias Python API.\n"
+            "\t- Mismatch between the running Python version and the version used to compile the Alias Python API.\n"
+            "\t- Mismatch in Alias Qt version and Python PySide version.\n"
+            "Alias Python API module will not be available."
         ).format(
             apa_name=module_name,
             apa_path=module_path,
@@ -97,9 +101,9 @@ def get_alias_api_module():
             py_minor=sys.version_info.minor,
             py_micro=sys.version_info.micro,
         )
-        raise AliasPythonApiImportError(
-            "{error}\n\n{info}".format(error=str(e), info=info_msg)
-        )
+        # No logger is available here, so print the message to console
+        sys.stderr.write(f"Error: {e}\n{warn_msg}\n")
+        api_module = None
 
     return api_module
 
