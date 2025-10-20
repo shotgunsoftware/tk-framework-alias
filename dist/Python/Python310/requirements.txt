@@ -10,6 +10,6 @@
 
 cryptography
 eventlet
-python-socketio
+python-socketio>=5.14.0
 requests
 websocket-client
