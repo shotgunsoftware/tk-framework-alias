@@ -1,0 +1,28 @@
+What's Changed
+####################
+
+Summary
+---------------------
+
+Summary of changes in the Alias Python API version |version|.
+
+Bug Fixes
+~~~~~~~~~~~~~~~~~~~
+
+* ``AlMessageType.LayersReordered`` message is now handled correctly.
+
+
+Removed members
+================
+
+* ``AlStoreOptions._iges_atf.store_want_layer``
+* ``AlStoreOptions._iges_atf.store_want_group_brep``
+* ``AlStoreOptions._iges_atf.store_want_group_hierarchy``
+* ``AlStoreOptions._iges_atf.store_want_curve_asm_conversion``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_parametric``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_construction``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_nested_group``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_curve_as_wire``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_unbounded_plane_as_wp``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_transformation_as_wp``
+* ``AlRetrieveOptions._iges_atf.retrieve_want_scan_data``
