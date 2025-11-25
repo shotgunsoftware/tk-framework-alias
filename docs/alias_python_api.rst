@@ -12,3 +12,4 @@ Reference
 * `Alias 2024.0 - 2025.0 <_static/alias_api/2024.0/index.html>`_
 * `Alias 2025.1 <_static/alias_api/2025.1/index.html>`_
 * `Alias 2026.0 <_static/alias_api/2026.0/index.html>`_
+* `Alias 2026.1 <_static/alias_api/2026.1/index.html>`_
