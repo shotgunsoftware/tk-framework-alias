@@ -13,6 +13,6 @@ python-engineio==4.12.3
 python-socketio==5.14.2
 requests==2.32.5
 simple-websocket==1.1.0
-urllib3==2.5.0
+urllib3==2.6.0
 websocket-client==1.9.0
 wsproto==1.2.0
