@@ -839,12 +839,18 @@ def ensure_plugin_ready(
         # the Alias Plugin to bootstrap the Flow Production Tracking Alias Engine.
         ensure_toolkit_plugin_up_to_date(logger)
 
-        # Alias 2024.0 is running with Qt 5.15.0, which means the PySide2 version used by the
-        # version of Python that is embedded by the Alias Plugin must also be 5.15.0. Since
-        # PySide2 5.15.0 requires Python < 3.9, we will force Python 3.7 to be used by the
-        # Alias Plugin (which is done by setting the server python)
-        py_major_version = 3
-        py_minor_version = 7
+        if version_cmp(alias_version, "2026.0") >= 0:
+            # Alias >= 2026.0 has removed dependency on Qt/PySide for the FPT plugin
+            py_major_version = 3
+            py_minor_version = 11
+        else:
+            # Alias 2024.0 is running with Qt 5.15.0, which means the PySide2 version used by the
+            # version of Python that is embedded by the Alias Plugin must also be 5.15.0. Since
+            # PySide2 5.15.0 requires Python < 3.9, we will force Python 3.7 to be used by the
+            # Alias Plugin (which is done by setting the server python)
+            py_major_version = 3
+            py_minor_version = 7
+
         install_python_packages = os.environ.get(
             "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
         ) in ("1", "true", "True")
