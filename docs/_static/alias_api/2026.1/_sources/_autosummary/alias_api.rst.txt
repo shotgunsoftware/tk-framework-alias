@@ -13,7 +13,6 @@
 
    .. autosummary::
    
-      add_async_task
       add_message_handler
       adjust_window
       al_are_equal
