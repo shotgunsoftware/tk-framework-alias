@@ -6,23 +6,7 @@ Summary
 
 Summary of changes in the Alias Python API version |version|.
 
-New
-=========
-
-.. automodule:: alias_api
-
-    .. autosummary::
-        :nosignatures:
-
-        add_async_task
-    
-Added members
+Updates
 ~~~~~~~~~~~~~~~~~~~
 
-* ``AlStoreOptions.jt_atf.store_want_subnode``
-
-
-Removed members
-================
-
-* ``AlStoreOptions.jt_atf.store_want_xtbrep``
+* ``import_file`` now has a new parameter ``keep_construction_options`` which defaults to false. If set to true, the construction options from the imported file will overwrite the current construction options, otherwise construction options will not be changed.
