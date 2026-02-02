@@ -1,0 +1,9 @@
+alias_api.AlShadingFields
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlShadingFields
+   :members:
+   :undoc-members:
+   :show-inheritance:

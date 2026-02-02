@@ -1,0 +1,6 @@
+alias_api.open_file
+===================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: open_file

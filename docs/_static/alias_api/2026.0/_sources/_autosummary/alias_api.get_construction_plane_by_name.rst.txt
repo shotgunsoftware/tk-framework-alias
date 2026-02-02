@@ -1,0 +1,6 @@
+alias_api.get_construction_plane_by_name
+========================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_construction_plane_by_name

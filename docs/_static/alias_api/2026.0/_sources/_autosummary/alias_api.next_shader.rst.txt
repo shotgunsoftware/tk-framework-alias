@@ -1,0 +1,6 @@
+alias_api.next_shader
+=====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: next_shader

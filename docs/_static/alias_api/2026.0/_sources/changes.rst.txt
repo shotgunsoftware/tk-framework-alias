@@ -19,10 +19,15 @@ New
 Added members
 ~~~~~~~~~~~~~~~~~~~
 
-* ``AlStoreOptions.jt_atf.store_want_subnode``
+* ``AlStoreOptions`` removed members:
+    * ``_c4``
+    * ``_catv5``
+    * ``_jamais``
+    * ``_vdais``
+    * ``_vdafs``
+    * ``catiav5_atf.store_use_new_translator``
+    * ``nx_atf.store_use_new_translator``
 
-
-Removed members
-================
-
-* ``AlStoreOptions.jt_atf.store_want_xtbrep``
+* ``AlRetrieveOptions`` removed members:
+    * ``catiav5_atf.retrieve_use_new_translator``
+    * ``nx_atf.retrieve_use_new_translator``
