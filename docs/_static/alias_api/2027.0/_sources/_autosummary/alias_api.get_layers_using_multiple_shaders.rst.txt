@@ -1,0 +1,6 @@
+alias_api.get_layers_using_multiple_shaders
+===========================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_layers_using_multiple_shaders

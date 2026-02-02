@@ -1,0 +1,9 @@
+alias_api.AlShellNode
+=====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlShellNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

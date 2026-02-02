@@ -1,0 +1,9 @@
+alias_api.AlDisplayModeType
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlDisplayModeType
+   :members:
+   :undoc-members:
+   :show-inheritance:

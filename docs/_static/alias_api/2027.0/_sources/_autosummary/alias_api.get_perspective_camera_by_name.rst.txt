@@ -1,0 +1,6 @@
+alias_api.get_perspective_camera_by_name
+========================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_perspective_camera_by_name

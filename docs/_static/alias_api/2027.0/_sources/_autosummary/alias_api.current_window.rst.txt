@@ -1,0 +1,6 @@
+alias_api.current_window
+========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: current_window

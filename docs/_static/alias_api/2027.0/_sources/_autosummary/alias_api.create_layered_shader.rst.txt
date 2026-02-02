@@ -1,0 +1,6 @@
+alias_api.create_layered_shader
+===============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: create_layered_shader
