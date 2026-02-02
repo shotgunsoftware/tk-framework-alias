@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._level_map
+===================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._level_map
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,9 @@
+alias_api.AlIterator
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlIterator
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,9 @@
+alias_api.AlSet
+===============
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlSet
+   :members:
+   :undoc-members:
+   :show-inheritance:

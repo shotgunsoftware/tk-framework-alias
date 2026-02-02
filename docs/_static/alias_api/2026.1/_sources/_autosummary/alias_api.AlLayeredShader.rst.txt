@@ -1,0 +1,9 @@
+alias_api.AlLayeredShader
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlLayeredShader
+   :members:
+   :undoc-members:
+   :show-inheritance:

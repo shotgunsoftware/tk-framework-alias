@@ -1,0 +1,9 @@
+alias_api.AlMessageType
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlMessageType
+   :members:
+   :undoc-members:
+   :show-inheritance:

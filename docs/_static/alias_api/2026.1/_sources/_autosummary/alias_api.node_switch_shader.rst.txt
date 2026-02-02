@@ -1,0 +1,6 @@
+alias_api.node_switch_shader
+============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: node_switch_shader

@@ -9,4 +9,15 @@ Summary of changes in the Alias Python API version |version|.
 Updates
 ~~~~~~~~~~~~~~~~~~~
 
-* ``import_file`` now has a new parameter ``keep_construction_options`` which defaults to false. If set to true, the construction options from the imported file will overwrite the current construction options, otherwise construction options will not be changed.
+* ``AlStoreOptions`` removed members:
+    * ``_c4``
+    * ``_catv5``
+    * ``_jamais``
+    * ``_vdais``
+    * ``_vdafs``
+    * ``catiav5_atf.store_use_new_translator``
+    * ``nx_atf.store_use_new_translator``
+
+* ``AlRetrieveOptions`` removed members:
+    * ``catiav5_atf.retrieve_use_new_translator``
+    * ``nx_atf.retrieve_use_new_translator``

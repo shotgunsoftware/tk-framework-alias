@@ -1,0 +1,9 @@
+alias_api.AlFileType
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlFileType
+   :members:
+   :undoc-members:
+   :show-inheritance:

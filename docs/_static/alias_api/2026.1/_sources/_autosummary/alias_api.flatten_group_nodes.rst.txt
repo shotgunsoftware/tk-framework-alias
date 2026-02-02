@@ -1,0 +1,6 @@
+alias_api.flatten_group_nodes
+=============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: flatten_group_nodes
