@@ -1,0 +1,9 @@
+alias_api.AlMeshNode
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlMeshNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

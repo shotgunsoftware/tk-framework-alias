@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._wire
+=================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._wire
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,9 @@
+alias_api.AlChannel
+===================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlChannel
+   :members:
+   :undoc-members:
+   :show-inheritance:

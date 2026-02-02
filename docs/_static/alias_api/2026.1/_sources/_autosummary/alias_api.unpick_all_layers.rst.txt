@@ -1,0 +1,6 @@
+alias_api.unpick_all_layers
+===========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: unpick_all_layers

@@ -1,0 +1,9 @@
+alias_api.AlCloud
+=================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCloud
+   :members:
+   :undoc-members:
+   :show-inheritance:

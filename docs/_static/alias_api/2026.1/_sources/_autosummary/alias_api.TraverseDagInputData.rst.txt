@@ -1,33 +1,9 @@
-﻿alias\_api.TraverseDagInputData
-===============================
+alias_api.TraverseDagInputData
+==============================
 
 .. currentmodule:: alias_api
 
 .. autoclass:: TraverseDagInputData
-
-   
-   .. automethod:: __init__
-
-   
-   .. rubric:: Methods
-
-   .. autosummary::
-   
-      ~TraverseDagInputData.__init__
-   
-   
-
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-   
-      ~TraverseDagInputData.layers
-      ~TraverseDagInputData.layersInclusive
-      ~TraverseDagInputData.nodeTypesInclusive
-      ~TraverseDagInputData.node_types
-      ~TraverseDagInputData.shaders
-      ~TraverseDagInputData.shadersInclusive
-   
-   
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,6 @@
+alias_api.next_locator
+======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: next_locator

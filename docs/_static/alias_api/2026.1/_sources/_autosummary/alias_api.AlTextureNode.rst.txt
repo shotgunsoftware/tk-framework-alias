@@ -1,0 +1,9 @@
+alias_api.AlTextureNode
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlTextureNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

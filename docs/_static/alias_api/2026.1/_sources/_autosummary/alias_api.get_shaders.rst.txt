@@ -1,0 +1,6 @@
+alias_api.get_shaders
+=====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_shaders
