@@ -1,0 +1,9 @@
+alias_api.AlCurveOnSurfacePoint
+===============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCurveOnSurfacePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:

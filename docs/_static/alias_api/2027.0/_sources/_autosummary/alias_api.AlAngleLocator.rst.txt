@@ -1,0 +1,9 @@
+alias_api.AlAngleLocator
+========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlAngleLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:

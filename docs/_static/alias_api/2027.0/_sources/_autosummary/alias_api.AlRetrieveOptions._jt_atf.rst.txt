@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._jt_atf
+===================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._jt_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

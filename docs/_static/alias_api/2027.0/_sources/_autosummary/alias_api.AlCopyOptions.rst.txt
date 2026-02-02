@@ -1,0 +1,9 @@
+alias_api.AlCopyOptions
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCopyOptions
+   :members:
+   :undoc-members:
+   :show-inheritance:

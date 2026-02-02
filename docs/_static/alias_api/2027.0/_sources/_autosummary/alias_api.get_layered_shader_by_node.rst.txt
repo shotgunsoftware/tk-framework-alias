@@ -1,0 +1,6 @@
+alias_api.get_layered_shader_by_node
+====================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_layered_shader_by_node

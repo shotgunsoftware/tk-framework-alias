@@ -1,0 +1,9 @@
+alias_api.AlParamAction
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlParamAction
+   :members:
+   :undoc-members:
+   :show-inheritance:
