@@ -1,0 +1,9 @@
+alias_api.AlLightNode
+=====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlLightNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

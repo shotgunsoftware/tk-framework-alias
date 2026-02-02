@@ -1,5 +1,5 @@
-Module Overview
-###############
+Module Reference
+#################
 
 .. autosummary::
     :toctree: _autosummary

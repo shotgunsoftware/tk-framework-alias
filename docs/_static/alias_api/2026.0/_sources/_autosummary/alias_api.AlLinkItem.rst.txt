@@ -1,0 +1,9 @@
+alias_api.AlLinkItem
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlLinkItem
+   :members:
+   :undoc-members:
+   :show-inheritance:

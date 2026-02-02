@@ -1,0 +1,9 @@
+alias_api.Menu
+==============
+
+.. currentmodule:: alias_api
+
+.. autoclass:: Menu
+   :members:
+   :undoc-members:
+   :show-inheritance:

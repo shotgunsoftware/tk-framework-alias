@@ -1,0 +1,9 @@
+alias_api.AliasCompatibilityException
+=====================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AliasCompatibilityException
+   :members:
+   :undoc-members:
+   :show-inheritance:
