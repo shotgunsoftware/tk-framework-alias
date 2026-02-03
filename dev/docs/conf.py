@@ -122,6 +122,4 @@ html_theme_options = {
 # Define |version| substitution
 rst_prolog = """
 .. |version| replace:: {version}
-""".format(
-    version=version
-)
+""".format(version=version)

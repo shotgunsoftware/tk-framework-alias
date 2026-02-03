@@ -2,7 +2,6 @@ from typing import Optional
 import os
 import sys
 
-
 TOOLKIT_PLUGIN_NAME = "com.sg.basic.alias"
 
 
