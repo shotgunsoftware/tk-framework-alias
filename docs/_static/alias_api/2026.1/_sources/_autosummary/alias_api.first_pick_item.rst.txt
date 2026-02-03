@@ -1,0 +1,6 @@
+alias_api.first_pick_item
+=========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: first_pick_item

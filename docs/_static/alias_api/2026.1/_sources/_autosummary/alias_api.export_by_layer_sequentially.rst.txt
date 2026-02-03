@@ -1,0 +1,6 @@
+alias_api.export_by_layer_sequentially
+======================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: export_by_layer_sequentially

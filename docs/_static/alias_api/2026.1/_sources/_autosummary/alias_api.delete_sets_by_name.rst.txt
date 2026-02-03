@@ -1,0 +1,6 @@
+alias_api.delete_sets_by_name
+=============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: delete_sets_by_name

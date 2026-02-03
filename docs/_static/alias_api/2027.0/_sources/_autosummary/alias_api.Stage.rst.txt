@@ -1,0 +1,9 @@
+alias_api.Stage
+===============
+
+.. currentmodule:: alias_api
+
+.. autoclass:: Stage
+   :members:
+   :undoc-members:
+   :show-inheritance:

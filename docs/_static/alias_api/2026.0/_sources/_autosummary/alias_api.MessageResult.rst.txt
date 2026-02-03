@@ -1,0 +1,9 @@
+alias_api.MessageResult
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: MessageResult
+   :members:
+   :undoc-members:
+   :show-inheritance:

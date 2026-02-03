@@ -19,7 +19,6 @@ from tk_framework_alias.server.api import alias_api
 from tk_framework_alias.server import alias_bridge
 from tk_framework_alias.server.utils.exceptions import AliasServerJSONDecoderError
 
-
 ####################################################################################################
 # fixtures
 ####################################################################################################

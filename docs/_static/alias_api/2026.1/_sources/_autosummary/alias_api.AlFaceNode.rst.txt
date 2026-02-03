@@ -1,0 +1,9 @@
+alias_api.AlFaceNode
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlFaceNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

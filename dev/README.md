@@ -9,10 +9,11 @@ The framework has pre-release steps:
 1. Include a pre-built [Toolkit Plugin](#build_toolkit_plugin)
 2. Include any necessary [embeddable Python packages](#embed_py_package)
 3. Include any [required Python packages](#required-python-packages)
+4. Update the [Alias Python API docs](#alias-python-api-docs)
 
 ## <a name="build_toolkit_plugin"></a> Build the Toolkit Plugin
 
-The framework provides the functionality to bootstrap a Toolkit engine (e.g. [tk-alias](https://github.com/shotgunsoftware/tk-alias)) using the the [ToolkitManager](https://github.com/shotgunsoftware/tk-core/blob/develop/python/tank/bootstrap/manager.py). A Toolkit Plugin must be created in order to intialize the manager to bootstrap an engine. The framework provides build scripts to generate the plugin bundle; after running the build, it will create the `com.sg.basic.alias` plugin bundle in the `dist/Toolkit/plugin` folder. At runtime, the framework start up utils will install the plugin bundle to the user's `%APPDATA%` folder, where it can be accessed during the [bootstrap process](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py).
+The framework provides the functionality to bootstrap a Toolkit engine (e.g. [tk-alias](https://github.com/shotgunsoftware/tk-alias)) using the the [ToolkitManager](https://github.com/shotgunsoftware/tk-core/blob/develop/python/tank/bootstrap/manager.py). A Toolkit Plugin must be created in order to initialize the manager to bootstrap an engine. The framework provides build scripts to generate the plugin bundle; after running the build, it will create the `com.sg.basic.alias` plugin bundle in the `dist/Toolkit/plugin` folder. At runtime, the framework start up utils will install the plugin bundle to the user's `%APPDATA%` folder, where it can be accessed during the [bootstrap process](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/python/tk_framework_alias_utils/plugin_bootstrap.py).
 
 The following files are provided to build the plugin:
 
@@ -22,7 +23,7 @@ The following files are provided to build the plugin:
 
 The actual plugin is built from the file `plugin/Toolkit/basic/info.yml`. The `info.yml` defines the Toolkit Plugin.
 
-Before exeuting the build scripts, set all necessary variables in `dev\env.cmd`. These environment variables will be set by calling `env.cmd` from the `make.bat` file. This is what the env file should look like:
+Before executing the build scripts, set all necessary variables in `dev\env.cmd`. These environment variables will be set by calling `env.cmd` from the `make.bat` file. This is what the env file should look like:
 
 ```
 TARGET_VERSION=1.1.3 # Make sure this matches the tk-framework-alias version you will be releasing
@@ -36,7 +37,7 @@ Follow [this link](https://developer.shotgridsoftware.com/7c9867c0/#bundle-cache
 
 ### Build
 
-Run the build to create the plugin bunlde in the `dist/Toolkit/plugin` folder. This is all that is needed to prep the plugin for release with the framework.
+Run the build to create the plugin bundle in the `dist/Toolkit/plugin` folder. This is all that is needed to prep the plugin for release with the framework.
 
 ```
 cd path/to/tk-framework-alias
@@ -73,7 +74,7 @@ The framework requires additional Python packages to the standard package that F
 
 ### What's included?
 
-The packages that are included are defined by the `requirements.txt` in each of the `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>` directory. The packages can be obtained by running the [update_python_packages.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dev/update_python_packages.py) script that uses pip to intall them. The script will then zip of the packages and copy them to the distribution directory. Standard Python packages will be found in `pkgs.zip`, and C extension packages will be found in `c_extensions.zip`. The reason for separating these packages is because C extension packages need to be unzipped in order to allow them to be imported by the framework (while standard packages do not).
+The packages that are included are defined by the `requirements.txt` in each of the `dist/Python/Python<MAJOR_VERSION><MINOR_VERSION>` directory. The packages can be obtained by running the [update_python_packages.py](https://github.com/shotgunsoftware/tk-framework-alias/blob/develop/dev/update_python_packages.py) script that uses pip to install them. The script will then zip of the packages and copy them to the distribution directory. Standard Python packages will be found in `pkgs.zip`, and C extension packages will be found in `c_extensions.zip`. The reason for separating these packages is because C extension packages need to be unzipped in order to allow them to be imported by the framework (while standard packages do not).
 
 ### Update the packages
 
@@ -92,3 +93,39 @@ Follow these steps to update the packages when needed, these steps will update t
 - The update script will use the requirements file and pip to install the packages to a local temp directory, which are eventually copied to the `dist` folder
 - C extension packages are put in their own separate zip file, to easily unzip them at run time.
 - To limit the size of the packages (to not bloat the repository size), special handling is made to the PySide2 package. PySide2 functionality is limited to using a single method from the QtCore module, and it is not intended that any further PySide2 functionality is to be needed. For this reason, the minimum files are included to use only the QtCore module.
+
+## <a name="alias-python-api-docs"></a> Alias Python API Docs
+
+This repo generates Sphinx documentation for the framework; which includes links to the Alias Python API module reference. The Alias Python API documentation is also generated by Sphinx, but it cannot be part of the Toolkit framework documentation directly because at build time for the docs, the Alias Python API module requires additional runtime DLLs that are not available when Toolkit generates the Sphinx documentation. For this reason, this repo provides scripts in the `dev/docs` folder to generate the documentation for the Alias Python API, which then can be linked in the Toolkit documentation.
+
+**How to update the documentation**
+
+*Prerequisites*
+
+* Locate the Alias Python API version to generate the docs for
+    * Find or add new modules in `dist/Alias/<PYTHON_VERSION>/<ALIAS_VERSION>`
+* Alias runtime DLLs (e.g. installation of Alias)
+    * Must match `ALIAS_VERSION` that the `alias_api` module was compiled with
+* Python >= 3.10
+    * Must match the `<PYTHON_VERSION>` that the `alias_api` module was compiled with
+* Python packages:
+    * Sphinx
+    * sphinx_rtd_theme==1.0.0
+    * [tk-toolchain](https://github.com/shotgunsoftware/tk-toolchain?tab=readme-ov-file#how-can-i-run-these-tools)
+    * PySide6 (required by tk-docs-preview)
+
+*Steps*
+
+1. Modify the `dev/docs/generate_docs.bat` file to set the required environment variables for the Alias version of the API docs to update (or set these variables in your environment).
+
+1. Run the script `dev/docs/generate_docs.bat`. What the script does:
+
+    a. Runs the script `dev/docs/generate_api_docs.py` which imports the `alias_api` module to inspect and autogenerate `.rst` files in `dev/docs/_autosummary` based on the module contents.
+
+    b. Calls `sphinx-build` to generate the Sphinx documentation from the autogenerated `.rst` files.
+
+    c. Installs the generated Sphinx documentation to the `docs/_static/alias_api/<ALIAS_VERSION>` folder (to be linked from the Toolkit framework docs)
+
+    d. Calls `tk-docs-preview` to generate the Toolkit framework docs
+
+1. If adding documentation for a new version of the API, update the `docs/alias_python_api.rst` file to link to the new documentation.

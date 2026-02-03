@@ -1,0 +1,9 @@
+alias_api.AlTangentType
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlTangentType
+   :members:
+   :undoc-members:
+   :show-inheritance:

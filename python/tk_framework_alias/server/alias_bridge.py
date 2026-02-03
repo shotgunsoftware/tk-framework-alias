@@ -421,14 +421,10 @@ class AliasBridge(metaclass=Singleton):
             #     str(port),
             #     client["namespace"],
             # ]
-            raise ClientBootstrapMethodNotSupported(
-                """
+            raise ClientBootstrapMethodNotSupported("""
                 Bootstrapping Alias client via executable path is currently not supported. Only Flow Production Tracking clients supported.
                 Client info: {client_info}
-            """.format(
-                    client_info=pprint.pformat(client_info)
-                )
-            )
+            """.format(client_info=pprint.pformat(client_info)))
 
         # Copy the env variables to start the new process with
         startup_env = os.environ.copy()

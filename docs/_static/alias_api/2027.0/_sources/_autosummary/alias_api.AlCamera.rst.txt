@@ -1,0 +1,9 @@
+alias_api.AlCamera
+==================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCamera
+   :members:
+   :undoc-members:
+   :show-inheritance:

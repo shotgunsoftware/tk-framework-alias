@@ -1,0 +1,9 @@
+alias_api.AlWindow
+==================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlWindow
+   :members:
+   :undoc-members:
+   :show-inheritance:

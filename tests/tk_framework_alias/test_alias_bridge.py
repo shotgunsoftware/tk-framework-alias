@@ -19,7 +19,6 @@ from tk_framework_alias.server.socketio.namespaces import (
 )
 from tk_framework_alias.server.utils import exceptions
 
-
 ####################################################################################################
 # fixtures
 ####################################################################################################

@@ -1,0 +1,9 @@
+alias_api.AlReferenceFile
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlReferenceFile
+   :members:
+   :undoc-members:
+   :show-inheritance:

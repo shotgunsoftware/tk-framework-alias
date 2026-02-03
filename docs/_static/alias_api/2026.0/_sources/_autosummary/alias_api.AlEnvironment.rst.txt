@@ -1,0 +1,9 @@
+alias_api.AlEnvironment
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlEnvironment
+   :members:
+   :undoc-members:
+   :show-inheritance:

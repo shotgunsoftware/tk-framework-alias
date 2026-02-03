@@ -1,0 +1,9 @@
+alias_api.AlTessellateTypes
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlTessellateTypes
+   :members:
+   :undoc-members:
+   :show-inheritance:

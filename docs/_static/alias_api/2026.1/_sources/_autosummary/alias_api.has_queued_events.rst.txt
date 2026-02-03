@@ -1,0 +1,6 @@
+alias_api.has_queued_events
+===========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: has_queued_events

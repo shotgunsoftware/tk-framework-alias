@@ -1,5 +1,5 @@
-﻿alias\_api.search\_node\_unused\_curves\_on\_surface
-====================================================
+alias_api.search_node_unused_curves_on_surface
+==============================================
 
 .. currentmodule:: alias_api
 

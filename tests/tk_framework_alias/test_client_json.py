@@ -15,7 +15,6 @@ from tk_framework_alias.client.socketio import client_json
 from tk_framework_alias.client.socketio import proxy_wrapper
 from tk_framework_alias.client.utils.exceptions import AliasClientJSONEncoderError
 
-
 ####################################################################################################
 # tk_framework_alias client_json AliasClientJSONEncoder
 ####################################################################################################

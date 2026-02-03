@@ -1,0 +1,9 @@
+alias_api.VectorAlTangentType
+=============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: VectorAlTangentType
+   :members:
+   :undoc-members:
+   :show-inheritance:

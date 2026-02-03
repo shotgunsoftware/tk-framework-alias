@@ -133,3 +133,6 @@ dmypy.json
 
 # Secret key file
 python/tk_framework_alias_utils/config
+
+# Docs
+dev/docs/_autosummary/

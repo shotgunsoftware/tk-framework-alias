@@ -1,0 +1,9 @@
+alias_api.AlShader
+==================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlShader
+   :members:
+   :undoc-members:
+   :show-inheritance:

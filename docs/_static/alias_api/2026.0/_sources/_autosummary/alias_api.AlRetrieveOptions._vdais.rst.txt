@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._vdais
+==================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._vdais
+   :members:
+   :undoc-members:
+   :show-inheritance:

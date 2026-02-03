@@ -1,0 +1,23 @@
+What's Changed
+####################
+
+Summary
+---------------------
+
+Summary of changes in the Alias Python API version |version|.
+
+Updates
+~~~~~~~~~~~~~~~~~~~
+
+* ``AlStoreOptions`` removed members:
+    * ``_c4``
+    * ``_catv5``
+    * ``_jamais``
+    * ``_vdais``
+    * ``_vdafs``
+    * ``catiav5_atf.store_use_new_translator``
+    * ``nx_atf.store_use_new_translator``
+
+* ``AlRetrieveOptions`` removed members:
+    * ``catiav5_atf.retrieve_use_new_translator``
+    * ``nx_atf.retrieve_use_new_translator``

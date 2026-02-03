@@ -1,0 +1,9 @@
+alias_api.Vec3
+==============
+
+.. currentmodule:: alias_api
+
+.. autoclass:: Vec3
+   :members:
+   :undoc-members:
+   :show-inheritance:

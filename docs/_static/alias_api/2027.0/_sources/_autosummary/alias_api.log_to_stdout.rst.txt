@@ -1,0 +1,6 @@
+alias_api.log_to_stdout
+=======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: log_to_stdout

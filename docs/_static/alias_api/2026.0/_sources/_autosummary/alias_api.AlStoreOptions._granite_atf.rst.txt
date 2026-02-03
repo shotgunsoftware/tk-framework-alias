@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._granite_atf
+=====================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._granite_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

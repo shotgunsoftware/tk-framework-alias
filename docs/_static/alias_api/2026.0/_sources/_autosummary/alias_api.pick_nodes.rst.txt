@@ -1,0 +1,6 @@
+alias_api.pick_nodes
+====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: pick_nodes

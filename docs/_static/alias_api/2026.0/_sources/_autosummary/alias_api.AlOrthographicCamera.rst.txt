@@ -1,0 +1,9 @@
+alias_api.AlOrthographicCamera
+==============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlOrthographicCamera
+   :members:
+   :undoc-members:
+   :show-inheritance:

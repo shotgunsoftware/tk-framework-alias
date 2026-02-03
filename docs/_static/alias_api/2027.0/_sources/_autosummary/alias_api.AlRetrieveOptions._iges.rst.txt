@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._iges
+=================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._iges
+   :members:
+   :undoc-members:
+   :show-inheritance:

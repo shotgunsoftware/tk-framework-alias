@@ -1,0 +1,9 @@
+alias_api.AlConstructionEntity
+==============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlConstructionEntity
+   :members:
+   :undoc-members:
+   :show-inheritance:

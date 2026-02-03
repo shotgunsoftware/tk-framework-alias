@@ -1,0 +1,9 @@
+alias_api.LinearUnit
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: LinearUnit
+   :members:
+   :undoc-members:
+   :show-inheritance:

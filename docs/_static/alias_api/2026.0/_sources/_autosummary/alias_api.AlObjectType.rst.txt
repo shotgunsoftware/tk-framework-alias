@@ -1,0 +1,9 @@
+alias_api.AlObjectType
+======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlObjectType
+   :members:
+   :undoc-members:
+   :show-inheritance:

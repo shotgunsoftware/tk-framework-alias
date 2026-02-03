@@ -1,0 +1,9 @@
+alias_api.AlIKHandle
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlIKHandle
+   :members:
+   :undoc-members:
+   :show-inheritance:

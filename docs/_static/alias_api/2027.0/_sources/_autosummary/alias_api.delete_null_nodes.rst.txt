@@ -1,0 +1,6 @@
+alias_api.delete_null_nodes
+===========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: delete_null_nodes

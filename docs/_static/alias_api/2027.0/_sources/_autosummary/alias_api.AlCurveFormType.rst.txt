@@ -1,0 +1,9 @@
+alias_api.AlCurveFormType
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCurveFormType
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,9 @@
+alias_api.AliasOpenModelException
+=================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AliasOpenModelException
+   :members:
+   :undoc-members:
+   :show-inheritance:

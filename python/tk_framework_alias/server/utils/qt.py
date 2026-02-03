@@ -13,7 +13,6 @@
 
 from .exceptions import QtModuleNotFound, QtAppInstanceNotFound
 
-
 QtCore = None
 QtCore5 = None
 qt_app = None

@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._sat
+=============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._sat
+   :members:
+   :undoc-members:
+   :show-inheritance:

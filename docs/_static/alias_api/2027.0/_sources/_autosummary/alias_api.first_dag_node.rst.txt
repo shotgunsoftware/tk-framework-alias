@@ -1,0 +1,6 @@
+alias_api.first_dag_node
+========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: first_dag_node
