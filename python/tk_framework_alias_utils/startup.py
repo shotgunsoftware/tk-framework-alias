@@ -861,17 +861,9 @@ def ensure_plugin_ready(
             install_python_packages=install_python_packages,
         )
     else:
-        # Alias < 2024.0
-        # Client will run in the same process as Alias.
-        new_process = False
-
-        # The Python version used by the Alias Plugin will be the current Python version,
-        # though the framework will still need to ensure the necesary python packages are
-        # insatlled
-        py_major_version = sys.version_info.major
-        py_minor_version = sys.version_info.minor
-        # Do not set the server python, this is not used by Alias < 2024.0
-        server_python_exe = None
+        raise Exception(
+            f"Alias {alias_version} is not supported in this tk-framework-alias version. Update to Alias 2024.0 or later or downgrade to tk-framework-alias v2.5.0 to use Alias < 2024.0."
+        )
 
     # Ensure python packages installed for user. The pacakges must be unzipped
     # to access any C extensions (e.g. .pyd files) that are included in the
