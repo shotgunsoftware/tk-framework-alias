@@ -1,0 +1,6 @@
+alias_api.set_license_information
+=================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: set_license_information

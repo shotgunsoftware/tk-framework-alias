@@ -23,7 +23,7 @@ if hasattr(os, "add_dll_directory"):
     os.add_dll_directory(api_path)
 
 try:
-    import alias_api
+    import alias_api_om as alias_api
 except ImportError as e:
     print(f"ERROR: Could not import alias_api: {e}")
     sys.exit(1)
