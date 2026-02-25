@@ -16,7 +16,7 @@ Workflow to create a Jira issue, update Python packages in tk-framework-alias, c
 
 Create a Jira issue. Use environment variables for credentials (never hardcode):
 
-- `JIRA_PROJECT` — **Required.** Jira project key. If not set and not provided by the user in the prompt, stop immediately before doing anything and ask: "Please provide the Jira project key (e.g. SHOT) or export JIRA_PROJECT."
+- `JIRA_PROJECT` — **Required.** Jira project key. If not set and not provided by the user in the prompt, stop immediately before doing anything and ask: "Please provide the Jira project key (e.g. PROJ) or export JIRA_PROJECT."
 - `JIRA_BASE_URL` — **Required.** Jira instance URL (no trailing slash). Use `$JIRA_BASE_URL` in all API calls. If not set, stop and ask: "Please export JIRA_BASE_URL (e.g. export JIRA_BASE_URL=https://jira.example.com)."
 - `JIRA_TOKEN` — **Required.** Bearer token for API auth. Use `Authorization: Bearer $JIRA_TOKEN` (not Basic Auth). If not set, stop and ask the user to export it.
 - `JIRA_USER` — **Required.** Jira username for API auth. If not set, stop and ask the user to export it.
@@ -73,7 +73,7 @@ Task Progress:
 
 **Before doing anything else**, check that all required variables are available:
 
-1. **JIRA_PROJECT**: Check if set in the environment. If not, check if the user provided the project key in their prompt (e.g. "use SHOT", "project PROJ", "Jira project: SHOT"). If neither, **stop immediately** and ask: "Please provide the Jira project key (e.g. SHOT) or export JIRA_PROJECT." If the user provided it in the prompt, set it for the session: `export JIRA_PROJECT=<key>`.
+1. **JIRA_PROJECT**: Check if set in the environment. If not, check if the user provided the project key in their prompt (e.g. "use PROJ", "project PROJ", "Jira project: PROJ"). If neither, **stop immediately** and ask: "Please provide the Jira project key (e.g. PROJ) or export JIRA_PROJECT." If the user provided it in the prompt, set it for the session: `export JIRA_PROJECT=<key>`.
 2. **JIRA_BASE_URL**: Check if set in the environment. If not, **stop immediately** and ask: "Please export JIRA_BASE_URL (e.g. export JIRA_BASE_URL=https://jira.example.com)." Do not use hardcoded fallback URLs.
 3. **JIRA_TOKEN**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
 4. **JIRA_USER**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
@@ -159,7 +159,7 @@ if [ -n "$TRANSITION_ID" ]; then
 fi
 ```
 
-**Required:** Keep `$ISSUE_KEY` (e.g. PROJ-1234) — it is used for the branch name in Step 1 and can be referenced in the PR body. **Do not proceed until the Jira issue exists and $ISSUE_KEY is set.**
+**Required:** Keep `$ISSUE_KEY` (e.g. PROJ-1234) — it is used for the branch name in Step 1 and the PR title. **Do not proceed until the Jira issue exists and $ISSUE_KEY is set.**
 
 ### Step 1: Create branch
 
@@ -224,9 +224,8 @@ git push -u origin "$ISSUE_KEY/snyk-update-packages" --force
 1. Check if GitHub CLI is available: `gh --version` or `gh pr create --help`
 2. **If gh is installed**:
    ```bash
-   gh pr create --title "$ISSUE_KEY: Snyk update python packages" --body "Updates Python packages. Jira: $ISSUE_KEY"
+   gh pr create --title "$ISSUE_KEY: Snyk update python packages" --body "Updates Python packages"
    ```
-   (Non-interactive use requires `--body`. Do not add "Made with Cursor" or similar footers to the PR body.)
 3. **If gh is not available**: After pushing, provide the compare URL. Get remote URL with `git remote get-url origin`, then construct:
    ```
    https://github.com/<owner>/<repo>/compare/<base-branch>...$ISSUE_KEY/snyk-update-packages?expand=1
@@ -239,4 +238,4 @@ git push -u origin "$ISSUE_KEY/snyk-update-packages" --force
 - [ ] Checkout main, pull latest, create branch `$ISSUE_KEY/snyk-update-packages`
 - [ ] Run update script for each Python version (default: from dist/Python folders; override if user specified)
 - [ ] Commit and push
-- [ ] Create PR via `gh pr create` or provide compare URL (optionally reference Jira issue key in PR body)
+- [ ] Create PR via `gh pr create` or provide compare URL (Jira key in title only, not in body)
