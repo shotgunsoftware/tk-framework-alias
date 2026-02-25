@@ -55,13 +55,13 @@ If not in Program Files, try `py -3.10` / `py -3.11` (py launcher) or `C:\Users\
 
 ## Workflow
 
-**CRITICAL: Execute steps strictly in order. Do not parallelize or reorder. Each step depends on the previous one. Complete Step N fully before starting Step N+1. The pre-step must run first — if JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, or JIRA_USER is not set or provided, stop and ask before doing anything.**
+**CRITICAL: Execute steps strictly in order. Do not parallelize or reorder. Each step depends on the previous one. Complete Step N fully before starting Step N+1. The precheck must run first — if local changes are detected, stop immediately and do not create a Jira ticket. Then verify JIRA vars before Step 0.**
 
 Copy this checklist and mark items as you complete them:
 
 ```
 Task Progress:
-- [ ] Pre-step: Verify JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, and JIRA_USER are set (env or user prompt)
+- [ ] Precheck: Verify no local changes; verify JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, and JIRA_USER
 - [ ] Step 0: Create Jira issue, assign, transition to In Progress
 - [ ] Step 1: Create branch $ISSUE_KEY/snyk-update-packages
 - [ ] Step 2: Run update_python_packages.py per Python version
@@ -69,16 +69,27 @@ Task Progress:
 - [ ] Step 4: Create PR
 ```
 
-### Pre-step: Verify JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, and JIRA_USER
+### Precheck: No local changes, then verify JIRA vars
 
-**Before doing anything else**, check that all required variables are available:
+**Before doing anything else** (including creating a Jira ticket), run these checks in order:
 
-1. **JIRA_PROJECT**: Check if set in the environment. If not, check if the user provided the project key in their prompt (e.g. "use PROJ", "project PROJ", "Jira project: PROJ"). If neither, **stop immediately** and ask: "Please provide the Jira project key (e.g. PROJ) or export JIRA_PROJECT." If the user provided it in the prompt, set it for the session: `export JIRA_PROJECT=<key>`.
-2. **JIRA_BASE_URL**: Check if set in the environment. If not, **stop immediately** and ask: "Please export JIRA_BASE_URL (e.g. export JIRA_BASE_URL=https://jira.example.com)." Do not use hardcoded fallback URLs.
-3. **JIRA_TOKEN**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
-4. **JIRA_USER**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
+**1. Check for local changes.** If the working tree has uncommitted changes, **stop immediately**. Do not create a Jira issue. Tell the user: "Local changes detected. Please commit or stash your changes, then run the workflow again."
 
-Do not create issues, branches, or run any commands until all four are confirmed. Only after all are set, proceed to Step 0.
+```bash
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Error: Local changes detected. Please commit or stash your changes, then run the workflow again."
+  exit 1
+fi
+```
+
+**2. Verify JIRA variables.** Only after confirming a clean working tree, check that all required variables are available:
+
+- **JIRA_PROJECT**: Check if set in the environment. If not, check if the user provided the project key in their prompt (e.g. "use PROJ", "project PROJ", "Jira project: PROJ"). If neither, **stop immediately** and ask: "Please provide the Jira project key (e.g. PROJ) or export JIRA_PROJECT." If the user provided it in the prompt, set it for the session: `export JIRA_PROJECT=<key>`.
+- **JIRA_BASE_URL**: Check if set in the environment. If not, **stop immediately** and ask: "Please export JIRA_BASE_URL (e.g. export JIRA_BASE_URL=https://jira.example.com)." Do not use hardcoded fallback URLs.
+- **JIRA_TOKEN**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
+- **JIRA_USER**: Check if set in the environment. If not, **stop immediately** and ask the user to export it.
+
+Do not create issues, branches, or run any commands until the working tree is clean and all four JIRA variables are confirmed. Only after all are set, proceed to Step 0.
 
 ### Step 0: Create Jira issue
 
@@ -163,7 +174,7 @@ fi
 
 ### Step 1: Create branch
 
-First ensure you are on main with the latest changes. Create a branch prefixed with the Jira ticket key from Step 0 (e.g. `PROJ-1234/snyk-update-packages`):
+Ensure you are on main with the latest changes. Create a branch prefixed with the Jira ticket key from Step 0 (e.g. `PROJ-1234/snyk-update-packages`):
 
 ```bash
 git checkout main
@@ -234,7 +245,8 @@ git push -u origin "$ISSUE_KEY/snyk-update-packages" --force
 
 ## Checklist
 
-- [ ] Verify JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, and JIRA_USER; create Jira issue (title, component tk-framework-alias, assign if JIRA_ASSIGNEE set, status In Progress)
+- [ ] Precheck: no local changes; verify JIRA_PROJECT, JIRA_BASE_URL, JIRA_TOKEN, and JIRA_USER
+- [ ] Create Jira issue (title, component tk-framework-alias, assign if JIRA_ASSIGNEE set, status In Progress)
 - [ ] Checkout main, pull latest, create branch `$ISSUE_KEY/snyk-update-packages`
 - [ ] Run update script for each Python version (default: from dist/Python folders; override if user specified)
 - [ ] Commit and push
