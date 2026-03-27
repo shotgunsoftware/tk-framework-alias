@@ -336,12 +336,19 @@ def get_alias_dist_dir(alias_version, python_major_version, python_minor_version
             python_folder_name,
         )
     )
+    if not os.path.exists(base_folder_path):
+        return
+
     dist_folder_path = os.path.join(base_folder_path, alias_version)
     if os.path.exists(dist_folder_path):
         return dist_folder_path
 
-    # Alias distribution not found for exact version, fallback to the next supported version.
+    # Alias distribution not found for exact version, get the list of supported versions.
     alias_dist_versions = sorted(os.listdir(base_folder_path))
+    if not alias_dist_versions:
+        return  # No supported versions found
+
+    # Fallback to the next supported version.
     last_version = alias_dist_versions[0]
     if version_cmp(alias_version, last_version) < 0:
         return None  # requested version does not meet minimum supported vesrion
@@ -517,6 +524,7 @@ def get_framework_supported_python_versions():
         (3, 9),
         (3, 10),
         (3, 11),
+        (3, 13),
     ]
 
 
