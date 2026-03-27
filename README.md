@@ -1,7 +1,11 @@
-[![VFX Platform](https://img.shields.io/badge/vfxplatform-2023%20%7C%202022%20%7C%202021-blue.svg)](http://www.vfxplatform.com/)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.9%20%7C%203.7-blue.svg)](https://www.python.org/)
+[![Supported VFX Platform: CY2022 - CY2026](https://img.shields.io/badge/VFX_Reference_Platform-CY2022_|_CY2023_|_CY2024_|_CY2025_|_CY2026-blue)](http://www.vfxplatform.com/ "Supported VFX Reference Platform versions")
+[![Supported Python versions: 3.9, 3.10, 3.11, 3.13](https://img.shields.io/badge/Python-3.9_|_3.10_|_3.11_|_3.13-blue?logo=python&logoColor=f5f5f5)](https://www.python.org/ "Supported Python versions")
+[![Reference Documentation](http://img.shields.io/badge/doc-reference-blue.svg)](http://developer.shotgridsoftware.com/tk-framework-alias)
+
+[![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status/shotgunsoftware.tk-framework-alias?branchName=main)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=38&branchName=main)
+[![codecov](https://codecov.io/gh/shotgunsoftware/tk-framework-alias/branch/main/graph/badge.svg)](https://codecov.io/gh/shotgunsoftware/tk-framework-alias)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status%2Ftk-framework-alias?repoName=shotgunsoftware%2Ftk-framework-alias&branchName=main)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=120&repoName=shotgunsoftware%2Ftk-framework-alias&branchName=main)
+
 
 # tk-framework-alias
 
