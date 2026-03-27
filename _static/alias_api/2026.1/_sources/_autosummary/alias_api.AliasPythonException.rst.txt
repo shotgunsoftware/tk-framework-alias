@@ -1,0 +1,9 @@
+alias_api.AliasPythonException
+==============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AliasPythonException
+   :members:
+   :undoc-members:
+   :show-inheritance:

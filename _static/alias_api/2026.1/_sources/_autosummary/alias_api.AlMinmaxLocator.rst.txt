@@ -1,0 +1,9 @@
+alias_api.AlMinmaxLocator
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlMinmaxLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:

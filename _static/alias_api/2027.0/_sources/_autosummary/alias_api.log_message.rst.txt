@@ -1,0 +1,6 @@
+alias_api.log_message
+=====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: log_message

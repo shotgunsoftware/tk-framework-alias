@@ -1,0 +1,9 @@
+alias_api.UngroupOption
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: UngroupOption
+   :members:
+   :undoc-members:
+   :show-inheritance:

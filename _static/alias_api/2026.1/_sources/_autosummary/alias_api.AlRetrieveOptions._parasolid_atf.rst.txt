@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._parasolid_atf
+==========================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._parasolid_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

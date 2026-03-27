@@ -1,0 +1,6 @@
+alias_api.pop_pick_list
+=======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: pop_pick_list

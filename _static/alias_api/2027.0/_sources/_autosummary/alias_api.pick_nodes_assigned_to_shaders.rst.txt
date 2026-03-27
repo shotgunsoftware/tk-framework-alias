@@ -1,0 +1,6 @@
+alias_api.pick_nodes_assigned_to_shaders
+========================================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: pick_nodes_assigned_to_shaders

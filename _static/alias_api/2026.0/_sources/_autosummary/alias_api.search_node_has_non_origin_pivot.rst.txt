@@ -1,5 +1,5 @@
-﻿alias\_api.search\_node\_has\_non\_origin\_pivot
-================================================
+alias_api.search_node_has_non_origin_pivot
+==========================================
 
 .. currentmodule:: alias_api
 

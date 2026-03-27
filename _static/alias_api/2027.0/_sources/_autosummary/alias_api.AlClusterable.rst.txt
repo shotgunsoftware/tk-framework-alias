@@ -1,0 +1,9 @@
+alias_api.AlClusterable
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlClusterable
+   :members:
+   :undoc-members:
+   :show-inheritance:

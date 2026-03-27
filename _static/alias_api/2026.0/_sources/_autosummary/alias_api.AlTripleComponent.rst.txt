@@ -1,0 +1,9 @@
+alias_api.AlTripleComponent
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlTripleComponent
+   :members:
+   :undoc-members:
+   :show-inheritance:

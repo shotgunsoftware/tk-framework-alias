@@ -1,0 +1,9 @@
+alias_api.AlCurveNodeJoinErrors
+===============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCurveNodeJoinErrors
+   :members:
+   :undoc-members:
+   :show-inheritance:

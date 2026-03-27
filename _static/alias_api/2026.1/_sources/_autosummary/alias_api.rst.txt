@@ -1,388 +1,1903 @@
-﻿alias\_api
-==========
+alias_api
+=========
+
+.. currentmodule:: alias_api
 
 .. automodule:: alias_api
 
-   
-   
-   
 
-   
-   
-   .. rubric:: Functions
+Classes
+-------
 
-   .. autosummary::
-   
-      add_message_handler
-      adjust_window
-      al_are_equal
-      al_is_valid
-      apply_iterator_to_dag_nodes
-      apply_iterator_to_shaders
-      assign_children_to_parent_layer
-      assign_nodes_to_layer
-      cleanup_geometry_model
-      clear_pick_list
-      clear_queued_events
-      convert_face_node_to_trimmed_surface_node
-      convert_to_trimmed_surface_node
-      copy_object
-      copy_object_cleanup
-      create_alternative
-      create_construction_plane
-      create_group_for_layer
-      create_layer
-      create_layer_folder
-      create_layered_shader
-      create_orthographic_camera
-      create_perspective_camera
-      create_reference
-      create_reference_alternative
-      create_shader
-      create_stage
-      create_switch_shader
-      create_texture_node
-      current_window
-      delete_all
-      delete_all_construction_entities
-      delete_all_construction_history
-      delete_all_locators
-      delete_construction_history
-      delete_dag_nodes_by_name
-      delete_history
-      delete_layers_by_name
-      delete_null_nodes
-      delete_sets_by_name
-      do_updates
-      expand_instances
-      export_by_layer
-      export_by_layer_sequentially
-      find_dag_node_by_name
-      find_top_level_dag_node_by_name
-      first_construction_entity
-      first_dag_node
-      first_environment
-      first_layer
-      first_layered_shader
-      first_locator
-      first_pick_item
-      first_set
-      first_shader
-      first_switch_shader
-      flatten_group_nodes
-      get_alternative_by_name
-      get_alternatives
-      get_annotation_locator_strings
-      get_annotation_locators
-      get_bounding_box_from_hanger
-      get_children
-      get_construction_plane_by_name
-      get_current_path
-      get_current_pick_item
-      get_current_stage
-      get_dag_nodes_by_name
-      get_empty_layers
-      get_empty_sets
-      get_layer_by_name
-      get_layer_by_number
-      get_layered_shader_by_name
-      get_layered_shader_by_node
-      get_layered_shaders
-      get_layers
-      get_layers_by_name
-      get_layers_using_multiple_shaders
-      get_locator_by_name
-      get_locators
-      get_locators_by_name
-      get_main_window_id
-      get_nesting_groups
-      get_perspective_camera_by_name
-      get_perspective_cameras
-      get_pick_item_dag_nodes
-      get_pick_items
-      get_product_information
-      get_reference_by_name
-      get_reference_by_path
-      get_reference_by_uuid
-      get_references
-      get_references_by_name
-      get_sets_by_name
-      get_shader_by_name
-      get_shaders
-      get_shaders_by_name
-      get_shaders_by_node
-      get_stages
-      get_switch_shader_by_name
-      get_switch_shader_by_node
-      get_switch_shaders
-      get_top_dag_nodes
-      get_variants
-      has_annotation_locator
-      has_construction_history
-      has_history
-      has_queued_events
-      has_reference
-      has_variants
-      import_file
-      import_reference
-      import_subdiv
-      import_subdivision
-      initialize_universe
-      is_construction_layer
-      is_copy_of_vred_shader
-      is_empty_file
-      is_queuing_events
-      is_stage_empty
-      linear_scale
-      linear_units
-      log_message
-      log_to_errlog
-      log_to_prompt
-      log_to_prompt_no_history
-      log_to_stderr
-      log_to_stdout
-      next_construction_entity
-      next_layer
-      next_locator
-      next_pick_item
-      next_shader
-      next_switch_shader
-      node_first_shader
-      node_switch_shader
-      open_file
-      pick
-      pick_all_layers
-      pick_all_locators
-      pick_by_name
-      pick_layers
-      pick_locators
-      pick_nodes
-      pick_nodes_assigned_to_layers
-      pick_nodes_assigned_to_shaders
-      pop_pick_list
-      prev_pick_item
-      push_pick_list
-      queue_events
-      redraw_screen
-      remove_message_handler
-      remove_message_handlers
-      remove_reference
-      remove_references
-      reset
-      reset_pivots
-      reset_stages
-      retrieve
-      retrieve_options
-      save_file
-      save_file_as
-      save_layers
-      search_dag
-      search_node_has_history
-      search_node_has_non_origin_pivot
-      search_node_has_non_zero_transform
-      search_node_is_instance
-      search_node_is_template
-      search_node_layer_does_not_match_parent_layer
-      search_node_unused_curves_on_surface
-      search_node_unused_curves_on_surface_with_history
-      set_layer_symmetry
-      set_parent_window
-      set_retrieve_options
-      set_store_options
-      store
-      store_active
-      store_current_window
-      store_options
-      tessellate_adaptive
-      tessellate_chord_height_deviation
-      tessellate_chord_height_deviation_accurate
-      tessellate_chord_height_deviation_fast
-      tessellate_number
-      tessellate_render_settings
-      tessellate_uniform
-      traverse_dag
-      ungroup
-      unpick
-      unpick_all_layers
-      unpick_all_locators
-      update_reference
-      zero_transform
-      zero_transform_top_level
-   
-   
+.. autosummary::
+   :toctree:
 
-   
-   
-   .. rubric:: Classes
+   alias_api.AlAction
+   alias_api.AlActionExtrapType
+   alias_api.AlAngleLocator
+   alias_api.AlAnimatable
+   alias_api.AlAnnotationLocator
+   alias_api.AlArcAttributes
+   alias_api.AlAttributes
+   alias_api.AlCamera
+   alias_api.AlCameraNode
+   alias_api.AlChannel
+   alias_api.AlChannelDataType
+   alias_api.AlCloud
+   alias_api.AlCluster
+   alias_api.AlClusterMember
+   alias_api.AlClusterNode
+   alias_api.AlClusterable
+   alias_api.AlConicAttributes
+   alias_api.AlConicType
+   alias_api.AlConstructionEntity
+   alias_api.AlConstructionPlane
+   alias_api.AlCoordinateSystem
+   alias_api.AlCopyOptions
+   alias_api.AlCurve
+   alias_api.AlCurveAttributes
+   alias_api.AlCurveCV
+   alias_api.AlCurveFormType
+   alias_api.AlCurveNode
+   alias_api.AlCurveNodeJoinErrors
+   alias_api.AlCurveOnSurface
+   alias_api.AlCurveOnSurfacePoint
+   alias_api.AlCurvePoint
+   alias_api.AlDagNode
+   alias_api.AlDeviationLocator
+   alias_api.AlDisplayModeType
+   alias_api.AlDistanceLocator
+   alias_api.AlEnvironment
+   alias_api.AlFace
+   alias_api.AlFaceNode
+   alias_api.AlFileType
+   alias_api.AlGroupNode
+   alias_api.AlHashable
+   alias_api.AlIKHandle
+   alias_api.AlIKHandleNode
+   alias_api.AlIterator
+   alias_api.AlKeyframe
+   alias_api.AlLayer
+   alias_api.AlLayeredShader
+   alias_api.AlLight
+   alias_api.AlLightNode
+   alias_api.AlLineAttributes
+   alias_api.AlLinkItem
+   alias_api.AlList
+   alias_api.AlLocator
+   alias_api.AlMesh
+   alias_api.AlMeshNode
+   alias_api.AlMessageType
+   alias_api.AlMinmaxLocator
+   alias_api.AlObject
+   alias_api.AlObjectType
+   alias_api.AlOrthographicCamera
+   alias_api.AlParamAction
+   alias_api.AlPerspectiveCamera
+   alias_api.AlPickable
+   alias_api.AlPlaneAttributes
+   alias_api.AlPoint
+   alias_api.AlPointType
+   alias_api.AlRadialLocator
+   alias_api.AlReferenceFile
+   alias_api.AlReferenceFileSet
+   alias_api.AlReferenceLayer
+   alias_api.AlRetrieveOptions
+   alias_api.AlRetrieveOptions._ai
+   alias_api.AlRetrieveOptions._autocad
+   alias_api.AlRetrieveOptions._c4
+   alias_api.AlRetrieveOptions._catiav4_atf
+   alias_api.AlRetrieveOptions._catiav5_atf
+   alias_api.AlRetrieveOptions._edf
+   alias_api.AlRetrieveOptions._fbx
+   alias_api.AlRetrieveOptions._granite_atf
+   alias_api.AlRetrieveOptions._iges
+   alias_api.AlRetrieveOptions._iges_atf
+   alias_api.AlRetrieveOptions._inventor_atf
+   alias_api.AlRetrieveOptions._jamais
+   alias_api.AlRetrieveOptions._jt_atf
+   alias_api.AlRetrieveOptions._level_map
+   alias_api.AlRetrieveOptions._nx_atf
+   alias_api.AlRetrieveOptions._parasolid_atf
+   alias_api.AlRetrieveOptions._sat
+   alias_api.AlRetrieveOptions._solidworks_atf
+   alias_api.AlRetrieveOptions._step_atf
+   alias_api.AlRetrieveOptions._stl_atf
+   alias_api.AlRetrieveOptions._trimming_map
+   alias_api.AlRetrieveOptions._vdafs
+   alias_api.AlRetrieveOptions._vdais
+   alias_api.AlRetrieveOptions._wire
+   alias_api.AlRevSurfAttributes
+   alias_api.AlSet
+   alias_api.AlSetMember
+   alias_api.AlSettable
+   alias_api.AlShader
+   alias_api.AlShadingFields
+   alias_api.AlShell
+   alias_api.AlShellNode
+   alias_api.AlSpacePoint
+   alias_api.AlStatusCode
+   alias_api.AlStoreOptions
+   alias_api.AlStoreOptions._ai
+   alias_api.AlStoreOptions._autocad
+   alias_api.AlStoreOptions._c4
+   alias_api.AlStoreOptions._catiav5_atf
+   alias_api.AlStoreOptions._catv5
+   alias_api.AlStoreOptions._edf
+   alias_api.AlStoreOptions._fbx
+   alias_api.AlStoreOptions._granite_atf
+   alias_api.AlStoreOptions._iges
+   alias_api.AlStoreOptions._iges_atf
+   alias_api.AlStoreOptions._jamais
+   alias_api.AlStoreOptions._jt_atf
+   alias_api.AlStoreOptions._level_map
+   alias_api.AlStoreOptions._nx_atf
+   alias_api.AlStoreOptions._parasolid_atf
+   alias_api.AlStoreOptions._sat
+   alias_api.AlStoreOptions._trimming_map
+   alias_api.AlStoreOptions._usd_atf
+   alias_api.AlStoreOptions._vdafs
+   alias_api.AlStoreOptions._vdais
+   alias_api.AlStoreOptions._wire
+   alias_api.AlSurface
+   alias_api.AlSurfaceNode
+   alias_api.AlSurfacePoint
+   alias_api.AlSwitchShader
+   alias_api.AlTM
+   alias_api.AlTangentType
+   alias_api.AlTessellateTypes
+   alias_api.AlTexture
+   alias_api.AlTextureNode
+   alias_api.AlTripleComponent
+   alias_api.AlWindow
+   alias_api.AliasCompatibilityException
+   alias_api.AliasOpenModelException
+   alias_api.AliasPythonException
+   alias_api.LinearUnit
+   alias_api.Menu
+   alias_api.MenuItem
+   alias_api.MessageResult
+   alias_api.ReferenceFileStatus
+   alias_api.Stage
+   alias_api.SymmetryState
+   alias_api.TraverseDagInputData
+   alias_api.TraverseDagOutputData
+   alias_api.Type
+   alias_api.UngroupOption
+   alias_api.Variant
+   alias_api.Vec3
+   alias_api.VectorAlTangentType
 
-   .. autosummary::
-   
-      AlAction
-      AlActionExtrapType
-      AlAngleLocator
-      AlAnimatable
-      AlAnnotationLocator
-      AlArcAttributes
-      AlAttributes
-      AlCamera
-      AlCameraNode
-      AlChannel
-      AlChannelDataType
-      AlCloud
-      AlCluster
-      AlClusterMember
-      AlClusterNode
-      AlClusterable
-      AlConicAttributes
-      AlConicType
-      AlConstructionEntity
-      AlConstructionPlane
-      AlCoordinateSystem
-      AlCopyOptions
-      AlCurve
-      AlCurveAttributes
-      AlCurveCV
-      AlCurveFormType
-      AlCurveNode
-      AlCurveNodeJoinErrors
-      AlCurveOnSurface
-      AlCurveOnSurfacePoint
-      AlCurvePoint
-      AlDagNode
-      AlDeviationLocator
-      AlDisplayModeType
-      AlDistanceLocator
-      AlEnvironment
-      AlFace
-      AlFaceNode
-      AlFileType
-      AlGroupNode
-      AlHashable
-      AlIKHandle
-      AlIKHandleNode
-      AlIterator
-      AlKeyframe
-      AlLayer
-      AlLayeredShader
-      AlLight
-      AlLightNode
-      AlLineAttributes
-      AlLinkItem
-      AlList
-      AlLocator
-      AlMesh
-      AlMeshNode
-      AlMessageType
-      AlMinmaxLocator
-      AlObject
-      AlObjectType
-      AlOrthographicCamera
-      AlParamAction
-      AlPerspectiveCamera
-      AlPickable
-      AlPlaneAttributes
-      AlPoint
-      AlPointType
-      AlRadialLocator
-      AlReferenceFile
-      AlReferenceFileSet
-      AlReferenceLayer
-      AlRetrieveOptions
-      AlRetrieveOptions._ai
-      AlRetrieveOptions._autocad
-      AlRetrieveOptions._c4
-      AlRetrieveOptions._catiav4_atf
-      AlRetrieveOptions._catiav5_atf
-      AlRetrieveOptions._edf
-      AlRetrieveOptions._fbx
-      AlRetrieveOptions._granite_atf
-      AlRetrieveOptions._iges
-      AlRetrieveOptions._iges_atf
-      AlRetrieveOptions._inventor_atf
-      AlRetrieveOptions._jamais
-      AlRetrieveOptions._jt_atf
-      AlRetrieveOptions._level_map
-      AlRetrieveOptions._nx_atf
-      AlRetrieveOptions._parasolid_atf
-      AlRetrieveOptions._sat
-      AlRetrieveOptions._solidworks_atf
-      AlRetrieveOptions._step_atf
-      AlRetrieveOptions._stl_atf
-      AlRetrieveOptions._trimming_map
-      AlRetrieveOptions._vdafs
-      AlRetrieveOptions._vdais
-      AlRetrieveOptions._wire
-      AlRevSurfAttributes
-      AlSet
-      AlSetMember
-      AlSettable
-      AlShader
-      AlShadingFields
-      AlShell
-      AlShellNode
-      AlSpacePoint
-      AlStatusCode
-      AlStoreOptions
-      AlStoreOptions._ai
-      AlStoreOptions._autocad
-      AlStoreOptions._c4
-      AlStoreOptions._catiav5_atf
-      AlStoreOptions._catv5
-      AlStoreOptions._edf
-      AlStoreOptions._fbx
-      AlStoreOptions._granite_atf
-      AlStoreOptions._iges
-      AlStoreOptions._iges_atf
-      AlStoreOptions._jamais
-      AlStoreOptions._jt_atf
-      AlStoreOptions._level_map
-      AlStoreOptions._nx_atf
-      AlStoreOptions._parasolid_atf
-      AlStoreOptions._sat
-      AlStoreOptions._trimming_map
-      AlStoreOptions._usd_atf
-      AlStoreOptions._vdafs
-      AlStoreOptions._vdais
-      AlStoreOptions._wire
-      AlSurface
-      AlSurfaceNode
-      AlSurfacePoint
-      AlSwitchShader
-      AlTM
-      AlTangentType
-      AlTessellateTypes
-      AlTexture
-      AlTextureNode
-      AlTripleComponent
-      AlWindow
-      LinearUnit
-      Menu
-      MenuItem
-      MessageResult
-      ReferenceFileStatus
-      Stage
-      SymmetryState
-      TraverseDagInputData
-      TraverseDagOutputData
-      Type
-      UngroupOption
-      Variant
-      Vec3
-      VectorAlTangentType
-   
-   
+Functions
+---------
 
-   
-   
-   .. rubric:: Exceptions
+.. autosummary::
+   :toctree:
 
-   .. autosummary::
-   
-      AliasCompatibilityException
-      AliasOpenModelException
-      AliasPythonException
-   
-   
+   alias_api.add_async_task
+   alias_api.add_message_handler
+   alias_api.adjust_window
+   alias_api.al_are_equal
+   alias_api.al_is_valid
+   alias_api.apply_iterator_to_dag_nodes
+   alias_api.apply_iterator_to_shaders
+   alias_api.assign_children_to_parent_layer
+   alias_api.assign_nodes_to_layer
+   alias_api.cleanup_geometry_model
+   alias_api.clear_pick_list
+   alias_api.clear_queued_events
+   alias_api.convert_face_node_to_trimmed_surface_node
+   alias_api.convert_to_trimmed_surface_node
+   alias_api.copy_object
+   alias_api.copy_object_cleanup
+   alias_api.create_alternative
+   alias_api.create_construction_plane
+   alias_api.create_group_for_layer
+   alias_api.create_layer
+   alias_api.create_layer_folder
+   alias_api.create_layered_shader
+   alias_api.create_orthographic_camera
+   alias_api.create_perspective_camera
+   alias_api.create_reference
+   alias_api.create_reference_alternative
+   alias_api.create_shader
+   alias_api.create_stage
+   alias_api.create_switch_shader
+   alias_api.create_texture_node
+   alias_api.current_window
+   alias_api.delete_all
+   alias_api.delete_all_construction_entities
+   alias_api.delete_all_construction_history
+   alias_api.delete_all_locators
+   alias_api.delete_construction_history
+   alias_api.delete_dag_nodes_by_name
+   alias_api.delete_history
+   alias_api.delete_layers_by_name
+   alias_api.delete_null_nodes
+   alias_api.delete_sets_by_name
+   alias_api.do_updates
+   alias_api.expand_instances
+   alias_api.export_by_layer
+   alias_api.export_by_layer_sequentially
+   alias_api.find_dag_node_by_name
+   alias_api.find_top_level_dag_node_by_name
+   alias_api.first_construction_entity
+   alias_api.first_dag_node
+   alias_api.first_environment
+   alias_api.first_layer
+   alias_api.first_layered_shader
+   alias_api.first_locator
+   alias_api.first_pick_item
+   alias_api.first_set
+   alias_api.first_shader
+   alias_api.first_switch_shader
+   alias_api.flatten_group_nodes
+   alias_api.get_alternative_by_name
+   alias_api.get_alternatives
+   alias_api.get_annotation_locator_strings
+   alias_api.get_annotation_locators
+   alias_api.get_bounding_box_from_hanger
+   alias_api.get_children
+   alias_api.get_construction_plane_by_name
+   alias_api.get_current_path
+   alias_api.get_current_pick_item
+   alias_api.get_current_stage
+   alias_api.get_dag_nodes_by_name
+   alias_api.get_empty_layers
+   alias_api.get_empty_sets
+   alias_api.get_layer_by_name
+   alias_api.get_layer_by_number
+   alias_api.get_layered_shader_by_name
+   alias_api.get_layered_shader_by_node
+   alias_api.get_layered_shaders
+   alias_api.get_layers
+   alias_api.get_layers_by_name
+   alias_api.get_layers_using_multiple_shaders
+   alias_api.get_locator_by_name
+   alias_api.get_locators
+   alias_api.get_locators_by_name
+   alias_api.get_main_window_id
+   alias_api.get_nesting_groups
+   alias_api.get_perspective_camera_by_name
+   alias_api.get_perspective_cameras
+   alias_api.get_pick_item_dag_nodes
+   alias_api.get_pick_items
+   alias_api.get_product_information
+   alias_api.get_reference_by_name
+   alias_api.get_reference_by_path
+   alias_api.get_reference_by_uuid
+   alias_api.get_references
+   alias_api.get_references_by_name
+   alias_api.get_sets_by_name
+   alias_api.get_shader_by_name
+   alias_api.get_shaders
+   alias_api.get_shaders_by_name
+   alias_api.get_shaders_by_node
+   alias_api.get_stages
+   alias_api.get_switch_shader_by_name
+   alias_api.get_switch_shader_by_node
+   alias_api.get_switch_shaders
+   alias_api.get_top_dag_nodes
+   alias_api.get_variants
+   alias_api.has_annotation_locator
+   alias_api.has_construction_history
+   alias_api.has_history
+   alias_api.has_queued_events
+   alias_api.has_reference
+   alias_api.has_variants
+   alias_api.import_file
+   alias_api.import_reference
+   alias_api.import_subdiv
+   alias_api.import_subdivision
+   alias_api.initialize_universe
+   alias_api.is_construction_layer
+   alias_api.is_copy_of_vred_shader
+   alias_api.is_empty_file
+   alias_api.is_queuing_events
+   alias_api.is_stage_empty
+   alias_api.linear_scale
+   alias_api.linear_units
+   alias_api.log_message
+   alias_api.log_to_errlog
+   alias_api.log_to_prompt
+   alias_api.log_to_prompt_no_history
+   alias_api.log_to_stderr
+   alias_api.log_to_stdout
+   alias_api.next_construction_entity
+   alias_api.next_layer
+   alias_api.next_locator
+   alias_api.next_pick_item
+   alias_api.next_shader
+   alias_api.next_switch_shader
+   alias_api.node_first_shader
+   alias_api.node_switch_shader
+   alias_api.open_file
+   alias_api.pick
+   alias_api.pick_all_layers
+   alias_api.pick_all_locators
+   alias_api.pick_by_name
+   alias_api.pick_layers
+   alias_api.pick_locators
+   alias_api.pick_nodes
+   alias_api.pick_nodes_assigned_to_layers
+   alias_api.pick_nodes_assigned_to_shaders
+   alias_api.pop_pick_list
+   alias_api.prev_pick_item
+   alias_api.push_pick_list
+   alias_api.queue_events
+   alias_api.redraw_screen
+   alias_api.remove_message_handler
+   alias_api.remove_message_handlers
+   alias_api.remove_reference
+   alias_api.remove_references
+   alias_api.reset
+   alias_api.reset_pivots
+   alias_api.reset_stages
+   alias_api.retrieve
+   alias_api.retrieve_options
+   alias_api.save_file
+   alias_api.save_file_as
+   alias_api.save_layers
+   alias_api.search_dag
+   alias_api.search_node_has_history
+   alias_api.search_node_has_non_origin_pivot
+   alias_api.search_node_has_non_zero_transform
+   alias_api.search_node_is_instance
+   alias_api.search_node_is_template
+   alias_api.search_node_layer_does_not_match_parent_layer
+   alias_api.search_node_unused_curves_on_surface
+   alias_api.search_node_unused_curves_on_surface_with_history
+   alias_api.set_layer_symmetry
+   alias_api.set_parent_window
+   alias_api.set_retrieve_options
+   alias_api.set_store_options
+   alias_api.store
+   alias_api.store_active
+   alias_api.store_current_window
+   alias_api.store_options
+   alias_api.tessellate_adaptive
+   alias_api.tessellate_chord_height_deviation
+   alias_api.tessellate_chord_height_deviation_accurate
+   alias_api.tessellate_chord_height_deviation_fast
+   alias_api.tessellate_number
+   alias_api.tessellate_render_settings
+   alias_api.tessellate_uniform
+   alias_api.traverse_dag
+   alias_api.ungroup
+   alias_api.unpick
+   alias_api.unpick_all_layers
+   alias_api.unpick_all_locators
+   alias_api.update_reference
+   alias_api.zero_transform
+   alias_api.zero_transform_top_level
 
 
+Module Contents
+---------------
+
+
+Classes
+~~~~~~~
+
+
+.. autoclass:: alias_api.AlAction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlActionExtrapType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlAngleLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlAnimatable
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlAnnotationLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlArcAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCamera
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCameraNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlChannel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlChannelDataType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCloud
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCluster
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlClusterMember
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlClusterNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlClusterable
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlConicAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlConicType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlConstructionEntity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlConstructionPlane
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCoordinateSystem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCopyOptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveCV
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveFormType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveNodeJoinErrors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveOnSurface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurveOnSurfacePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlCurvePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlDagNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlDeviationLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlDisplayModeType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlDistanceLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlEnvironment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlFace
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlFaceNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlFileType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlGroupNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlHashable
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlIKHandle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlIKHandleNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlIterator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlKeyframe
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLayer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLayeredShader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLight
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLightNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLineAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLinkItem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlList
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlMesh
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlMeshNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlMessageType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlMinmaxLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlObject
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlObjectType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlOrthographicCamera
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlParamAction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlPerspectiveCamera
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlPickable
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlPlaneAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlPoint
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlPointType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRadialLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlReferenceFile
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlReferenceFileSet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlReferenceLayer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._ai
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._autocad
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._c4
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._catiav4_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._catiav5_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._edf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._fbx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._granite_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._iges
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._iges_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._inventor_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._jamais
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._jt_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._level_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._nx_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._parasolid_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._sat
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._solidworks_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._step_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._stl_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._trimming_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._vdafs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._vdais
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRetrieveOptions._wire
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlRevSurfAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSetMember
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSettable
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlShader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlShadingFields
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlShell
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlShellNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSpacePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStatusCode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._ai
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._autocad
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._c4
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._catiav5_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._catv5
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._edf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._fbx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._granite_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._iges
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._iges_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._jamais
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._jt_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._level_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._nx_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._parasolid_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._sat
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._trimming_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._usd_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._vdafs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._vdais
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlStoreOptions._wire
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSurface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSurfaceNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSurfacePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlSwitchShader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTM
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTangentType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTessellateTypes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTexture
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTextureNode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlTripleComponent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AlWindow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AliasCompatibilityException
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AliasOpenModelException
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.AliasPythonException
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.LinearUnit
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.Menu
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.MenuItem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.MessageResult
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.ReferenceFileStatus
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.Stage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.SymmetryState
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.TraverseDagInputData
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.TraverseDagOutputData
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.Type
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.UngroupOption
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.Variant
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.Vec3
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: alias_api.VectorAlTangentType
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Functions
+~~~~~~~~~
+
+
+.. autofunction:: alias_api.add_async_task
+
+
+.. autofunction:: alias_api.add_message_handler
+
+
+.. autofunction:: alias_api.adjust_window
+
+
+.. autofunction:: alias_api.al_are_equal
+
+
+.. autofunction:: alias_api.al_is_valid
+
+
+.. autofunction:: alias_api.apply_iterator_to_dag_nodes
+
+
+.. autofunction:: alias_api.apply_iterator_to_shaders
+
+
+.. autofunction:: alias_api.assign_children_to_parent_layer
+
+
+.. autofunction:: alias_api.assign_nodes_to_layer
+
+
+.. autofunction:: alias_api.cleanup_geometry_model
+
+
+.. autofunction:: alias_api.clear_pick_list
+
+
+.. autofunction:: alias_api.clear_queued_events
+
+
+.. autofunction:: alias_api.convert_face_node_to_trimmed_surface_node
+
+
+.. autofunction:: alias_api.convert_to_trimmed_surface_node
+
+
+.. autofunction:: alias_api.copy_object
+
+
+.. autofunction:: alias_api.copy_object_cleanup
+
+
+.. autofunction:: alias_api.create_alternative
+
+
+.. autofunction:: alias_api.create_construction_plane
+
+
+.. autofunction:: alias_api.create_group_for_layer
+
+
+.. autofunction:: alias_api.create_layer
+
+
+.. autofunction:: alias_api.create_layer_folder
+
+
+.. autofunction:: alias_api.create_layered_shader
+
+
+.. autofunction:: alias_api.create_orthographic_camera
+
+
+.. autofunction:: alias_api.create_perspective_camera
+
+
+.. autofunction:: alias_api.create_reference
+
+
+.. autofunction:: alias_api.create_reference_alternative
+
+
+.. autofunction:: alias_api.create_shader
+
+
+.. autofunction:: alias_api.create_stage
+
+
+.. autofunction:: alias_api.create_switch_shader
+
+
+.. autofunction:: alias_api.create_texture_node
+
+
+.. autofunction:: alias_api.current_window
+
+
+.. autofunction:: alias_api.delete_all
+
+
+.. autofunction:: alias_api.delete_all_construction_entities
+
+
+.. autofunction:: alias_api.delete_all_construction_history
+
+
+.. autofunction:: alias_api.delete_all_locators
+
+
+.. autofunction:: alias_api.delete_construction_history
+
+
+.. autofunction:: alias_api.delete_dag_nodes_by_name
+
+
+.. autofunction:: alias_api.delete_history
+
+
+.. autofunction:: alias_api.delete_layers_by_name
+
+
+.. autofunction:: alias_api.delete_null_nodes
+
+
+.. autofunction:: alias_api.delete_sets_by_name
+
+
+.. autofunction:: alias_api.do_updates
+
+
+.. autofunction:: alias_api.expand_instances
+
+
+.. autofunction:: alias_api.export_by_layer
+
+
+.. autofunction:: alias_api.export_by_layer_sequentially
+
+
+.. autofunction:: alias_api.find_dag_node_by_name
+
+
+.. autofunction:: alias_api.find_top_level_dag_node_by_name
+
+
+.. autofunction:: alias_api.first_construction_entity
+
+
+.. autofunction:: alias_api.first_dag_node
+
+
+.. autofunction:: alias_api.first_environment
+
+
+.. autofunction:: alias_api.first_layer
+
+
+.. autofunction:: alias_api.first_layered_shader
+
+
+.. autofunction:: alias_api.first_locator
+
+
+.. autofunction:: alias_api.first_pick_item
+
+
+.. autofunction:: alias_api.first_set
+
+
+.. autofunction:: alias_api.first_shader
+
+
+.. autofunction:: alias_api.first_switch_shader
+
+
+.. autofunction:: alias_api.flatten_group_nodes
+
+
+.. autofunction:: alias_api.get_alternative_by_name
+
+
+.. autofunction:: alias_api.get_alternatives
+
+
+.. autofunction:: alias_api.get_annotation_locator_strings
+
+
+.. autofunction:: alias_api.get_annotation_locators
+
+
+.. autofunction:: alias_api.get_bounding_box_from_hanger
+
+
+.. autofunction:: alias_api.get_children
+
+
+.. autofunction:: alias_api.get_construction_plane_by_name
+
+
+.. autofunction:: alias_api.get_current_path
+
+
+.. autofunction:: alias_api.get_current_pick_item
+
+
+.. autofunction:: alias_api.get_current_stage
+
+
+.. autofunction:: alias_api.get_dag_nodes_by_name
+
+
+.. autofunction:: alias_api.get_empty_layers
+
+
+.. autofunction:: alias_api.get_empty_sets
+
+
+.. autofunction:: alias_api.get_layer_by_name
+
+
+.. autofunction:: alias_api.get_layer_by_number
+
+
+.. autofunction:: alias_api.get_layered_shader_by_name
+
+
+.. autofunction:: alias_api.get_layered_shader_by_node
+
+
+.. autofunction:: alias_api.get_layered_shaders
+
+
+.. autofunction:: alias_api.get_layers
+
+
+.. autofunction:: alias_api.get_layers_by_name
+
+
+.. autofunction:: alias_api.get_layers_using_multiple_shaders
+
+
+.. autofunction:: alias_api.get_locator_by_name
+
+
+.. autofunction:: alias_api.get_locators
+
+
+.. autofunction:: alias_api.get_locators_by_name
+
+
+.. autofunction:: alias_api.get_main_window_id
+
+
+.. autofunction:: alias_api.get_nesting_groups
+
+
+.. autofunction:: alias_api.get_perspective_camera_by_name
+
+
+.. autofunction:: alias_api.get_perspective_cameras
+
+
+.. autofunction:: alias_api.get_pick_item_dag_nodes
+
+
+.. autofunction:: alias_api.get_pick_items
+
+
+.. autofunction:: alias_api.get_product_information
+
+
+.. autofunction:: alias_api.get_reference_by_name
+
+
+.. autofunction:: alias_api.get_reference_by_path
+
+
+.. autofunction:: alias_api.get_reference_by_uuid
+
+
+.. autofunction:: alias_api.get_references
+
+
+.. autofunction:: alias_api.get_references_by_name
+
+
+.. autofunction:: alias_api.get_sets_by_name
+
+
+.. autofunction:: alias_api.get_shader_by_name
+
+
+.. autofunction:: alias_api.get_shaders
+
+
+.. autofunction:: alias_api.get_shaders_by_name
+
+
+.. autofunction:: alias_api.get_shaders_by_node
+
+
+.. autofunction:: alias_api.get_stages
+
+
+.. autofunction:: alias_api.get_switch_shader_by_name
+
+
+.. autofunction:: alias_api.get_switch_shader_by_node
+
+
+.. autofunction:: alias_api.get_switch_shaders
+
+
+.. autofunction:: alias_api.get_top_dag_nodes
+
+
+.. autofunction:: alias_api.get_variants
+
+
+.. autofunction:: alias_api.has_annotation_locator
+
+
+.. autofunction:: alias_api.has_construction_history
+
+
+.. autofunction:: alias_api.has_history
+
+
+.. autofunction:: alias_api.has_queued_events
+
+
+.. autofunction:: alias_api.has_reference
+
+
+.. autofunction:: alias_api.has_variants
+
+
+.. autofunction:: alias_api.import_file
+
+
+.. autofunction:: alias_api.import_reference
+
+
+.. autofunction:: alias_api.import_subdiv
+
+
+.. autofunction:: alias_api.import_subdivision
+
+
+.. autofunction:: alias_api.initialize_universe
+
+
+.. autofunction:: alias_api.is_construction_layer
+
+
+.. autofunction:: alias_api.is_copy_of_vred_shader
+
+
+.. autofunction:: alias_api.is_empty_file
+
+
+.. autofunction:: alias_api.is_queuing_events
+
+
+.. autofunction:: alias_api.is_stage_empty
+
+
+.. autofunction:: alias_api.linear_scale
+
+
+.. autofunction:: alias_api.linear_units
+
+
+.. autofunction:: alias_api.log_message
+
+
+.. autofunction:: alias_api.log_to_errlog
+
+
+.. autofunction:: alias_api.log_to_prompt
+
+
+.. autofunction:: alias_api.log_to_prompt_no_history
+
+
+.. autofunction:: alias_api.log_to_stderr
+
+
+.. autofunction:: alias_api.log_to_stdout
+
+
+.. autofunction:: alias_api.next_construction_entity
+
+
+.. autofunction:: alias_api.next_layer
+
+
+.. autofunction:: alias_api.next_locator
+
+
+.. autofunction:: alias_api.next_pick_item
+
+
+.. autofunction:: alias_api.next_shader
+
+
+.. autofunction:: alias_api.next_switch_shader
+
+
+.. autofunction:: alias_api.node_first_shader
+
+
+.. autofunction:: alias_api.node_switch_shader
+
+
+.. autofunction:: alias_api.open_file
+
+
+.. autofunction:: alias_api.pick
+
+
+.. autofunction:: alias_api.pick_all_layers
+
+
+.. autofunction:: alias_api.pick_all_locators
+
+
+.. autofunction:: alias_api.pick_by_name
+
+
+.. autofunction:: alias_api.pick_layers
+
+
+.. autofunction:: alias_api.pick_locators
+
+
+.. autofunction:: alias_api.pick_nodes
+
+
+.. autofunction:: alias_api.pick_nodes_assigned_to_layers
+
+
+.. autofunction:: alias_api.pick_nodes_assigned_to_shaders
+
+
+.. autofunction:: alias_api.pop_pick_list
+
+
+.. autofunction:: alias_api.prev_pick_item
+
+
+.. autofunction:: alias_api.push_pick_list
+
+
+.. autofunction:: alias_api.queue_events
+
+
+.. autofunction:: alias_api.redraw_screen
+
+
+.. autofunction:: alias_api.remove_message_handler
+
+
+.. autofunction:: alias_api.remove_message_handlers
+
+
+.. autofunction:: alias_api.remove_reference
+
+
+.. autofunction:: alias_api.remove_references
+
+
+.. autofunction:: alias_api.reset
+
+
+.. autofunction:: alias_api.reset_pivots
+
+
+.. autofunction:: alias_api.reset_stages
+
+
+.. autofunction:: alias_api.retrieve
+
+
+.. autofunction:: alias_api.retrieve_options
+
+
+.. autofunction:: alias_api.save_file
+
+
+.. autofunction:: alias_api.save_file_as
+
+
+.. autofunction:: alias_api.save_layers
+
+
+.. autofunction:: alias_api.search_dag
+
+
+.. autofunction:: alias_api.search_node_has_history
+
+
+.. autofunction:: alias_api.search_node_has_non_origin_pivot
+
+
+.. autofunction:: alias_api.search_node_has_non_zero_transform
+
+
+.. autofunction:: alias_api.search_node_is_instance
+
+
+.. autofunction:: alias_api.search_node_is_template
+
+
+.. autofunction:: alias_api.search_node_layer_does_not_match_parent_layer
+
+
+.. autofunction:: alias_api.search_node_unused_curves_on_surface
+
+
+.. autofunction:: alias_api.search_node_unused_curves_on_surface_with_history
+
+
+.. autofunction:: alias_api.set_layer_symmetry
+
+
+.. autofunction:: alias_api.set_parent_window
+
+
+.. autofunction:: alias_api.set_retrieve_options
+
+
+.. autofunction:: alias_api.set_store_options
+
+
+.. autofunction:: alias_api.store
+
+
+.. autofunction:: alias_api.store_active
+
+
+.. autofunction:: alias_api.store_current_window
+
+
+.. autofunction:: alias_api.store_options
+
+
+.. autofunction:: alias_api.tessellate_adaptive
+
+
+.. autofunction:: alias_api.tessellate_chord_height_deviation
+
+
+.. autofunction:: alias_api.tessellate_chord_height_deviation_accurate
+
+
+.. autofunction:: alias_api.tessellate_chord_height_deviation_fast
+
+
+.. autofunction:: alias_api.tessellate_number
+
+
+.. autofunction:: alias_api.tessellate_render_settings
+
+
+.. autofunction:: alias_api.tessellate_uniform
+
+
+.. autofunction:: alias_api.traverse_dag
+
+
+.. autofunction:: alias_api.ungroup
+
+
+.. autofunction:: alias_api.unpick
+
+
+.. autofunction:: alias_api.unpick_all_layers
+
+
+.. autofunction:: alias_api.unpick_all_locators
+
+
+.. autofunction:: alias_api.update_reference
+
+
+.. autofunction:: alias_api.zero_transform
+
+
+.. autofunction:: alias_api.zero_transform_top_level
 

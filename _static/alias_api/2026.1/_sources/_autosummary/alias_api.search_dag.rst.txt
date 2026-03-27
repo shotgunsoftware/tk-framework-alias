@@ -1,0 +1,6 @@
+alias_api.search_dag
+====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: search_dag

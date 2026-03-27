@@ -1,0 +1,9 @@
+alias_api.AlDeviationLocator
+============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlDeviationLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:

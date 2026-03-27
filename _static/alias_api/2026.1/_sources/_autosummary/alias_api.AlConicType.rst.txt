@@ -1,0 +1,9 @@
+alias_api.AlConicType
+=====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlConicType
+   :members:
+   :undoc-members:
+   :show-inheritance:

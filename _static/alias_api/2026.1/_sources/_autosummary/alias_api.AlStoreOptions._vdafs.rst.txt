@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._vdafs
+===============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._vdafs
+   :members:
+   :undoc-members:
+   :show-inheritance:

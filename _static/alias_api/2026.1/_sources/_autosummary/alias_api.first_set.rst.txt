@@ -1,0 +1,6 @@
+alias_api.first_set
+===================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: first_set

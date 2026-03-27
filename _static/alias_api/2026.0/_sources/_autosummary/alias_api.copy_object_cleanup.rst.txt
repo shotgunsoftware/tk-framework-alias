@@ -1,0 +1,6 @@
+alias_api.copy_object_cleanup
+=============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: copy_object_cleanup

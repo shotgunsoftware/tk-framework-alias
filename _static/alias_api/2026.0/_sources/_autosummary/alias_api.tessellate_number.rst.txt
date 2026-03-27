@@ -1,0 +1,6 @@
+alias_api.tessellate_number
+===========================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: tessellate_number

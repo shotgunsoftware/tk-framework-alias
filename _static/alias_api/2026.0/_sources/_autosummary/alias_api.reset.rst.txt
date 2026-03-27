@@ -1,0 +1,6 @@
+alias_api.reset
+===============
+
+.. currentmodule:: alias_api
+
+.. autofunction:: reset

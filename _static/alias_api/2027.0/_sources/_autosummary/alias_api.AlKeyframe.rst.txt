@@ -1,0 +1,9 @@
+alias_api.AlKeyframe
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlKeyframe
+   :members:
+   :undoc-members:
+   :show-inheritance:

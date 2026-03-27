@@ -1,0 +1,9 @@
+alias_api.AlSettable
+====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlSettable
+   :members:
+   :undoc-members:
+   :show-inheritance:

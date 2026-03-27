@@ -1,0 +1,9 @@
+alias_api.AlCurvePoint
+======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCurvePoint
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,6 @@
+alias_api.delete_all_locators
+=============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: delete_all_locators

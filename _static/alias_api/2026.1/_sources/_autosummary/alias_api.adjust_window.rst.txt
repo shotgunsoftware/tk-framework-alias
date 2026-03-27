@@ -1,0 +1,6 @@
+alias_api.adjust_window
+=======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: adjust_window

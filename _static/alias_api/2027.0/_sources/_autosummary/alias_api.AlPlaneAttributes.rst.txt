@@ -1,0 +1,9 @@
+alias_api.AlPlaneAttributes
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlPlaneAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:

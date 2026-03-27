@@ -1,0 +1,9 @@
+alias_api.AlDagNode
+===================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlDagNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

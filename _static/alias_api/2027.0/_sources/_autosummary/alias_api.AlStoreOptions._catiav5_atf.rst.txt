@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._catiav5_atf
+=====================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._catiav5_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

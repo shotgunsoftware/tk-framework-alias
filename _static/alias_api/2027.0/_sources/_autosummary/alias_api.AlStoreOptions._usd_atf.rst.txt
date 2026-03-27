@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._usd_atf
+=================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._usd_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

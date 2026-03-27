@@ -1,0 +1,9 @@
+alias_api.SymmetryState
+=======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: SymmetryState
+   :members:
+   :undoc-members:
+   :show-inheritance:

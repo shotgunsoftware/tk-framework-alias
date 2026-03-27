@@ -1,0 +1,9 @@
+alias_api.AlActionExtrapType
+============================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlActionExtrapType
+   :members:
+   :undoc-members:
+   :show-inheritance:

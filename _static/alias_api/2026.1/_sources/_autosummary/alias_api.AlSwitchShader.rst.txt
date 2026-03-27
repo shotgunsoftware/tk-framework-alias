@@ -1,0 +1,9 @@
+alias_api.AlSwitchShader
+========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlSwitchShader
+   :members:
+   :undoc-members:
+   :show-inheritance:

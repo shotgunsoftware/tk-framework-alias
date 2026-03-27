@@ -1,0 +1,9 @@
+alias_api.AlAnimatable
+======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlAnimatable
+   :members:
+   :undoc-members:
+   :show-inheritance:

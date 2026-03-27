@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._sat
+================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._sat
+   :members:
+   :undoc-members:
+   :show-inheritance:

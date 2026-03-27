@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._solidworks_atf
+===========================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._solidworks_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

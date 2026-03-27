@@ -1,0 +1,9 @@
+alias_api.AlGroupNode
+=====================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlGroupNode
+   :members:
+   :undoc-members:
+   :show-inheritance:

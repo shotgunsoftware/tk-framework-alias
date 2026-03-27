@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._jamais
+================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._jamais
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -5,5 +5,4 @@ Alias Python API
    :maxdepth: 3
 
    module_summary
-   reference
    changes

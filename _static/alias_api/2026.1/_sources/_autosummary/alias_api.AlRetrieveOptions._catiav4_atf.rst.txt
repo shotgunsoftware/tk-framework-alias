@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._catiav4_atf
+========================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._catiav4_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

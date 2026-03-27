@@ -1,0 +1,9 @@
+alias_api.AlStatusCode
+======================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStatusCode
+   :members:
+   :undoc-members:
+   :show-inheritance:

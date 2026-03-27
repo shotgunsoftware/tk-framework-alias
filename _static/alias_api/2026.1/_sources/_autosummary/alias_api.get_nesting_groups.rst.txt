@@ -1,0 +1,6 @@
+alias_api.get_nesting_groups
+============================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: get_nesting_groups

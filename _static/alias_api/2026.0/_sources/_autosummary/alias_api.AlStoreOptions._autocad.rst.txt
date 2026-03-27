@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._autocad
+=================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._autocad
+   :members:
+   :undoc-members:
+   :show-inheritance:

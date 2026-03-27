@@ -1,0 +1,9 @@
+alias_api.AlChannelDataType
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlChannelDataType
+   :members:
+   :undoc-members:
+   :show-inheritance:

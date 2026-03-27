@@ -1,0 +1,9 @@
+alias_api.AlCurveCV
+===================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlCurveCV
+   :members:
+   :undoc-members:
+   :show-inheritance:

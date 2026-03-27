@@ -1,0 +1,6 @@
+alias_api.reset_stages
+======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: reset_stages

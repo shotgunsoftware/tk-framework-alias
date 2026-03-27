@@ -1,0 +1,9 @@
+alias_api.AlDistanceLocator
+===========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlDistanceLocator
+   :members:
+   :undoc-members:
+   :show-inheritance:

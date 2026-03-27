@@ -1,0 +1,6 @@
+alias_api.al_are_equal
+======================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: al_are_equal

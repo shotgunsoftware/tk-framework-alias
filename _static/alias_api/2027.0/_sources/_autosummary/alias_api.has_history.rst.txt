@@ -1,0 +1,6 @@
+alias_api.has_history
+=====================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: has_history

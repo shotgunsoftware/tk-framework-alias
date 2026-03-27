@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._parasolid_atf
+=======================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._parasolid_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

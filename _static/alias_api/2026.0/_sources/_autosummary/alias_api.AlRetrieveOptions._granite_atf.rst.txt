@@ -1,0 +1,9 @@
+alias_api.AlRetrieveOptions._granite_atf
+========================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlRetrieveOptions._granite_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

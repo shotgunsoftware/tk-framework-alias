@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._trimming_map
+======================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._trimming_map
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,9 @@
+alias_api.AlStoreOptions._nx_atf
+================================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlStoreOptions._nx_atf
+   :members:
+   :undoc-members:
+   :show-inheritance:

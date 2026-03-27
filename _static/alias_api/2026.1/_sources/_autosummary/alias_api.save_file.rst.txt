@@ -1,0 +1,6 @@
+alias_api.save_file
+===================
+
+.. currentmodule:: alias_api
+
+.. autofunction:: save_file

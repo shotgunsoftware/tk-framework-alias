@@ -1,0 +1,9 @@
+alias_api.AlArcAttributes
+=========================
+
+.. currentmodule:: alias_api
+
+.. autoclass:: AlArcAttributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
