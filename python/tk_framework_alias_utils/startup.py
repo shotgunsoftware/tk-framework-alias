@@ -830,6 +830,8 @@ def ensure_plugin_ready(
         logger = logging.getLogger(__file__)
         logger.setLevel(logging.DEBUG)
 
+    alias_python_exe = None
+
     if version_cmp(alias_version, "2024.0") >= 0:
         # Alias >= 2024.0
         # Client will run in a new process, separate from Alias.
@@ -839,7 +841,21 @@ def ensure_plugin_ready(
         # the Alias Plugin to bootstrap the Flow Production Tracking Alias Engine.
         ensure_toolkit_plugin_up_to_date(logger)
 
-        if version_cmp(alias_version, "2026.0") >= 0:
+        if version_cmp(alias_version, "2027.1") >= 0:
+            # Alias >= 2027.1 now supports Python and ships python interpreter.
+            alias_python_exe = os.path.join(sys.executable, "Python", "python.exe")
+            if not os.path.exists(alias_python_exe):
+                alias_python_exe = None
+                raise Exception(
+                    f"Failed to find Alias Python interpreter at {alias_python_exe}"
+                )
+            result = subprocess.run(
+                [alias_python_exe, "--version"], capture_output=True, text=True
+            )
+            version_string = result.stdout.strip()  # e.g. "Python 3.12.0"
+            py_major_version = int(version_string.split(" ")[1].split(".")[0])
+            py_minor_version = int(version_string.split(" ")[1].split(".")[1])
+        elif version_cmp(alias_version, "2026.0") >= 0:
             # Alias >= 2026.0 has removed dependency on Qt/PySide for the FPT plugin
             py_major_version = 3
             py_minor_version = 11
@@ -854,12 +870,18 @@ def ensure_plugin_ready(
         install_python_packages = os.environ.get(
             "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
         ) in ("1", "true", "True")
-        server_python_exe = ensure_python_installed(
-            py_major_version,
-            py_minor_version,
-            logger,
-            install_python_packages=install_python_packages,
-        )
+
+        if alias_python_exe:
+            # Use the Alias Python interpreter
+            server_python_exe = alias_python_exe
+        else:
+            # Use the framework's Python interpreter (installed for user)
+            server_python_exe = ensure_python_installed(
+                py_major_version,
+                py_minor_version,
+                logger,
+                install_python_packages=install_python_packages,
+            )
     else:
         raise Exception(
             f"Alias {alias_version} is not supported in this tk-framework-alias version. Update to Alias 2024.0 or later or downgrade to tk-framework-alias v2.5.0 to use Alias < 2024.0."
@@ -873,17 +895,19 @@ def ensure_plugin_ready(
     # version.
     ensure_python_packages_installed(logger=logger)
 
-    # Get the file path to the .lst file that contains the file path to the Alias Plugin to
-    # load at startup with Alias.
-    plugin_lst_path = get_plugin_lst(
-        alias_version,
-        py_major_version,
-        py_minor_version,
-        logger,
-    )
-    if not plugin_lst_path:
-        raise Exception("The plugin .lst file not found for Alias {alias_version}.")
-    logger.debug(f"Alias Plugin List file path {plugin_lst_path}")
+    if not alias_python_exe:
+        # For Alias < 2027.1, pre-python support we use C++ compiled plugin
+        # Get the file path to the .lst file that contains the file path to the Alias Plugin to
+        # load at startup with Alias.
+        plugin_lst_path = get_plugin_lst(
+            alias_version,
+            py_major_version,
+            py_minor_version,
+            logger,
+        )
+        if not plugin_lst_path:
+            raise Exception("The plugin .lst file not found for Alias {alias_version}.")
+        logger.debug(f"Alias Plugin List file path {plugin_lst_path}")
 
     # Get the dictionary of environment variables that are needed by the Alias Plugin
     plugin_env = get_plugin_environment(
