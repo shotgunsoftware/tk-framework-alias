@@ -16,6 +16,7 @@ import traceback
 import shutil
 import zipfile
 import pprint
+import re
 import subprocess
 import zipfile
 
@@ -830,7 +831,8 @@ def ensure_plugin_ready(
         logger = logging.getLogger(__file__)
         logger.setLevel(logging.DEBUG)
 
-    alias_python_exe = None
+    alias_python_supported = False
+    server_python_exe = None
 
     if version_cmp(alias_version, "2024.0") >= 0:
         # Alias >= 2024.0
@@ -843,18 +845,23 @@ def ensure_plugin_ready(
 
         if version_cmp(alias_version, "2027.1") >= 0:
             # Alias >= 2027.1 now supports Python and ships python interpreter.
-            alias_python_exe = os.path.join(sys.executable, "Python", "python.exe")
-            if not os.path.exists(alias_python_exe):
-                alias_python_exe = None
+            alias_python_supported = True
+            alias_bin_path = os.path.dirname(alias_exec_path)
+            alias_python_dir = os.path.join(alias_bin_path, "Python")
+            if not os.path.exists(alias_python_dir):
                 raise Exception(
-                    f"Failed to find Alias Python interpreter at {alias_python_exe}"
+                    f"Could not find Alias Python directory at {alias_python_dir}"
                 )
-            result = subprocess.run(
-                [alias_python_exe, "--version"], capture_output=True, text=True
-            )
-            version_string = result.stdout.strip()  # e.g. "Python 3.12.0"
-            py_major_version = int(version_string.split(" ")[1].split(".")[0])
-            py_minor_version = int(version_string.split(" ")[1].split(".")[1])
+            for filename in os.listdir(alias_python_dir):
+                match = re.match(r"python(\d)(\d+)\.dll", filename)
+                if match:
+                    py_major_version = int(match.group(1))
+                    py_minor_version = int(match.group(2))
+                    break
+            else:
+                raise Exception(
+                    f"Could not determine Alias Python version from {alias_python_dir}"
+                )
         elif version_cmp(alias_version, "2026.0") >= 0:
             # Alias >= 2026.0 has removed dependency on Qt/PySide for the FPT plugin
             py_major_version = 3
@@ -867,14 +874,11 @@ def ensure_plugin_ready(
             py_major_version = 3
             py_minor_version = 7
 
-        install_python_packages = os.environ.get(
-            "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
-        ) in ("1", "true", "True")
+        if not alias_python_supported:
+            install_python_packages = os.environ.get(
+                "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
+            ) in ("1", "true", "True")
 
-        if alias_python_exe:
-            # Use the Alias Python interpreter
-            server_python_exe = alias_python_exe
-        else:
             # Use the framework's Python interpreter (installed for user)
             server_python_exe = ensure_python_installed(
                 py_major_version,
@@ -895,7 +899,9 @@ def ensure_plugin_ready(
     # version.
     ensure_python_packages_installed(logger=logger)
 
-    if not alias_python_exe:
+    if alias_python_supported:
+        plugin_lst_path = None
+    else:
         # For Alias < 2027.1, pre-python support we use C++ compiled plugin
         # Get the file path to the .lst file that contains the file path to the Alias Plugin to
         # load at startup with Alias.
