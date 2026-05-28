@@ -63,26 +63,17 @@ def get_alias_api_module(alias_bin_path=None):
     The Alias Python API supports Python >= 3
     """
 
-    # import debugpy
-    # try:
-    #     debugpy.listen(5678)
-    #     debugpy.wait_for_client()
-    # except Exception as e:
-    #     print(e)
-
     # Determine the module name based on if running in OpenAlias or OpenModel
     # If the executable is Alias, then it is OpenAlias, else OpenModel.
     is_open_model = os.path.basename(sys.executable) != "Alias.exe"
     module_name = OPEN_MODEL_API_NAME if is_open_model else OPEN_ALIAS_API_NAME
     alias_version = get_alias_version()
 
-    print(f"init_api alias bin path: {alias_bin_path}")
     # First check if Alias ships the Python API module
     module_path = None
     if alias_bin_path:
         alias_api_pyd = f"{module_name}.pyd"
         alias_python_module_path = os.path.join(alias_bin_path, alias_api_pyd)
-        print(f"init_api alias python module path: {alias_python_module_path}")
         if os.path.exists(alias_python_module_path):
             module_path = alias_python_module_path
 

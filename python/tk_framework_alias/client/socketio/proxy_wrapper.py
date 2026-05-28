@@ -609,6 +609,11 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         """
 
         class_attrs = self._get_attributes()
+
+        # Remove __slots__ — proxy classes don't need them, and their presence
+        # causes ValueError when a class variable shares a name with a slot.
+        class_attrs.pop("__slots__", None)
+
         return type(self.__class_name, (self.__class__,), class_attrs)
 
 
@@ -773,11 +778,16 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         proxy_module_name = data["__module_name__"]
         module = AliasClientObjectProxyWrapper.get_module(proxy_module_name)
         if not module:
-            raise Exception("Module not found")
+            return None
         proxy_type_name = data["__class_name__"]
         proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
         if not proxy_type:
-            lookup_type = getattr(module, proxy_type_name)
+            lookup_type = getattr(module, proxy_type_name, None)
+            if lookup_type is None:
+                # Unknown type (e.g. PyCapsule) — create a bare proxy
+                proxy_type = type(proxy_type_name, (cls,), {})
+                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
+                return proxy_type(data)
             proxy_attributes = lookup_type.__dict__
 
             # Skip any private members, and modify any attributes that conflict
