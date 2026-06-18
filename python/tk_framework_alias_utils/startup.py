@@ -16,6 +16,7 @@ import traceback
 import shutil
 import zipfile
 import pprint
+import re
 import subprocess
 import zipfile
 
@@ -830,6 +831,9 @@ def ensure_plugin_ready(
         logger = logging.getLogger(__file__)
         logger.setLevel(logging.DEBUG)
 
+    alias_python_supported = False
+    server_python_exe = None
+
     if version_cmp(alias_version, "2024.0") >= 0:
         # Alias >= 2024.0
         # Client will run in a new process, separate from Alias.
@@ -839,7 +843,26 @@ def ensure_plugin_ready(
         # the Alias Plugin to bootstrap the Flow Production Tracking Alias Engine.
         ensure_toolkit_plugin_up_to_date(logger)
 
-        if version_cmp(alias_version, "2026.0") >= 0:
+        if version_cmp(alias_version, "2027.1") >= 0:
+            # Alias >= 2027.1 now supports Python and ships python interpreter.
+            alias_python_supported = True
+            alias_bin_path = os.path.dirname(alias_exec_path)
+            alias_python_dir = os.path.join(alias_bin_path, "Python")
+            if not os.path.exists(alias_python_dir):
+                raise Exception(
+                    f"Could not find Alias Python directory at {alias_python_dir}"
+                )
+            for filename in os.listdir(alias_python_dir):
+                match = re.match(r"python(\d)(\d+)\.dll", filename)
+                if match:
+                    py_major_version = int(match.group(1))
+                    py_minor_version = int(match.group(2))
+                    break
+            else:
+                raise Exception(
+                    f"Could not determine Alias Python version from {alias_python_dir}"
+                )
+        elif version_cmp(alias_version, "2026.0") >= 0:
             # Alias >= 2026.0 has removed dependency on Qt/PySide for the FPT plugin
             py_major_version = 3
             py_minor_version = 11
@@ -851,15 +874,18 @@ def ensure_plugin_ready(
             py_major_version = 3
             py_minor_version = 7
 
-        install_python_packages = os.environ.get(
-            "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
-        ) in ("1", "true", "True")
-        server_python_exe = ensure_python_installed(
-            py_major_version,
-            py_minor_version,
-            logger,
-            install_python_packages=install_python_packages,
-        )
+        if not alias_python_supported:
+            install_python_packages = os.environ.get(
+                "SHOTGRID_ALIAS_INSTALL_PYTHON_PACKAGES"
+            ) in ("1", "true", "True")
+
+            # Use the framework's Python interpreter (installed for user)
+            server_python_exe = ensure_python_installed(
+                py_major_version,
+                py_minor_version,
+                logger,
+                install_python_packages=install_python_packages,
+            )
     else:
         raise Exception(
             f"Alias {alias_version} is not supported in this tk-framework-alias version. Update to Alias 2024.0 or later or downgrade to tk-framework-alias v2.5.0 to use Alias < 2024.0."
@@ -873,17 +899,21 @@ def ensure_plugin_ready(
     # version.
     ensure_python_packages_installed(logger=logger)
 
-    # Get the file path to the .lst file that contains the file path to the Alias Plugin to
-    # load at startup with Alias.
-    plugin_lst_path = get_plugin_lst(
-        alias_version,
-        py_major_version,
-        py_minor_version,
-        logger,
-    )
-    if not plugin_lst_path:
-        raise Exception("The plugin .lst file not found for Alias {alias_version}.")
-    logger.debug(f"Alias Plugin List file path {plugin_lst_path}")
+    if alias_python_supported:
+        plugin_lst_path = None
+    else:
+        # For Alias < 2027.1, pre-python support we use C++ compiled plugin
+        # Get the file path to the .lst file that contains the file path to the Alias Plugin to
+        # load at startup with Alias.
+        plugin_lst_path = get_plugin_lst(
+            alias_version,
+            py_major_version,
+            py_minor_version,
+            logger,
+        )
+        if not plugin_lst_path:
+            raise Exception("The plugin .lst file not found for Alias {alias_version}.")
+        logger.debug(f"Alias Plugin List file path {plugin_lst_path}")
 
     # Get the dictionary of environment variables that are needed by the Alias Plugin
     plugin_env = get_plugin_environment(
