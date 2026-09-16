@@ -22,6 +22,19 @@ from .namespaces.events_namespace import AliasEventsServerNamespace
 from ..utils.exceptions import AliasServerJSONDecoderError
 
 
+# Module-level hooks that should not be serialized into the API cache.
+# pybind11 exposes PEP 562 __getattr__ with an internal C name (e.g. _flat_getattr).
+# Serializing these causes the client proxy module to forward missing attribute
+# lookups to the server using the internal name, which does not exist on alias_api.
+_MODULE_SKIP_MEMBERS = frozenset(
+    {
+        "__getattr__",
+        "__dir__",
+        "_flat_getattr",
+    }
+)
+
+
 class AliasServerJSON:
     """A custom json module to handle serializing Alias API objects to JSON."""
 
@@ -134,7 +147,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         }
 
     @staticmethod
-    def encode_callable(obj):
+    def encode_callable(obj, export_name=None):
         """Encode a callable such that is JSON serializable."""
 
         # NOTE C-defined instance methods are not builtin functions or methods, so
@@ -142,9 +155,11 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         # instance method. The other option is to check the object class name is
         # "instancemethod"
         if obj.__class__.__name__ == "instancemethod":
-            return AliasServerJSONEncoder.encode_function(obj, is_method=True)
+            return AliasServerJSONEncoder.encode_function(
+                obj, is_method=True, export_name=export_name
+            )
 
-        return AliasServerJSONEncoder.encode_function(obj)
+        return AliasServerJSONEncoder.encode_function(obj, export_name=export_name)
 
     @staticmethod
     def is_unbound_method(obj):
@@ -160,11 +175,11 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         return False
 
     @staticmethod
-    def encode_function(obj, is_method=False):
+    def encode_function(obj, is_method=False, export_name=None):
         """Encode a function such that is JSON serializable."""
 
         return {
-            "__function_name__": obj.__name__,
+            "__function_name__": export_name if export_name is not None else obj.__name__,
             "__is_method__": is_method,
         }
 
@@ -204,7 +219,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         _seen.discard(obj_id)
         return result
 
-    def _encode_member_value(self, member_value):
+    def _encode_member_value(self, member_name, member_value):
         """Encode a member value for use in module/class member lists.
 
         Handles Alias API instances and enums as lightweight references so they
@@ -226,7 +241,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         if self.is_al_enum(member_value):
             return self.encode_al_enum(member_value)
         if callable(member_value):
-            return self.encode_callable(member_value)
+            return self.encode_callable(member_value, export_name=member_name)
         if self.is_al_object(member_value):
             return {
                 "__module_name__": member_value.__module__,
@@ -277,7 +292,9 @@ class AliasServerJSONEncoder(json.JSONEncoder):
 
         class_members = []
         for member_name, member_value in members:
-            class_members.append((member_name, self._encode_member_value(member_value)))
+            class_members.append(
+                (member_name, self._encode_member_value(member_name, member_value))
+            )
 
         return {
             "__module_name__": obj.__module__,
@@ -296,6 +313,8 @@ class AliasServerJSONEncoder(json.JSONEncoder):
 
         members = []
         for name, value in inspect.getmembers(obj):
+            if name in _MODULE_SKIP_MEMBERS:
+                continue
             if inspect.isclass(value):
                 # Let classes pass through so the encoder calls encode_class_type
                 # with full member data (unlike _encode_member_value which stubs them)
@@ -305,7 +324,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             elif self.is_al_enum(value):
                 members.append((name, self.encode_al_enum(value)))
             elif callable(value):
-                members.append((name, self.encode_callable(value)))
+                members.append((name, self.encode_callable(value, export_name=name)))
             elif self.is_al_object(value):
                 members.append(
                     (
