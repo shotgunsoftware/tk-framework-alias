@@ -75,7 +75,12 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Return True if the value is an Alias instance object."""
 
         module = getattr(obj, "__module__", None)
-        return module == alias_api.__name__
+        if module is None:
+            return False
+        if module == alias_api.__name__:
+            return True
+        # Alias 2027+ exposes instance types in submodules (e.g. stages.Stage).
+        return module.startswith(f"{alias_api.__name__}.")
 
     @staticmethod
     def is_al_enum(obj):
@@ -405,14 +410,18 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         data_model = alias_bridge.AliasBridge().alias_data_model
         instance_id = data_model.register_instance(obj)
 
+        obj_dict = {
+            "name": obj.name if hasattr(obj, "name") else None,
+            "type": obj.type() if hasattr(obj, "type") else None,
+        }
+        if hasattr(obj, "path"):
+            obj_dict["path"] = obj.path
+
         return {
             "__module_name__": obj.__module__,
             "__class_name__": obj.__class__.__name__,
             "__instance_id__": instance_id,
-            "__dict__": {
-                "name": obj.name if hasattr(obj, "name") else None,
-                "type": obj.type() if hasattr(obj, "type") else None,
-            },
+            "__dict__": obj_dict,
         }
 
     def default(self, obj):

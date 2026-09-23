@@ -229,13 +229,73 @@ class AliasClientObjectProxyWrapper:
 
         attrs = {}
 
+        root_module_proxy = self if isinstance(self, AliasClientModuleProxyWrapper) else self.module
+
         for attr_name, attr_data in self.__members:
-            if isinstance(attr_data, AliasClientObjectProxyWrapper):
+            if isinstance(attr_data, AliasClientModuleProxyWrapper):
+                attrs[attr_name] = AliasClientSubmoduleProxy(
+                    root_module_proxy, attr_data.data["__module_name__"]
+                )
+            elif isinstance(attr_data, AliasClientObjectProxyWrapper):
                 attrs[attr_name] = attr_data.create_object(self.module, attr_name)
+            elif self._is_submodule_stub(attr_data):
+                attrs[attr_name] = AliasClientSubmoduleProxy(
+                    root_module_proxy, attr_data["__module_name__"]
+                )
             else:
                 attrs[attr_name] = attr_data
 
         return attrs
+
+    @staticmethod
+    def _is_submodule_stub(attr_data):
+        """Return True if the value is a serialized Alias API submodule reference."""
+
+        return (
+            isinstance(attr_data, dict)
+            and set(attr_data.keys()) == {"__module_name__"}
+        )
+
+
+class AliasClientSubmoduleProxy:
+    """
+    Proxy for Alias API submodules exposed as module stubs in the API cache.
+
+    Submodule members such as ``alias_api.stages`` are serialized as
+    ``{"__module_name__": "alias_api.stages"}``. This proxy forwards attribute
+    access to socketio requests against that submodule on the server.
+    """
+
+    def __init__(self, root_module_proxy, module_name):
+        """
+        Initialize the submodule proxy.
+
+        :param root_module_proxy: The root ``alias_api`` module proxy used to
+            send socketio requests.
+        :param module_name: The fully-qualified submodule name.
+        """
+
+        self._root = root_module_proxy
+        self._module_name = module_name
+
+    def __getattr__(self, name):
+        """Return a function that invokes the submodule member on the server."""
+
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        def _call(*args, **kwargs):
+            return self._root.send_request(
+                name,
+                {
+                    "__function_name__": name,
+                    "__function_args__": args,
+                    "__function_kwargs__": kwargs,
+                    "__request_module_name__": self._module_name,
+                },
+            )
+
+        return _call
 
 
 class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
@@ -777,9 +837,13 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
 
         proxy_module_name = data["__module_name__"]
         module = AliasClientObjectProxyWrapper.get_module(proxy_module_name)
-        if not module:
-            return None
         proxy_type_name = data["__class_name__"]
+        if not module:
+            proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
+            if not proxy_type:
+                proxy_type = type(proxy_type_name, (cls,), {})
+                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
+            return proxy_type(data)
         proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
         if not proxy_type:
             lookup_type = getattr(module, proxy_type_name, None)
@@ -858,6 +922,11 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         """
 
         return self.__dict.get("type")
+
+    @property
+    def path(self):
+        """Return the file path cached from the server-encoded object data."""
+        return self.__dict.get("path")
 
     def to_dict(self):
         """Return the dictionary representation of the object."""

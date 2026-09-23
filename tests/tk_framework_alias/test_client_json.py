@@ -287,3 +287,44 @@ def test_json_decode_alias_object():
     assert result.__class__.__name__ == "AlObjectType"
     assert result.data == data
     assert result.unique_id == 28
+
+
+def test_module_proxy_wraps_submodule_stub():
+    """Submodule stubs from the API cache should expose callable members."""
+
+    module_data = {
+        "__module_name__": "alias_api",
+        "__members__": [
+            ("stages", {"__module_name__": "alias_api.stages"}),
+        ],
+    }
+    module_proxy = proxy_wrapper.AliasClientModuleProxyWrapper(module_data)
+    module_proxy._init(module_proxy, "alias_api")
+
+    attrs = module_proxy._get_attributes()
+
+    assert isinstance(attrs["stages"], proxy_wrapper.AliasClientSubmoduleProxy)
+
+
+def test_json_decode_alias_submodule_object():
+    """Test decoding objects from alias_api submodules without a cached module."""
+
+    data = {
+        "__module_name__": "alias_api.stages",
+        "__class_name__": "Stage",
+        "__instance_id__": 42,
+        "__dict__": {
+            "name": "Stage",
+            "type": None,
+            "path": "/path/to/scene.wire",
+        },
+    }
+    json_data = json.dumps(data)
+
+    result = client_json.AliasClientJSON.loads(json_data)
+
+    assert isinstance(result, proxy_wrapper.AliasClientObjectProxy)
+    assert result.__class__.__name__ == "Stage"
+    assert result.name == "Stage"
+    assert result.path == "/path/to/scene.wire"
+    assert result.unique_id == 42
