@@ -371,17 +371,9 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             args = self.func_args[1:]
             return lambda: class_instance(*args, *self.func_kwargs)
         elif self.func_name == "_flat_getattr":
-            # Backward compatibility for API caches built before pybind11 module
-            # hooks were excluded. The client proxy encoded __getattr__ using the
-            # internal pybind11 function name instead of the exported member name.
+            # Resolve exports missing from the client API cache (PEP 562 / pybind11).
             attr_name = self.func_args[0]
-            getter = getattr(self.instance, "__getattr__", None)
-            if getter is None:
-                raise AttributeError(
-                    f"module '{self.instance.__name__}' has no attribute "
-                    f"'{self.func_name}'"
-                )
-            return lambda: getter(attr_name)
+            return lambda: getattr(self.instance, attr_name)
         else:
             # Execute the function to make the Alias API request.
             method = getattr(self.instance, self.func_name)

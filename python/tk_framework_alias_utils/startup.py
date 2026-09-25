@@ -900,9 +900,10 @@ def ensure_plugin_ready(
     ensure_python_packages_installed(logger=logger)
 
     if alias_python_supported:
+        # Alias 2027.1+ uses a Python plugin; tk-alias passes its path via -P at launch.
         plugin_lst_path = None
     else:
-        # For Alias < 2027.1, pre-python support we use C++ compiled plugin
+        # For Alias < 2027.1 we use a C++ compiled plugin loaded via a .lst file.
         # Get the file path to the .lst file that contains the file path to the Alias Plugin to
         # load at startup with Alias.
         plugin_lst_path = get_plugin_lst(

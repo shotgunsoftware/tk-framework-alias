@@ -17,6 +17,7 @@ import traceback
 from ..api import alias_api
 
 from .. import alias_bridge
+from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 from .api_request import AliasApiRequestWrapper
 from .namespaces.events_namespace import AliasEventsServerNamespace
 from ..utils.exceptions import AliasServerJSONDecoderError
@@ -33,6 +34,11 @@ _MODULE_SKIP_MEMBERS = frozenset(
         "_flat_getattr",
     }
 )
+
+# Only alias_api.gui is fully embedded in the API cache. Other submodules stay as stubs
+# (name only) to keep the cache small; stages-like usage does not need client class metadata.
+# gui needs full encode so the FPTR client gets Menu/MainMenu class proxies for menubar RPC.
+_FULL_API_SUBMODULES = frozenset({"alias_api.gui"})
 
 
 class AliasServerJSON:
@@ -152,14 +158,14 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         }
 
     @staticmethod
-    def encode_callable(obj, export_name=None):
+    def encode_callable(obj, export_name=None, as_instance_method=False):
         """Encode a callable such that is JSON serializable."""
 
         # NOTE C-defined instance methods are not builtin functions or methods, so
         # this assumes if it is a callable but not a builtin function then it is an
         # instance method. The other option is to check the object class name is
         # "instancemethod"
-        if obj.__class__.__name__ == "instancemethod":
+        if as_instance_method or obj.__class__.__name__ == "instancemethod":
             return AliasServerJSONEncoder.encode_function(
                 obj, is_method=True, export_name=export_name
             )
@@ -224,7 +230,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         _seen.discard(obj_id)
         return result
 
-    def _encode_member_value(self, member_name, member_value):
+    def _encode_member_value(self, member_name, member_value, as_class_member=False):
         """Encode a member value for use in module/class member lists.
 
         Handles Alias API instances and enums as lightweight references so they
@@ -233,6 +239,9 @@ class AliasServerJSONEncoder(json.JSONEncoder):
 
         Order matters: callables must be checked before is_al_object because
         pybind11 methods have __module__ set to the API module name.
+
+        :param as_class_member: When True, encode callables as instance methods
+            (pybind11 unbound methods are not Python ``instancemethod`` objects).
         """
 
         if inspect.isclass(member_value):
@@ -246,6 +255,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         if self.is_al_enum(member_value):
             return self.encode_al_enum(member_value)
         if callable(member_value):
+            if as_class_member:
+                return self.encode_callable(
+                    member_value, export_name=member_name, as_instance_method=True
+                )
             return self.encode_callable(member_value, export_name=member_name)
         if self.is_al_object(member_value):
             return {
@@ -295,11 +308,45 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             except Exception:
                 pass
 
+        # pybind11 instance methods (e.g. gui.Menu.add_item) are often missing from
+        # inspect.getmembers but appear in dir().
+        for name in dir(obj):
+            if name in existing_names or name.startswith("_"):
+                continue
+            try:
+                member_value = getattr(obj, name)
+            except AttributeError:
+                continue
+            members.append((name, member_value))
+            existing_names.add(name)
+
         class_members = []
         for member_name, member_value in members:
             class_members.append(
-                (member_name, self._encode_member_value(member_name, member_value))
+                (
+                    member_name,
+                    self._encode_member_value(
+                        member_name, member_value, as_class_member=True
+                    ),
+                )
             )
+
+        # Supplement cache with methods pybind does not surface on the class (see gui_api_methods).
+        if obj.__module__ == "alias_api.gui":
+            encoded_names = {name for name, _ in class_members}
+            for method_name in GUI_CLASS_INSTANCE_METHODS.get(class_type_name, ()):
+                if method_name in encoded_names:
+                    continue
+                class_members.append(
+                    (
+                        method_name,
+                        {
+                            "__function_name__": method_name,
+                            "__is_method__": True,
+                        },
+                    )
+                )
+                encoded_names.add(method_name)
 
         return {
             "__module_name__": obj.__module__,
@@ -317,15 +364,21 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         self._module_cache_mode = True
 
         members = []
-        for name, value in inspect.getmembers(obj):
-            if name in _MODULE_SKIP_MEMBERS:
-                continue
+        member_names = set()
+
+        def _append_member(name, value):
+            if name in member_names:
+                return
+            member_names.add(name)
             if inspect.isclass(value):
                 # Let classes pass through so the encoder calls encode_class_type
                 # with full member data (unlike _encode_member_value which stubs them)
                 members.append((name, value))
             elif inspect.ismodule(value):
-                members.append((name, {"__module_name__": value.__name__}))
+                if value.__name__ in _FULL_API_SUBMODULES:
+                    members.append((name, self.encode_module(value)))
+                else:
+                    members.append((name, {"__module_name__": value.__name__}))
             elif self.is_al_enum(value):
                 members.append((name, self.encode_al_enum(value)))
             elif callable(value):
@@ -343,6 +396,11 @@ class AliasServerJSONEncoder(json.JSONEncoder):
                 )
             else:
                 members.append((name, self._sanitize_dict_keys(value)))
+
+        for name, value in inspect.getmembers(obj):
+            if name in _MODULE_SKIP_MEMBERS:
+                continue
+            _append_member(name, value)
 
         return {
             "__module_name__": obj.__name__,
@@ -417,9 +475,11 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         if hasattr(obj, "path"):
             obj_dict["path"] = obj.path
 
+        obj_type = obj.__class__
         return {
-            "__module_name__": obj.__module__,
-            "__class_name__": obj.__class__.__name__,
+            # Prefer the class module (alias_api.gui) over instance __module__ (often alias_api).
+            "__module_name__": getattr(obj_type, "__module__", obj.__module__),
+            "__class_name__": obj_type.__name__,
             "__instance_id__": instance_id,
             "__dict__": obj_dict,
         }

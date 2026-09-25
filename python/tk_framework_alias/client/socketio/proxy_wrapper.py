@@ -15,6 +15,7 @@ import threading
 import types
 
 from ..utils.exceptions import AliasClientNotFound
+from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 
 
 class AliasClientObjectProxyWrapper:
@@ -232,10 +233,19 @@ class AliasClientObjectProxyWrapper:
         root_module_proxy = self if isinstance(self, AliasClientModuleProxyWrapper) else self.module
 
         for attr_name, attr_data in self.__members:
+            # Fully cached submodules (e.g. alias_api.gui) are nested module proxies, not stubs.
             if isinstance(attr_data, AliasClientModuleProxyWrapper):
-                attrs[attr_name] = AliasClientSubmoduleProxy(
-                    root_module_proxy, attr_data.data["__module_name__"]
+                module_proxy = (
+                    self
+                    if isinstance(self, AliasClientModuleProxyWrapper)
+                    else root_module_proxy
                 )
+                if module_proxy.sio:
+                    attrs[attr_name] = attr_data.get_or_create_module(module_proxy.sio)
+                else:
+                    attrs[attr_name] = AliasClientSubmoduleProxy(
+                        root_module_proxy, attr_data.data["__module_name__"]
+                    )
             elif isinstance(attr_data, AliasClientObjectProxyWrapper):
                 attrs[attr_name] = attr_data.create_object(self.module, attr_name)
             elif self._is_submodule_stub(attr_data):
@@ -661,11 +671,12 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         """
         Create an object from the proxy data to represent a class type in Alias api.
 
-        Inspect the data to create and return the Alias api class type, as a subclass
-        of this class.
+        Inspect the data to create and return the Alias api class type. Calling the
+        returned type forwards construction to the server (same as submodule stubs)
+        and returns a decoded instance proxy.
 
         :return: The class type object.
-        :rtype: AliasClientClassProxyWrapper
+        :rtype: type
         """
 
         class_attrs = self._get_attributes()
@@ -674,7 +685,44 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         # causes ValueError when a class variable shares a name with a slot.
         class_attrs.pop("__slots__", None)
 
-        return type(self.__class_name, (self.__class__,), class_attrs)
+        module_proxy = self.module
+        class_name = self.__class_name
+        module_name = self.data["__module_name__"]
+
+        # pybind gui classes omit methods on the type; inject RPC stubs (see gui_api_methods).
+        if module_name == "alias_api.gui":
+            for method_name in GUI_CLASS_INSTANCE_METHODS.get(class_name, ()):
+                if method_name in class_attrs:
+                    continue
+                func_proxy = AliasClientFunctionProxyWrapper(
+                    {
+                        "__function_name__": method_name,
+                        "__is_method__": True,
+                    }
+                )
+                func_proxy._init(module_proxy, method_name)
+                class_attrs[method_name] = func_proxy._create_object()
+
+        # Constructor RPC: Menu("label") runs in Alias; client holds the returned instance proxy.
+        def __new__(cls, *args, **kwargs):
+            """
+            Construct an Alias API object on the server and return its client proxy.
+
+            :rtype: AliasClientObjectProxy
+            """
+
+            request_data = {
+                "__function_name__": class_name,
+                "__function_args__": args,
+                "__function_kwargs__": kwargs,
+                "__request_module_name__": module_name,
+            }
+            return module_proxy.send_request(class_name, request_data)
+
+        class_attrs["__new__"] = staticmethod(__new__)
+
+        # Do not inherit AliasClientClassProxyWrapper.__init__ (expects encoded dict).
+        return type(self.__class_name, (object,), class_attrs)
 
 
 class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
@@ -801,6 +849,37 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         """Return the string representation of the object."""
         return f"<{self.__class__.__name__}: {self.name}>"
 
+    def __getattr__(self, name):
+        """
+        Resolve missing attributes from the cached Alias API class proxy.
+
+        Covers stale instance proxy types and pybind classes whose methods were
+        not copied onto the instance type at creation time.
+        """
+
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        lookup_type = self._resolve_api_class_lookup(
+            self.data["__module_name__"], self.__class__.__name__
+        )
+        if lookup_type is None:
+            raise AttributeError(name)
+
+        try:
+            attr = getattr(lookup_type, name)
+        except AttributeError:
+            raise AttributeError(name)
+
+        if callable(attr):
+
+            def _bound(*args, **kwargs):
+                return attr(self, *args, **kwargs)
+
+            return _bound
+
+        return attr
+
     @classmethod
     def required_data(cls):
         """
@@ -820,6 +899,67 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         )
 
     @classmethod
+    def _resolve_api_class_lookup(cls, proxy_module_name, proxy_type_name):
+        """
+        Find the client-side class proxy for an Alias API instance type.
+
+        pybind11 instances may report ``__module__`` as ``alias_api`` while the
+        class lives under ``alias_api.gui``. Needed so instance proxies copy methods
+        from the cached gui.Menu / MainMenu client types (tk-alias menubar).
+
+        :param proxy_module_name: Module name from encoded instance data.
+        :param proxy_type_name: Class name (e.g. ``Menu``).
+        :rtype: type | None
+        """
+
+        modules_to_search = []
+        seen = set()
+
+        def _add_module(mod):
+            if mod is None or mod in seen:
+                return
+            seen.add(mod)
+            modules_to_search.append(mod)
+
+        _add_module(cls.get_module(proxy_module_name))
+
+        if "." in proxy_module_name:
+            parent_name, sub_name = proxy_module_name.rsplit(".", 1)
+            parent_module = cls.get_module(parent_name)
+            if parent_module is not None:
+                _add_module(getattr(parent_module, sub_name, None))
+
+        root_module = cls.get_module("alias_api")
+        if root_module is not None:
+            _add_module(getattr(root_module, "gui", None))
+
+        for mod in modules_to_search:
+            lookup_type = getattr(mod, proxy_type_name, None)
+            if lookup_type is not None:
+                return lookup_type
+        return None
+
+    @classmethod
+    def _build_instance_proxy_type(cls, proxy_type_name, lookup_type):
+        """
+        Build a client instance proxy type that copies API methods from ``lookup_type``.
+
+        :param proxy_type_name: Alias class name (e.g. ``Menu``).
+        :param lookup_type: Client-side class proxy from the API cache.
+        :rtype: type
+        """
+
+        modified_attributes = {}
+        for attr_name, attr_value in lookup_type.__dict__.items():
+            if attr_name.startswith("__"):
+                continue
+            if hasattr(cls, attr_name):
+                modified_attributes[f"_{attr_name}"] = attr_value
+            else:
+                modified_attributes[attr_name] = attr_value
+        return type(proxy_type_name, (cls,), modified_attributes)
+
+    @classmethod
     def _create_proxy(cls, data):
         """
         Override the base class method.
@@ -836,41 +976,17 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         """
 
         proxy_module_name = data["__module_name__"]
-        module = AliasClientObjectProxyWrapper.get_module(proxy_module_name)
         proxy_type_name = data["__class_name__"]
-        if not module:
-            proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
-            if not proxy_type:
-                proxy_type = type(proxy_type_name, (cls,), {})
-                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
-            return proxy_type(data)
-        proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
-        if not proxy_type:
-            lookup_type = getattr(module, proxy_type_name, None)
-            if lookup_type is None:
-                # Unknown type (e.g. PyCapsule) — create a bare proxy
-                proxy_type = type(proxy_type_name, (cls,), {})
-                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
-                return proxy_type(data)
-            proxy_attributes = lookup_type.__dict__
-
-            # Skip any private members, and modify any attributes that conflict
-            # with the proxy class. The proxy class may want to override the
-            # attribute to provide additional functionality.
-            modified_attributes = {}
-            for attr_name, attr_value in proxy_attributes.items():
-                if attr_name.startswith("__"):
-                    continue
-                if hasattr(cls, attr_name):
-                    modified_attr_name = f"_{attr_name}"
-                    modified_attributes[modified_attr_name] = attr_value
-                else:
-                    modified_attributes[attr_name] = attr_value
-
-            proxy_type = type(proxy_type_name, (cls,), modified_attributes)
+        lookup_type = cls._resolve_api_class_lookup(proxy_module_name, proxy_type_name)
+        if lookup_type is not None:
+            proxy_type = cls._build_instance_proxy_type(proxy_type_name, lookup_type)
             cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
+        else:
+            proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
+            if proxy_type is None:
+                proxy_type = type(proxy_type_name, (cls,), {})
+                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
 
-        # Return an actual instance of the proxy type, not just the type object (like other classes do)
         return proxy_type(data)
 
     @property
