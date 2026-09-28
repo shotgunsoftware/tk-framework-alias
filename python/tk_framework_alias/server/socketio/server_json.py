@@ -17,9 +17,28 @@ import traceback
 from ..api import alias_api
 
 from .. import alias_bridge
+from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 from .api_request import AliasApiRequestWrapper
 from .namespaces.events_namespace import AliasEventsServerNamespace
 from ..utils.exceptions import AliasServerJSONDecoderError
+
+
+# Module-level hooks that should not be serialized into the API cache.
+# pybind11 exposes PEP 562 __getattr__ with an internal C name (e.g. _flat_getattr).
+# Serializing these causes the client proxy module to forward missing attribute
+# lookups to the server using the internal name, which does not exist on alias_api.
+_MODULE_SKIP_MEMBERS = frozenset(
+    {
+        "__getattr__",
+        "__dir__",
+        "_flat_getattr",
+    }
+)
+
+# Only alias_api.gui is fully embedded in the API cache. Other submodules stay as stubs
+# (name only) to keep the cache small; stages-like usage does not need client class metadata.
+# gui needs full encode so the FPTR client gets Menu/MainMenu class proxies for menubar RPC.
+_FULL_API_SUBMODULES = frozenset({"alias_api.gui"})
 
 
 class AliasServerJSON:
@@ -50,25 +69,57 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def __init__(self, *args, **kwargs):
         """Initialize the encoder."""
 
+        # Disable the built-in circular reference check; we handle cycle prevention
+        # ourselves via _seen_ids in encode_class_type/encode_module.
+        kwargs["check_circular"] = False
         super().__init__(*args, **kwargs)
+        self._seen_ids = set()
+        self._module_cache_mode = False
 
     @staticmethod
     def is_al_object(obj):
         """Return True if the value is an Alias instance object."""
 
         module = getattr(obj, "__module__", None)
-        return module == alias_api.__name__
+        if module is None:
+            return False
+        if module == alias_api.__name__:
+            return True
+        # Alias 2027+ exposes instance types in submodules (e.g. stages.Stage).
+        return module.startswith(f"{alias_api.__name__}.")
 
     @staticmethod
     def is_al_enum(obj):
         """Return True if the object is an Alias Python API enum."""
 
-        return (
-            AliasServerJSONEncoder.is_al_object(obj)
-            and hasattr(obj, "name")
-            and hasattr(obj, "value")
-            and hasattr(obj, "__entries")
-        )
+        if not AliasServerJSONEncoder.is_al_object(obj):
+            return False
+        if inspect.isclass(obj):
+            return False
+        # pybind11 enum classes expose a __members__ mapping (name -> value)
+        # or __entries dict depending on version. Check the class for either.
+        obj_type = type(obj)
+        if hasattr(obj_type, "__entries"):
+            return True
+        # Check multiple ways — pybind11 types may use custom descriptors
+        if "__members__" in dir(obj_type):
+            try:
+                pb11_members = getattr(obj_type, "__members__", None)
+                if pb11_members is not None and hasattr(pb11_members, "items"):
+                    return True
+            except Exception:
+                pass
+        # Last resort: pybind11 arithmetic enums support int conversion
+        try:
+            int(obj)
+            # Verify it's not just a regular numeric Alias object — check if
+            # repr looks like an enum: <ClassName.Name: value>
+            r = repr(obj)
+            if r.startswith("<") and "." in r and ":" in r:
+                return True
+        except (TypeError, ValueError):
+            pass
+        return False
 
     @staticmethod
     def encode_exception(obj):
@@ -107,17 +158,19 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         }
 
     @staticmethod
-    def encode_callable(obj):
+    def encode_callable(obj, export_name=None, as_instance_method=False):
         """Encode a callable such that is JSON serializable."""
 
         # NOTE C-defined instance methods are not builtin functions or methods, so
         # this assumes if it is a callable but not a builtin function then it is an
         # instance method. The other option is to check the object class name is
         # "instancemethod"
-        if obj.__class__.__name__ == "instancemethod":
-            return AliasServerJSONEncoder.encode_function(obj, is_method=True)
+        if as_instance_method or obj.__class__.__name__ == "instancemethod":
+            return AliasServerJSONEncoder.encode_function(
+                obj, is_method=True, export_name=export_name
+            )
 
-        return AliasServerJSONEncoder.encode_function(obj)
+        return AliasServerJSONEncoder.encode_function(obj, export_name=export_name)
 
     @staticmethod
     def is_unbound_method(obj):
@@ -133,37 +186,167 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         return False
 
     @staticmethod
-    def encode_function(obj, is_method=False):
+    def encode_function(obj, is_method=False, export_name=None):
         """Encode a function such that is JSON serializable."""
 
         return {
-            "__function_name__": obj.__name__,
+            "__function_name__": export_name if export_name is not None else obj.__name__,
             "__is_method__": is_method,
         }
+
+    @staticmethod
+    def _sanitize_dict_keys(obj, _seen=None):
+        """Convert dict keys that are not JSON-serializable to their string representation.
+
+        The json encoder's ``default`` method only handles values; dict keys that are not
+        str/int/float/bool/None cause a TypeError before ``default`` is ever called. This
+        handles dicts found in pybind11 modules (e.g. ``__entries__``) that use type objects
+        as keys.
+        """
+
+        if not isinstance(obj, (dict, list, tuple)):
+            return obj
+
+        if _seen is None:
+            _seen = set()
+
+        obj_id = id(obj)
+        if obj_id in _seen:
+            return None
+        _seen.add(obj_id)
+
+        if isinstance(obj, dict):
+            sanitized = {}
+            for k, v in obj.items():
+                if not isinstance(k, (str, int, float, bool, type(None))):
+                    k = str(k)
+                sanitized[k] = AliasServerJSONEncoder._sanitize_dict_keys(v, _seen)
+            _seen.discard(obj_id)
+            return sanitized
+
+        result = type(obj)(
+            AliasServerJSONEncoder._sanitize_dict_keys(item, _seen) for item in obj
+        )
+        _seen.discard(obj_id)
+        return result
+
+    def _encode_member_value(self, member_name, member_value, as_class_member=False):
+        """Encode a member value for use in module/class member lists.
+
+        Handles Alias API instances and enums as lightweight references so they
+        don't trigger client-side proxy creation during cache deserialization
+        (which fails because the module hasn't been registered yet at that point).
+
+        Order matters: callables must be checked before is_al_object because
+        pybind11 methods have __module__ set to the API module name.
+
+        :param as_class_member: When True, encode callables as instance methods
+            (pybind11 unbound methods are not Python ``instancemethod`` objects).
+        """
+
+        if inspect.isclass(member_value):
+            return {
+                "__module_name__": member_value.__module__,
+                "__class_name__": member_value.__name__,
+                "__members__": None,
+            }
+        if inspect.ismodule(member_value):
+            return {"__module_name__": member_value.__name__}
+        if self.is_al_enum(member_value):
+            return self.encode_al_enum(member_value)
+        if callable(member_value):
+            if as_class_member:
+                return self.encode_callable(
+                    member_value, export_name=member_name, as_instance_method=True
+                )
+            return self.encode_callable(member_value, export_name=member_name)
+        if self.is_al_object(member_value):
+            return {
+                "__module_name__": member_value.__module__,
+                "__class_name__": member_value.__class__.__name__,
+                "__al_instance_repr__": repr(member_value),
+            }
+        return self._sanitize_dict_keys(member_value)
 
     def encode_class_type(self, obj):
         """Encode a class type object such that is JSON serializable."""
 
+        obj_id = id(obj)
+        if obj_id in self._seen_ids:
+            return {
+                "__module_name__": obj.__module__,
+                "__class_name__": obj.__name__,
+                "__members__": None,
+            }
+        self._seen_ids.add(obj_id)
+
         class_type_name = obj.__name__
         members = inspect.getmembers(obj)
 
+        # pybind11 enum classes may not expose all enum values in dir(), so
+        # inspect.getmembers misses them. Look for a __members__ mapping in the
+        # already-retrieved members (maps name -> enum value/int).
+        existing_names = {m[0] for m in members}
+        pb11_dict = None
+        for member_name, member_value in list(members):
+            if member_name == "__members__":
+                pb11_dict = member_value
+                break
+        if pb11_dict is None:
+            # Try direct attribute access as fallback
+            try:
+                pb11_dict = getattr(obj, "__members__", None)
+            except Exception:
+                pass
+        if pb11_dict is not None:
+            try:
+                items = pb11_dict.items() if hasattr(pb11_dict, "items") else []
+                for name, value in items:
+                    if name not in existing_names:
+                        members.append((name, value))
+                        existing_names.add(name)
+            except Exception:
+                pass
+
+        # pybind11 instance methods (e.g. gui.Menu.add_item) are often missing from
+        # inspect.getmembers but appear in dir().
+        for name in dir(obj):
+            if name in existing_names or name.startswith("_"):
+                continue
+            try:
+                member_value = getattr(obj, name)
+            except AttributeError:
+                continue
+            members.append((name, member_value))
+            existing_names.add(name)
+
         class_members = []
         for member_name, member_value in members:
-            if inspect.isclass(member_value):
-                # Avoid circular references by not nesting class type objects.
-                # Specify that this value is a class type but do not include its members, the
-                # receiving end will need to look up the class type members from the root
-                # module
-                class_name = member_value.__name__
-                value = {
-                    "__module_name__": member_value.__module__,
-                    "__class_name__": class_name,
-                    "__members__": None,
-                }
-            else:
-                value = member_value
+            class_members.append(
+                (
+                    member_name,
+                    self._encode_member_value(
+                        member_name, member_value, as_class_member=True
+                    ),
+                )
+            )
 
-            class_members.append((member_name, value))
+        # Supplement cache with methods pybind does not surface on the class (see gui_api_methods).
+        if obj.__module__ == "alias_api.gui":
+            encoded_names = {name for name, _ in class_members}
+            for method_name in GUI_CLASS_INSTANCE_METHODS.get(class_type_name, ()):
+                if method_name in encoded_names:
+                    continue
+                class_members.append(
+                    (
+                        method_name,
+                        {
+                            "__function_name__": method_name,
+                            "__is_method__": True,
+                        },
+                    )
+                )
+                encoded_names.add(method_name)
 
         return {
             "__module_name__": obj.__module__,
@@ -174,20 +357,106 @@ class AliasServerJSONEncoder(json.JSONEncoder):
     def encode_module(self, obj):
         """Encode a module object such that is JSON serializable."""
 
+        obj_id = id(obj)
+        if obj_id in self._seen_ids:
+            return {"__module_name__": obj.__name__}
+        self._seen_ids.add(obj_id)
+        self._module_cache_mode = True
+
+        members = []
+        member_names = set()
+
+        def _append_member(name, value):
+            if name in member_names:
+                return
+            member_names.add(name)
+            if inspect.isclass(value):
+                # Let classes pass through so the encoder calls encode_class_type
+                # with full member data (unlike _encode_member_value which stubs them)
+                members.append((name, value))
+            elif inspect.ismodule(value):
+                if value.__name__ in _FULL_API_SUBMODULES:
+                    members.append((name, self.encode_module(value)))
+                else:
+                    members.append((name, {"__module_name__": value.__name__}))
+            elif self.is_al_enum(value):
+                members.append((name, self.encode_al_enum(value)))
+            elif callable(value):
+                members.append((name, self.encode_callable(value, export_name=name)))
+            elif self.is_al_object(value):
+                members.append(
+                    (
+                        name,
+                        {
+                            "__module_name__": value.__module__,
+                            "__class_name__": value.__class__.__name__,
+                            "__al_instance_repr__": repr(value),
+                        },
+                    )
+                )
+            else:
+                members.append((name, self._sanitize_dict_keys(value)))
+
+        for name, value in inspect.getmembers(obj):
+            if name in _MODULE_SKIP_MEMBERS:
+                continue
+            _append_member(name, value)
+
         return {
             "__module_name__": obj.__name__,
-            "__members__": inspect.getmembers(obj),
+            "__members__": members,
         }
 
     @staticmethod
     def encode_al_enum(obj):
         """Encode an Alias Python API enum such that is JSON serializable."""
 
+        obj_type = type(obj)
+        # Try direct .name/.value first; fall back to __members__ reverse
+        # lookup and int() for pybind11 arithmetic enums where the properties
+        # may not be accessible on instances.
+        enum_name = None
+        enum_value = None
+        try:
+            enum_name = obj.name
+        except (AttributeError, TypeError):
+            pass
+        try:
+            enum_value = obj.value
+        except (AttributeError, TypeError):
+            pass
+
+        if enum_name is None:
+            try:
+                pb11_members = getattr(obj_type, "__members__", None)
+                if pb11_members and hasattr(pb11_members, "items"):
+                    for member_name, member_value in pb11_members.items():
+                        if member_value == obj:
+                            enum_name = member_name
+                            break
+            except Exception:
+                pass
+
+        if enum_name is None:
+            # Parse from repr: "<ClassName.EnumName: value>"
+            try:
+                r = repr(obj)
+                if "." in r and ":" in r:
+                    enum_name = r.split(".")[1].split(":")[0].strip()
+            except Exception:
+                pass
+
+        if enum_value is None:
+            try:
+                enum_value = int(obj)
+            except (TypeError, ValueError):
+                enum_value = 0
+
         return {
-            "__module_name__": obj.__module__,
-            "__class_name__": obj.__class__.__name__,
-            "__enum_name__": obj.name,
-            "__enum_value__": obj.value,
+            "__module_name__": getattr(obj, "__module__", obj_type.__module__),
+            "__class_name__": obj_type.__name__,
+            "__enum_name__": enum_name,
+            "__enum_value__": enum_value,
         }
 
     @staticmethod
@@ -199,14 +468,20 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         data_model = alias_bridge.AliasBridge().alias_data_model
         instance_id = data_model.register_instance(obj)
 
+        obj_dict = {
+            "name": obj.name if hasattr(obj, "name") else None,
+            "type": obj.type() if hasattr(obj, "type") else None,
+        }
+        if hasattr(obj, "path"):
+            obj_dict["path"] = obj.path
+
+        obj_type = obj.__class__
         return {
-            "__module_name__": obj.__module__,
-            "__class_name__": obj.__class__.__name__,
+            # Prefer the class module (alias_api.gui) over instance __module__ (often alias_api).
+            "__module_name__": getattr(obj_type, "__module__", obj.__module__),
+            "__class_name__": obj_type.__name__,
             "__instance_id__": instance_id,
-            "__dict__": {
-                "name": obj.name if hasattr(obj, "name") else None,
-                "type": obj.type() if hasattr(obj, "type") else None,
-            },
+            "__dict__": obj_dict,
         }
 
     def default(self, obj):
@@ -227,7 +502,7 @@ class AliasServerJSONEncoder(json.JSONEncoder):
                 return self.encode_set(obj)
 
             if isinstance(obj, types.MappingProxyType):
-                return dict(obj)
+                return self._sanitize_dict_keys(dict(obj))
 
             if isinstance(obj, importlib.machinery.ModuleSpec):
                 return None
@@ -261,14 +536,32 @@ class AliasServerJSONEncoder(json.JSONEncoder):
             if inspect.ismodule(obj):
                 return self.encode_module(obj)
 
-            if callable(obj):
-                return self.encode_callable(obj)
-
             if self.is_al_enum(obj):
                 return self.encode_al_enum(obj)
 
+            if callable(obj):
+                return self.encode_callable(obj)
+
             if self.is_al_object(obj):
+                if self._module_cache_mode:
+                    return {
+                        "__module_name__": obj.__module__,
+                        "__class_name__": obj.__class__.__name__,
+                        "__al_instance_repr__": repr(obj),
+                    }
                 return self.encode_al_object(obj)
+
+            # Handle opaque C objects (PyCapsule, etc.) returned by Alias API
+            # by registering them in the data model so the client gets a ref ID.
+            if type(obj).__name__ == "PyCapsule":
+                data_model = alias_bridge.AliasBridge().alias_data_model
+                instance_id = data_model.register_instance(obj)
+                return {
+                    "__module_name__": alias_api.__name__,
+                    "__class_name__": "PyCapsule",
+                    "__instance_id__": instance_id,
+                    "__dict__": {"name": None, "type": None},
+                }
 
             # Fall back to the default encode method.
             return super().default(obj)

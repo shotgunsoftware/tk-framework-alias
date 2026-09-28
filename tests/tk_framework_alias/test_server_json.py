@@ -202,6 +202,15 @@ def test_json_encode_alias_api_enum(enum):
         (alias_api.create_perspective_camera()),
     ],
 )
+def test_is_al_object_alias_submodule():
+    """Alias 2027+ instance types live in alias_api submodules."""
+
+    class Stage:
+        __module__ = "alias_api.stages"
+
+    assert server_json.AliasServerJSONEncoder.is_al_object(Stage())
+
+
 def test_json_encode_alias_api_object(alias_object):
     """Test the AliasServerJSONEncoder default method to encode Alias API objects."""
 
@@ -221,6 +230,37 @@ def test_json_encode_alias_api_object(alias_object):
     data_model = alias_bridge.AliasBridge().alias_data_model
     instance = data_model.get_instance(instance_id)
     assert instance is alias_object
+
+
+def test_json_encode_alias_api_object_with_path():
+    """Test encoding Alias 2027+ Stage objects that expose a path attribute."""
+
+    class Stage:
+        __module__ = "alias_api.stages"
+        __name__ = "Stage"
+
+        def __init__(self):
+            self.name = "Stage"
+            self.path = "/path/to/scene.wire"
+
+    stage = Stage()
+    stage.__class__.__name__ = "Stage"
+    instance_id = id(stage)
+
+    result = server_json.AliasServerJSON.dumps(stage)
+    expected = json.dumps(
+        {
+            "__module_name__": "alias_api.stages",
+            "__class_name__": "Stage",
+            "__instance_id__": instance_id,
+            "__dict__": {
+                "name": "Stage",
+                "type": None,
+                "path": "/path/to/scene.wire",
+            },
+        }
+    )
+    assert result == expected
 
 
 def test_json_encode_mapping_proxy_type():

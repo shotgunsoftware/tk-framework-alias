@@ -54,7 +54,7 @@ def get_module_path(module_name, alias_version):
     return module_path
 
 
-def get_alias_api_module():
+def get_alias_api_module(alias_bin_path=None):
     """
     Import the right Alias Python API module according to the criteria:
         - the version of Alias
@@ -68,7 +68,19 @@ def get_alias_api_module():
     is_open_model = os.path.basename(sys.executable) != "Alias.exe"
     module_name = OPEN_MODEL_API_NAME if is_open_model else OPEN_ALIAS_API_NAME
     alias_version = get_alias_version()
-    module_path = get_module_path(module_name, alias_version)
+
+    # First check if Alias ships the Python API module
+    module_path = None
+    if alias_bin_path:
+        alias_api_pyd = f"{module_name}.pyd"
+        alias_python_module_path = os.path.join(alias_bin_path, alias_api_pyd)
+        if os.path.exists(alias_python_module_path):
+            module_path = alias_python_module_path
+
+    if not module_path:
+        # Fallback to the framework's Python API module
+        module_path = get_module_path(module_name, alias_version)
+
     if not module_path:
         return None
 
@@ -122,6 +134,6 @@ if hasattr(os, "add_dll_directory"):
         )
     alias_dll_path = os.path.dirname(alias_bin_path)
     with os.add_dll_directory(alias_dll_path):
-        alias_api = get_alias_api_module()
+        alias_api = get_alias_api_module(alias_dll_path)
 else:
     alias_api = get_alias_api_module()
