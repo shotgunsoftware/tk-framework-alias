@@ -22,7 +22,6 @@ from .api_request import AliasApiRequestWrapper
 from .namespaces.events_namespace import AliasEventsServerNamespace
 from ..utils.exceptions import AliasServerJSONDecoderError
 
-
 # Module-level hooks that should not be serialized into the API cache.
 # pybind11 exposes PEP 562 __getattr__ with an internal C name (e.g. _flat_getattr).
 # Serializing these causes the client proxy module to forward missing attribute
@@ -190,7 +189,9 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Encode a function such that is JSON serializable."""
 
         return {
-            "__function_name__": export_name if export_name is not None else obj.__name__,
+            "__function_name__": (
+                export_name if export_name is not None else obj.__name__
+            ),
             "__is_method__": is_method,
         }
 

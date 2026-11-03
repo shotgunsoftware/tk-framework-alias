@@ -230,7 +230,9 @@ class AliasClientObjectProxyWrapper:
 
         attrs = {}
 
-        root_module_proxy = self if isinstance(self, AliasClientModuleProxyWrapper) else self.module
+        root_module_proxy = (
+            self if isinstance(self, AliasClientModuleProxyWrapper) else self.module
+        )
 
         for attr_name, attr_data in self.__members:
             # Fully cached submodules (e.g. alias_api.gui) are nested module proxies, not stubs.
@@ -261,10 +263,9 @@ class AliasClientObjectProxyWrapper:
     def _is_submodule_stub(attr_data):
         """Return True if the value is a serialized Alias API submodule reference."""
 
-        return (
-            isinstance(attr_data, dict)
-            and set(attr_data.keys()) == {"__module_name__"}
-        )
+        return isinstance(attr_data, dict) and set(attr_data.keys()) == {
+            "__module_name__"
+        }
 
 
 class AliasClientSubmoduleProxy:
