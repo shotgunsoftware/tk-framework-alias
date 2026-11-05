@@ -213,8 +213,41 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             self.__instance = data_model.get_instance(instance_id)
 
         if self.__instance is None:
-            # This is a module-level function
-            self.__instance = alias_api
+            request_module_name = data.get("__request_module_name__")
+            if request_module_name:
+                self.__instance = self._resolve_module(request_module_name)
+            else:
+                # This is a module-level function
+                self.__instance = alias_api
+
+    @staticmethod
+    def _resolve_module(module_name):
+        """
+        Resolve a fully-qualified Alias API module name to the module object.
+
+        :param module_name: The module name (e.g. ``alias_api.stages``).
+        :rtype: module
+        :raises AliasApiRequestNotValid: If the module cannot be resolved.
+        """
+
+        if module_name == alias_api.__name__:
+            return alias_api
+
+        prefix = f"{alias_api.__name__}."
+        if not module_name.startswith(prefix):
+            raise AliasApiRequestNotValid(
+                f"Unsupported Alias API module name '{module_name}'"
+            )
+
+        module_obj = alias_api
+        for part in module_name[len(prefix) :].split("."):
+            try:
+                module_obj = getattr(module_obj, part)
+            except AttributeError:
+                raise AliasApiRequestNotValid(
+                    f"Alias API module '{module_name}' could not be resolved"
+                )
+        return module_obj
 
     def __str__(self) -> str:
         """Return a string representation for the Alias Api request object."""
@@ -337,6 +370,10 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             class_instance = self.func_args[0]
             args = self.func_args[1:]
             return lambda: class_instance(*args, *self.func_kwargs)
+        elif self.func_name == "_flat_getattr":
+            # Resolve exports missing from the client API cache (PEP 562 / pybind11).
+            attr_name = self.func_args[0]
+            return lambda: getattr(self.instance, attr_name)
         else:
             # Execute the function to make the Alias API request.
             method = getattr(self.instance, self.func_name)

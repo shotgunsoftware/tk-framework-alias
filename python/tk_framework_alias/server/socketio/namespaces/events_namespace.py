@@ -109,12 +109,14 @@ class AliasEventsServerNamespace(socketio.Namespace):
 
         self._log_message(None, f"Client connection failed\n{data}")
 
-    def on_disconnect(self, sid):
+    def on_disconnect(self, sid, reason=None):
         """
         A disconnect error event triggered.
 
         :param sid: The session id of the client that triggered the event.
         :type sid: str
+        :param reason: The reason for the disconnect (provided by newer socketio versions).
+        :type reason: str | None
         """
 
         if self.client_sid is None or sid != self.client_sid:
