@@ -955,7 +955,10 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
             if attr_name.startswith("__"):
                 continue
             if hasattr(cls, attr_name):
-                modified_attributes[f"_{attr_name}"] = attr_value
+                if attr_name == "path":
+                    modified_attributes[attr_name] = attr_value
+                else:
+                    modified_attributes[f"_{attr_name}"] = attr_value
             else:
                 modified_attributes[attr_name] = attr_value
         return type(proxy_type_name, (cls,), modified_attributes)
@@ -980,8 +983,12 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
         proxy_type_name = data["__class_name__"]
         lookup_type = cls._resolve_api_class_lookup(proxy_module_name, proxy_type_name)
         if lookup_type is not None:
-            proxy_type = cls._build_instance_proxy_type(proxy_type_name, lookup_type)
-            cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
+            proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
+            if proxy_type is None:
+                proxy_type = cls._build_instance_proxy_type(
+                    proxy_type_name, lookup_type
+                )
+                cls.store_type(proxy_module_name, proxy_type_name, proxy_type)
         else:
             proxy_type = cls.get_proxy_type(proxy_module_name, proxy_type_name)
             if proxy_type is None:
