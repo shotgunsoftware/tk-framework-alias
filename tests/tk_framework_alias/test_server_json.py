@@ -335,7 +335,8 @@ def test_json_encode_module(json_encoder):
     """
 
     result = json_encoder.default(alias_api)
-    assert result == json_encoder.encode_module(alias_api)
+    compare_encoder = server_json.AliasServerJSONEncoder()
+    assert result == compare_encoder.encode_module(alias_api)
 
 
 def test_json_encode_error():
