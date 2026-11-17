@@ -821,6 +821,40 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
         )
 
     @classmethod
+    def _resolve_enum_proxy_type(cls, module_name, class_name):
+        """
+        Find a registered client enum proxy type for an Alias API enum class.
+
+        Enum payloads use the enum type's ``__module__`` (often a submodule such as
+        ``alias_api.stages``), while the type may have been registered under a parent
+        module key when the API cache was built.
+
+        :param module_name: ``__module_name__`` from encoded enum data.
+        :param class_name: ``__class_name__`` from encoded enum data.
+        :rtype: type | None
+        """
+
+        module_names = []
+        seen = set()
+
+        def _add_module_name(name):
+            if not name or name in seen:
+                return
+            seen.add(name)
+            module_names.append(name)
+
+        _add_module_name(module_name)
+        if module_name and "." in module_name:
+            _add_module_name(module_name.rsplit(".", 1)[0])
+        _add_module_name("alias_api")
+
+        for mod_name in module_names:
+            enum_type = cls.get_proxy_type(mod_name, class_name)
+            if enum_type is not None:
+                return enum_type
+        return None
+
+    @classmethod
     def _create_proxy(cls, data):
         """
         Override the base class method.
@@ -837,7 +871,7 @@ class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
 
         enum_module_name = data["__module_name__"]
         enum_class_name = data["__class_name__"]
-        enum_type = cls.get_proxy_type(enum_module_name, enum_class_name)
+        enum_type = cls._resolve_enum_proxy_type(enum_module_name, enum_class_name)
         if not enum_type:
             enum_type = type(enum_class_name, (cls,), {})
             cls.store_type(enum_module_name, enum_class_name, enum_type)

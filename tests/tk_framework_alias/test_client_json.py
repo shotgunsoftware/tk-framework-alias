@@ -255,6 +255,7 @@ def test_json_decode_alias_enum():
     """Test the AliasClientJSONDecoder object_hook method to decode api module object."""
 
     data = {
+        "__module_name__": "alias_api",
         "__class_name__": "some_enum_class",
         "__enum_name__": "some_enum",
         "__enum_value__": 2,
@@ -265,6 +266,34 @@ def test_json_decode_alias_enum():
 
     assert isinstance(result, proxy_wrapper.AliasClientEnumProxyWrapper)
     assert result.data == data
+    assert result.__class__.__name__ == "some_enum_class"
+
+
+def test_json_decode_alias_enum_submodule_resolves_parent_registry():
+    """
+    Enum types registered under a parent module key still decode from submodule payloads.
+    """
+
+    enum_type = type(
+        "StageOpenMode",
+        (proxy_wrapper.AliasClientEnumProxyWrapper,),
+        {},
+    )
+    proxy_wrapper.AliasClientObjectProxyWrapper.store_type(
+        "alias_api", "StageOpenMode", enum_type
+    )
+
+    data = {
+        "__module_name__": "alias_api.stages",
+        "__class_name__": "StageOpenMode",
+        "__enum_name__": "Open",
+        "__enum_value__": 1,
+    }
+    result = client_json.AliasClientJSON.loads(json.dumps(data))
+
+    assert result.__class__ is enum_type
+    assert result.name == "Open"
+    assert result.value == 1
 
 
 def test_json_decode_alias_object():
