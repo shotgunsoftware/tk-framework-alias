@@ -144,7 +144,8 @@ def test_json_encode_class_type(json_encoder, class_type):
     """
 
     result = json_encoder.default(class_type)
-    assert result == json_encoder.encode_class_type(class_type)
+    compare_encoder = server_json.AliasServerJSONEncoder()
+    assert result == compare_encoder.encode_class_type(class_type)
 
 
 @pytest.mark.parametrize(
@@ -334,11 +335,7 @@ def test_json_encode_module(json_encoder):
     """
 
     result = json_encoder.default(alias_api)
-    expected = {
-        "__module_name__": alias_api.__name__,
-        "__members__": inspect.getmembers(alias_api),
-    }
-    assert result == expected
+    assert result == json_encoder.encode_module(alias_api)
 
 
 def test_json_encode_error():

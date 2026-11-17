@@ -242,6 +242,8 @@ class AliasClientObjectProxyWrapper:
                     if isinstance(self, AliasClientModuleProxyWrapper)
                     else root_module_proxy
                 )
+                if isinstance(module_proxy, AliasClientModuleProxyWrapper):
+                    attr_data._set_batch_owner(module_proxy._batch_coordinator())
                 if module_proxy.sio:
                     attrs[attr_name] = attr_data.get_or_create_module(module_proxy.sio)
                 else:
@@ -336,6 +338,7 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
         self.__sio = None
         self.__batch_mode = False
         self.__batch_requests = []
+        self.__batch_owner = None
 
     # -------------------------------------------------------------------------------------------------------
     # Class methods
@@ -367,12 +370,31 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
     @property
     def batch_mode(self):
         """Get the flag indicating whether or not the module is executing in batch mode."""
-        return self.__batch_mode
+        return self._batch_coordinator().__batch_mode
 
     @property
     def num_pending_requests(self):
         """Get the number of pending requests that have been batched."""
-        return len(self.__batch_requests)
+        return len(self._batch_coordinator().__batch_requests)
+
+    def _set_batch_owner(self, owner):
+        """
+        Share batch request queue with a parent module proxy (e.g. root ``alias_api``).
+
+        Fully cached submodules such as ``alias_api.gui`` are separate module proxies; their
+        RPC must participate in the same batch as ``ClientRequestContextManager`` on the root.
+
+        :param owner: The module proxy that owns batch mode and the pending request list.
+        :type owner: AliasClientModuleProxyWrapper
+        """
+
+        if owner is not self:
+            self.__batch_owner = owner
+
+    def _batch_coordinator(self):
+        """Return the module proxy that owns batch mode and pending requests."""
+
+        return self.__batch_owner or self
 
     # -------------------------------------------------------------------------------------------------------
     # Public methods
@@ -442,9 +464,10 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
                     kwargs[name] = self.__sanitize_arg(arg)
                 request_data["__function_kwargs__"] = kwargs
 
-        if self.batch_mode:
+        coordinator = self._batch_coordinator()
+        if coordinator.batch_mode:
             # Defer and store the request to send multiple requests at once
-            self.__batch_requests.append((request_name, request_data))
+            coordinator.__batch_requests.append((request_name, request_data))
             return
         # Emit non-blocking GUI request (to avoid deadlocks with Alias) and wait for the event result.
         return self.sio.emit_threadsafe_and_wait(request_name, request_data)
@@ -470,18 +493,24 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
             mode and executing the requests.
         """
 
-        self.__batch_mode = start
+        coordinator = self._batch_coordinator()
+        if coordinator is not self:
+            return coordinator.batch_requests(start, is_async=is_async)
 
-        if not self.__batch_mode:
+        coordinator.__batch_mode = start
+
+        if not coordinator.__batch_mode:
             try:
                 if is_async:
-                    self.sio.emit_threadsafe("batch_requests", self.__batch_requests)
+                    coordinator.sio.emit_threadsafe(
+                        "batch_requests", coordinator.__batch_requests
+                    )
                 else:
-                    return self.sio.emit_threadsafe_and_wait(
-                        "batch_requests", self.__batch_requests
+                    return coordinator.sio.emit_threadsafe_and_wait(
+                        "batch_requests", coordinator.__batch_requests
                     )
             finally:
-                self.__batch_requests = []
+                coordinator.__batch_requests = []
 
     # -------------------------------------------------------------------------------------------------------
     # Private methods
