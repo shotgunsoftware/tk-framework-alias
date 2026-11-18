@@ -112,8 +112,10 @@ def install_common_python_packages(python_dist_dir):
     """
 
     if not os.path.exists(python_dist_dir):
-        print(f"Cannot find Python distribution folder {python_dist_dir}")
-        return
+        print(
+            f"Missing Python distribution folder {python_dist_dir}. \nCreate folder with requirements.txt to support new Python version."
+        )
+        return False
 
     with TemporaryDirectory() as temp_dir:
         print("Installing common Python packages...")
@@ -179,6 +181,8 @@ def install_common_python_packages(python_dist_dir):
         for package_name in package_names:
             print(f"Zipping {package_name}...")
             zip_recursively(pkgs_zip, temp_dir_path, package_name)
+
+    return True
 
 
 def install_qt_packages(python_dist_dir):
@@ -304,5 +308,7 @@ python_dist_dir = os.path.normpath(
         f"Python{sys.version_info.major}{sys.version_info.minor}",
     )
 )
-install_common_python_packages(python_dist_dir)
+success = install_common_python_packages(python_dist_dir)
+if not success:
+    sys.exit(1)
 install_qt_packages(python_dist_dir)

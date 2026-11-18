@@ -143,27 +143,9 @@ def test_json_encode_class_type(json_encoder, class_type):
     are tests for each object type to be encoded.
     """
 
-    members = inspect.getmembers(class_type)
-    class_members = []
-    for member_name, member_value in members:
-        if inspect.isclass(member_value):
-            class_name = member_value.__name__
-            value = {
-                "__module_name__": member_value.__module__,
-                "__class_name__": class_name,
-                "__members__": None,
-            }
-        else:
-            value = member_value
-        class_members.append((member_name, value))
-
     result = json_encoder.default(class_type)
-    expected = {
-        "__module_name__": class_type.__module__,
-        "__class_name__": class_type.__name__,
-        "__members__": class_members,
-    }
-    assert result == expected
+    compare_encoder = server_json.AliasServerJSONEncoder()
+    assert result == compare_encoder.encode_class_type(class_type)
 
 
 @pytest.mark.parametrize(
@@ -188,6 +170,15 @@ def test_json_encode_alias_api_enum(enum):
         }
     )
     assert result == expected
+
+
+def test_is_al_object_alias_submodule():
+    """Alias 2027+ instance types live in alias_api submodules."""
+
+    class Stage:
+        __module__ = "alias_api.stages"
+
+    assert server_json.AliasServerJSONEncoder.is_al_object(Stage())
 
 
 @pytest.mark.parametrize(
@@ -221,6 +212,37 @@ def test_json_encode_alias_api_object(alias_object):
     data_model = alias_bridge.AliasBridge().alias_data_model
     instance = data_model.get_instance(instance_id)
     assert instance is alias_object
+
+
+def test_json_encode_alias_api_object_with_path():
+    """Test encoding Alias 2027+ Stage objects that expose a path attribute."""
+
+    class Stage:
+        __module__ = "alias_api.stages"
+        __name__ = "Stage"
+
+        def __init__(self):
+            self.name = "Stage"
+            self.path = "/path/to/scene.wire"
+
+    stage = Stage()
+    stage.__class__.__name__ = "Stage"
+    instance_id = id(stage)
+
+    result = server_json.AliasServerJSON.dumps(stage)
+    expected = json.dumps(
+        {
+            "__module_name__": "alias_api.stages",
+            "__class_name__": "Stage",
+            "__instance_id__": instance_id,
+            "__dict__": {
+                "name": "Stage",
+                "type": None,
+                "path": "/path/to/scene.wire",
+            },
+        }
+    )
+    assert result == expected
 
 
 def test_json_encode_mapping_proxy_type():
@@ -313,11 +335,8 @@ def test_json_encode_module(json_encoder):
     """
 
     result = json_encoder.default(alias_api)
-    expected = {
-        "__module_name__": alias_api.__name__,
-        "__members__": inspect.getmembers(alias_api),
-    }
-    assert result == expected
+    compare_encoder = server_json.AliasServerJSONEncoder()
+    assert result == compare_encoder.encode_module(alias_api)
 
 
 def test_json_encode_error():

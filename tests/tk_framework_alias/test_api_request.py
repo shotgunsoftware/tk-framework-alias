@@ -36,6 +36,24 @@ def test_api_request_function_validate():
     assert func_wrapper.validate("create_shader")
 
 
+def test_api_request_submodule_function_execute():
+    """Test executing a function on an Alias API submodule."""
+
+    if not hasattr(alias_api, "stages"):
+        pytest.skip("alias_api.stages submodule is not available")
+
+    func_data = {
+        "__function_name__": "all",
+        "__function_args__": [],
+        "__function_kwargs__": {},
+        "__request_module_name__": "alias_api.stages",
+    }
+    func_wrapper = api_request.AliasApiRequestFunctionWrapper(func_data)
+
+    result = func_wrapper.execute("all")
+    assert isinstance(result, list)
+
+
 def test_api_request_function_execute():
     """Test the AliasApiRequestFunctionWrapper object."""
 

@@ -140,12 +140,14 @@ class AliasServerNamespace(socketio.Namespace):
 
         self._log_message(None, f"Client connection failed\n{data}")
 
-    def on_disconnect(self, sid):
+    def on_disconnect(self, sid, reason=None):
         """
         A disconnect error event triggered.
 
         :param sid: The session id of the client that triggered the event.
         :type sid: str
+        :param reason: The reason for the disconnect (provided by newer socketio versions).
+        :type reason: str | None
         """
 
         if self.client_sid is None or sid != self.client_sid:
@@ -308,8 +310,13 @@ class AliasServerNamespace(socketio.Namespace):
         # Check if the cache is up-to-date. If not, create a new cache. Creating
         # a new cache is expensive and should only be done if the api or
         # extensions have changed
+        force_rebuild = os.environ.get("TK_ALIAS_REBUILD_API_CACHE", "0") in (
+            "1",
+            "true",
+        )
         if (
-            not os.path.exists(cache_filepath)
+            force_rebuild
+            or not os.path.exists(cache_filepath)
             or not os.path.exists(cache_module_filepath)
             or not filecmp.cmp(api_info["file_path"], cache_module_filepath)
             or extensions_updated
