@@ -15,8 +15,7 @@ Alias 2027.1+ menubar support requires constructing ``alias_api.gui`` menu types
 the Alias server. ``alias_api.AliasApiExtensions`` is a plain Python extension class:
 instances are lightweight client handles and methods RPC to a fresh server-side instance.
 
-All other cached pybind types keep the pre–2027.1 client class proxy (subclass of
-``AliasClientClassProxyWrapper``) without server-side construction.
+All other pybind types keep server-side construction (#143) except ``AliasApiExtensions``.
 
 Extension classes are (re)installed on the ``alias_api`` module after cache load so
 menubar-related class-encoding changes cannot leave ``FunctionProxyWrapper`` objects

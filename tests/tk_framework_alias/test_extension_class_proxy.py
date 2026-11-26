@@ -105,23 +105,32 @@ def test_extension_rpc_via_module_install():
     )
 
 
-def test_pybind_class_keeps_legacy_client_class_base():
-    """Non-gui pybind types must not use server-side ``__new__`` (pre–PR #143 behavior)."""
+def test_pybind_class_uses_server_side_constructor():
+    """Pybind types such as Stage forward ``()`` to the server like PR #143."""
 
     module_proxy = mock.Mock()
+    module_proxy.send_request.return_value = mock.sentinel.stage_proxy
     wrapper = proxy_wrapper.AliasClientClassProxyWrapper(
         {
-            "__module_name__": "alias_api",
-            "__class_name__": "SomePybindType",
+            "__module_name__": "alias_api.stages",
+            "__class_name__": "Stage",
             "__members__": [],
         }
     )
-    wrapper._init(module_proxy, "SomePybindType")
+    wrapper._init(module_proxy, "Stage")
     cls = wrapper._create_object()
 
-    assert cls.__bases__[0] is proxy_wrapper.AliasClientClassProxyWrapper
-    assert "__new__" not in cls.__dict__
-    module_proxy.send_request.assert_not_called()
+    result = cls("StageName", "path/to/stage")
+    module_proxy.send_request.assert_called_once_with(
+        "Stage",
+        {
+            "__function_name__": "Stage",
+            "__function_args__": ("StageName", "path/to/stage"),
+            "__function_kwargs__": {},
+            "__request_module_name__": "alias_api.stages",
+        },
+    )
+    assert result is mock.sentinel.stage_proxy
 
 
 def test_gui_menu_item_uses_server_constructor_rpc():
@@ -211,10 +220,11 @@ def test_root_alias_api_menu_uses_server_constructor_rpc():
     assert result is mock.sentinel.menu_proxy
 
 
-def test_legacy_pybind_class_drops_encoded_new_stub():
-    """Encoded ``__new__`` stubs must not break client pybind construction."""
+def test_legacy_pybind_class_replaces_encoded_new_stub():
+    """Encoded ``__new__`` instance-method stubs are replaced with server construction."""
 
     module_proxy = mock.Mock()
+    module_proxy.send_request.return_value = mock.sentinel.layer_proxy
     func_proxy = proxy_wrapper.AliasClientFunctionProxyWrapper(
         {"__function_name__": "__new__", "__is_method__": True}
     )
@@ -229,4 +239,5 @@ def test_legacy_pybind_class_drops_encoded_new_stub():
     wrapper._init(module_proxy, "Layer")
     cls = wrapper._create_object()
 
-    assert "__new__" not in cls.__dict__
+    assert isinstance(cls.__dict__["__new__"], staticmethod)
+    assert cls("LayerName") is mock.sentinel.layer_proxy

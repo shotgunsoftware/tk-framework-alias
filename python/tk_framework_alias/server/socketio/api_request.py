@@ -11,6 +11,7 @@
 from ..api import alias_api
 
 from .. import alias_bridge
+from ...extension_api_classes import ALIAS_API_EXTENSION_CLASSES
 from ..utils.exceptions import AliasApiRequestNotValid
 
 
@@ -215,13 +216,16 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         if self.__instance is None:
             extension_class = data.get("__alias_api_extension_class__")
             if extension_class:
+                if extension_class not in ALIAS_API_EXTENSION_CLASSES:
+                    raise AliasApiRequestNotValid(
+                        f"Unsupported Alias API extension class '{extension_class}'"
+                    )
                 extension_type = getattr(alias_api, extension_class, None)
-                if extension_type is not None:
-                    self.__instance = extension_type()
-                else:
+                if extension_type is None:
                     raise AliasApiRequestNotValid(
                         f"Unknown Alias API extension class '{extension_class}'"
                     )
+                self.__instance = extension_type()
             else:
                 request_module_name = data.get("__request_module_name__")
                 if request_module_name:

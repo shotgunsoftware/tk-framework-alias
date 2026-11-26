@@ -92,6 +92,19 @@ def test_api_request_instance_method_execute():
     assert not result
 
 
+def test_api_request_rejects_unsupported_extension_class():
+    """Extension dispatch must not invoke arbitrary ``alias_api`` callables."""
+
+    func_data = {
+        "__function_name__": "has_picked_items",
+        "__function_args__": [],
+        "__function_kwargs__": {},
+        "__alias_api_extension_class__": alias_api.create_shader.__name__,
+    }
+    with pytest.raises(AliasApiRequestNotValid):
+        api_request.AliasApiRequestFunctionWrapper(func_data)
+
+
 def test_api_request_function_new_execute():
     """Test the AliasApiRequestFunctionWrapper object."""
 

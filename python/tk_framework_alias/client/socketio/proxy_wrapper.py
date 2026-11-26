@@ -19,7 +19,6 @@ from ...extension_api_classes import (
     ALIAS_API_EXTENSION_CLASSES,
     install_alias_api_extensions_on_module,
     uses_local_client_constructor,
-    uses_server_side_constructor,
 )
 from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 
@@ -37,6 +36,7 @@ class AliasClientObjectProxyWrapper:
     # the server side. Currently there should only ever be one module, the 'alias_api', but in
     # the future there could be more api modules to add here.
     __modules = {}
+    __module_proxies = {}
     __module_lock = threading.Lock()
 
     # Store any Alias types that have been created on the client side (here), so that these
@@ -78,6 +78,20 @@ class AliasClientObjectProxyWrapper:
 
         with cls.__module_lock:
             cls.__modules[module_name] = module
+
+    @classmethod
+    def get_module_proxy(cls, module_name):
+        """Return the socketio module proxy for the given module name."""
+
+        with cls.__module_lock:
+            return cls.__module_proxies.get(module_name)
+
+    @classmethod
+    def store_module_proxy(cls, module_name, module_proxy):
+        """Store the module proxy used to send RPC requests for a module."""
+
+        with cls.__module_lock:
+            cls.__module_proxies[module_name] = module_proxy
 
     @classmethod
     def get_proxy_type(cls, module_name, type_name):
@@ -460,6 +474,8 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
             # Store the module
             self.store_module(self.__module_name, module)
 
+        self.store_module_proxy(self.__module_name, self)
+
         if self.__module_name == "alias_api":
             install_alias_api_extensions_on_module(module, self)
 
@@ -687,10 +703,10 @@ class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
         if owner is not None:
             owner_module = getattr(owner, "__module__", None)
             if owner_module:
-                module_proxy = self.get_module(owner_module)
+                module_proxy = self.get_module_proxy(owner_module)
 
         if module_proxy is None:
-            module_proxy = self.get_module("alias_api")
+            module_proxy = self.get_module_proxy("alias_api")
 
         if module_proxy is None:
             raise AliasClientNotFound(
@@ -815,13 +831,42 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
             func_proxy._init(module_proxy, method_name)
             class_attrs[method_name] = func_proxy._create_object()
 
+    def _attach_server_side_constructor(
+        self, class_attrs, module_proxy, class_name, module_name
+    ):
+        """
+        Replace encoded constructor stubs with server-side ``()`` (PR #143).
+
+        Encoded ``__new__`` instance-method stubs send the wrong payload (Alias 2026.0
+        menubar). Forwarding ``()`` to the server matches ``Stage(name, path)`` and menus.
+        """
+
+        for name in ("__new__", "__call__"):
+            class_attrs.pop(name, None)
+
+        def __new__(cls, *args, **kwargs):
+            """
+            Construct an Alias API object on the server and return its client proxy.
+
+            :rtype: AliasClientObjectProxy
+            """
+
+            request_data = {
+                "__function_name__": class_name,
+                "__function_args__": args,
+                "__function_kwargs__": kwargs,
+                "__request_module_name__": module_name,
+            }
+            return module_proxy.send_request(class_name, request_data)
+
+        class_attrs["__new__"] = staticmethod(__new__)
+
     def _create_object(self):
         """
         Create an object from the proxy data to represent a class type in Alias api.
 
-        gui menu types (2027.1+) forward ``()`` to the server. ``AliasApiExtensions``
-        stays on the client. All other cached pybind types keep the legacy client
-        class proxy base (pre–PR #143).
+        ``AliasApiExtensions`` stays on the client (installed on the module after load).
+        Menu types and all other pybind types forward ``()`` to the server (#143).
 
         :return: The class type object.
         :rtype: type
@@ -840,39 +885,14 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         if uses_local_client_constructor(module_name, class_name):
             return self._placeholder_alias_api_extensions_type(class_name)
 
-        if uses_server_side_constructor(module_name, class_name):
-            self._inject_gui_class_methods(class_attrs, module_proxy, class_name)
-
-            def __new__(cls, *args, **kwargs):
-                """
-                Construct an Alias API object on the server and return its client proxy.
-
-                :rtype: AliasClientObjectProxy
-                """
-
-                request_data = {
-                    "__function_name__": class_name,
-                    "__function_args__": args,
-                    "__function_kwargs__": kwargs,
-                    "__request_module_name__": module_name,
-                }
-                return module_proxy.send_request(class_name, request_data)
-
-            class_attrs["__new__"] = staticmethod(__new__)
-
-            # Do not inherit AliasClientClassProxyWrapper.__init__ (expects encoded dict).
-            return type(self.__class_name, (object,), class_attrs)
-
         if module_name == "alias_api.gui":
             self._inject_gui_class_methods(class_attrs, module_proxy, class_name)
 
-        # Encoded pybind classes may include ``__new__`` RPC stubs. If left on the client
-        # type, ``Menu("label")`` dispatches ``__new__`` with the label as the only arg and
-        # the server treats it as a class (Alias 2026.0 menubar regression).
-        for name in ("__new__", "__call__"):
-            class_attrs.pop(name, None)
-
-        return type(self.__class_name, (self.__class__,), class_attrs)
+        self._attach_server_side_constructor(
+            class_attrs, module_proxy, class_name, module_name
+        )
+        # Do not inherit AliasClientClassProxyWrapper.__init__ (expects encoded dict).
+        return type(self.__class_name, (object,), class_attrs)
 
 
 class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
