@@ -15,6 +15,12 @@ import threading
 import types
 
 from ..utils.exceptions import AliasClientNotFound
+from ...extension_api_classes import (
+    ALIAS_API_EXTENSION_CLASSES,
+    install_alias_api_extensions_on_module,
+    uses_local_client_constructor,
+    uses_server_side_constructor,
+)
 from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 
 
@@ -225,6 +231,19 @@ class AliasClientObjectProxyWrapper:
 
         return self
 
+    def _materialize_function_member(self, attr_name, attr_data, module_proxy):
+        """Turn a cached function stub or proxy into a client-callable RPC function."""
+
+        if isinstance(attr_data, AliasClientFunctionProxyWrapper):
+            return attr_data.create_object(module_proxy, attr_name)
+        if isinstance(
+            attr_data, dict
+        ) and AliasClientFunctionProxyWrapper.needs_wrapping(attr_data):
+            proxy = AliasClientFunctionProxyWrapper(attr_data)
+            proxy._init(module_proxy, attr_name)
+            return proxy._create_object()
+        return None
+
     def _get_attributes(self):
         """Return a dictionary of attribtues for this object."""
 
@@ -250,6 +269,10 @@ class AliasClientObjectProxyWrapper:
                     attrs[attr_name] = AliasClientSubmoduleProxy(
                         root_module_proxy, attr_data.data["__module_name__"]
                     )
+            elif isinstance(attr_data, AliasClientFunctionProxyWrapper):
+                attrs[attr_name] = self._materialize_function_member(
+                    attr_name, attr_data, self.module
+                )
             elif isinstance(attr_data, AliasClientObjectProxyWrapper):
                 attrs[attr_name] = attr_data.create_object(self.module, attr_name)
             elif self._is_submodule_stub(attr_data):
@@ -257,7 +280,18 @@ class AliasClientObjectProxyWrapper:
                     root_module_proxy, attr_data["__module_name__"]
                 )
             else:
-                attrs[attr_name] = attr_data
+                module_proxy = (
+                    self.module
+                    if not isinstance(self, AliasClientModuleProxyWrapper)
+                    else self
+                )
+                materialized = self._materialize_function_member(
+                    attr_name, attr_data, module_proxy
+                )
+                if materialized is not None:
+                    attrs[attr_name] = materialized
+                else:
+                    attrs[attr_name] = attr_data
 
         return attrs
 
@@ -425,6 +459,9 @@ class AliasClientModuleProxyWrapper(AliasClientObjectProxyWrapper):
 
             # Store the module
             self.store_module(self.__module_name, module)
+
+        if self.__module_name == "alias_api":
+            install_alias_api_extensions_on_module(module, self)
 
         return module
 
@@ -640,6 +677,47 @@ class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
             return self.__get_method()
         return self.__get_function()
 
+    def _ensure_module_initialized(self, owner=None):
+        """Bind a module proxy when this wrapper was cached on a class without initialization."""
+
+        if self.module is not None:
+            return
+
+        module_proxy = None
+        if owner is not None:
+            owner_module = getattr(owner, "__module__", None)
+            if owner_module:
+                module_proxy = self.get_module(owner_module)
+
+        if module_proxy is None:
+            module_proxy = self.get_module("alias_api")
+
+        if module_proxy is None:
+            raise AliasClientNotFound(
+                "Alias client module proxy is not available for "
+                f"'{self.__func_name}'"
+            )
+
+        attr_name = self.attribute_name or self.__func_name
+        self._init(module_proxy, attr_name)
+
+    def __get__(self, instance, owner=None):
+        """
+        Materialize RPC callables when the API cache left a wrapper on the class dict.
+        """
+
+        self._ensure_module_initialized(owner)
+        fn = self._create_object()
+        if self.__is_instance_method:
+            if instance is None:
+                return fn
+
+            def bound(*args, **kwargs):
+                return fn(instance, *args, **kwargs)
+
+            return bound
+        return fn
+
     def __get_method(self):
         """
         Return a function that acts as a method that sends an api request from the proxy data.
@@ -647,11 +725,19 @@ class AliasClientFunctionProxyWrapper(AliasClientObjectProxyWrapper):
 
         def __method(instance, *args, **kwargs):
             data = {
-                "__instance_id__": instance.unique_id,
                 "__function_name__": self.__func_name,
                 "__function_args__": args,
                 "__function_kwargs__": kwargs,
             }
+            # Extension handles must not read ``unique_id``: the API cache may attach a
+            # property proxy whose getter reads ``instance.unique_id`` again (recursion).
+            if type(instance).__name__ in ALIAS_API_EXTENSION_CLASSES:
+                data["__alias_api_extension_class__"] = type(instance).__name__
+            else:
+                instance_id = getattr(instance, "unique_id", None)
+                if instance_id:
+                    data["__instance_id__"] = instance_id
+
             return self.module.send_request(self.__func_name, data)
 
         return __method
@@ -697,13 +783,45 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
             ]
         )
 
+    @staticmethod
+    def _placeholder_alias_api_extensions_type(class_name):
+        """
+        Placeholder until :func:`install_alias_api_extensions_on_module` runs on ``alias_api``.
+
+        :rtype: type
+        """
+
+        return type(
+            class_name,
+            (object,),
+            {
+                "__init__": lambda self, *args, **kwargs: None,
+                "__new__": staticmethod(object.__new__),
+            },
+        )
+
+    def _inject_gui_class_methods(self, class_attrs, module_proxy, class_name):
+        """Inject RPC instance methods missing from pybind gui class introspection."""
+
+        for method_name in GUI_CLASS_INSTANCE_METHODS.get(class_name, ()):
+            if method_name in class_attrs:
+                continue
+            func_proxy = AliasClientFunctionProxyWrapper(
+                {
+                    "__function_name__": method_name,
+                    "__is_method__": True,
+                }
+            )
+            func_proxy._init(module_proxy, method_name)
+            class_attrs[method_name] = func_proxy._create_object()
+
     def _create_object(self):
         """
         Create an object from the proxy data to represent a class type in Alias api.
 
-        Inspect the data to create and return the Alias api class type. Calling the
-        returned type forwards construction to the server (same as submodule stubs)
-        and returns a decoded instance proxy.
+        gui menu types (2027.1+) forward ``()`` to the server. ``AliasApiExtensions``
+        stays on the client. All other cached pybind types keep the legacy client
+        class proxy base (pre–PR #143).
 
         :return: The class type object.
         :rtype: type
@@ -719,40 +837,42 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         class_name = self.__class_name
         module_name = self.data["__module_name__"]
 
-        # pybind gui classes omit methods on the type; inject RPC stubs (see gui_api_methods).
+        if uses_local_client_constructor(module_name, class_name):
+            return self._placeholder_alias_api_extensions_type(class_name)
+
+        if uses_server_side_constructor(module_name, class_name):
+            self._inject_gui_class_methods(class_attrs, module_proxy, class_name)
+
+            def __new__(cls, *args, **kwargs):
+                """
+                Construct an Alias API object on the server and return its client proxy.
+
+                :rtype: AliasClientObjectProxy
+                """
+
+                request_data = {
+                    "__function_name__": class_name,
+                    "__function_args__": args,
+                    "__function_kwargs__": kwargs,
+                    "__request_module_name__": module_name,
+                }
+                return module_proxy.send_request(class_name, request_data)
+
+            class_attrs["__new__"] = staticmethod(__new__)
+
+            # Do not inherit AliasClientClassProxyWrapper.__init__ (expects encoded dict).
+            return type(self.__class_name, (object,), class_attrs)
+
         if module_name == "alias_api.gui":
-            for method_name in GUI_CLASS_INSTANCE_METHODS.get(class_name, ()):
-                if method_name in class_attrs:
-                    continue
-                func_proxy = AliasClientFunctionProxyWrapper(
-                    {
-                        "__function_name__": method_name,
-                        "__is_method__": True,
-                    }
-                )
-                func_proxy._init(module_proxy, method_name)
-                class_attrs[method_name] = func_proxy._create_object()
+            self._inject_gui_class_methods(class_attrs, module_proxy, class_name)
 
-        # Constructor RPC: Menu("label") runs in Alias; client holds the returned instance proxy.
-        def __new__(cls, *args, **kwargs):
-            """
-            Construct an Alias API object on the server and return its client proxy.
+        # Encoded pybind classes may include ``__new__`` RPC stubs. If left on the client
+        # type, ``Menu("label")`` dispatches ``__new__`` with the label as the only arg and
+        # the server treats it as a class (Alias 2026.0 menubar regression).
+        for name in ("__new__", "__call__"):
+            class_attrs.pop(name, None)
 
-            :rtype: AliasClientObjectProxy
-            """
-
-            request_data = {
-                "__function_name__": class_name,
-                "__function_args__": args,
-                "__function_kwargs__": kwargs,
-                "__request_module_name__": module_name,
-            }
-            return module_proxy.send_request(class_name, request_data)
-
-        class_attrs["__new__"] = staticmethod(__new__)
-
-        # Do not inherit AliasClientClassProxyWrapper.__init__ (expects encoded dict).
-        return type(self.__class_name, (object,), class_attrs)
+        return type(self.__class_name, (self.__class__,), class_attrs)
 
 
 class AliasClientEnumProxyWrapper(AliasClientObjectProxyWrapper):
@@ -934,6 +1054,9 @@ class AliasClientObjectProxy(AliasClientObjectProxyWrapper):
             attr = getattr(lookup_type, name)
         except AttributeError:
             raise AttributeError(name)
+
+        if isinstance(attr, AliasClientFunctionProxyWrapper):
+            return attr.__get__(self, lookup_type)
 
         if callable(attr):
 

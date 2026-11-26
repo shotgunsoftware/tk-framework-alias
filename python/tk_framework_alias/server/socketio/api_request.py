@@ -213,12 +213,22 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
             self.__instance = data_model.get_instance(instance_id)
 
         if self.__instance is None:
-            request_module_name = data.get("__request_module_name__")
-            if request_module_name:
-                self.__instance = self._resolve_module(request_module_name)
+            extension_class = data.get("__alias_api_extension_class__")
+            if extension_class:
+                extension_type = getattr(alias_api, extension_class, None)
+                if extension_type is not None:
+                    self.__instance = extension_type()
+                else:
+                    raise AliasApiRequestNotValid(
+                        f"Unknown Alias API extension class '{extension_class}'"
+                    )
             else:
-                # This is a module-level function
-                self.__instance = alias_api
+                request_module_name = data.get("__request_module_name__")
+                if request_module_name:
+                    self.__instance = self._resolve_module(request_module_name)
+                else:
+                    # This is a module-level function
+                    self.__instance = alias_api
 
     @staticmethod
     def _resolve_module(module_name):
@@ -369,7 +379,12 @@ class AliasApiRequestFunctionWrapper(AliasApiRequestWrapper):
         if self.func_name == "__new__":
             class_instance = self.func_args[0]
             args = self.func_args[1:]
-            return lambda: class_instance(*args, *self.func_kwargs)
+            if not isinstance(class_instance, type):
+                raise AliasApiRequestNotValid(
+                    "Invalid '__new__' request: expected a class as the first argument "
+                    f"but got {type(class_instance).__name__!r}"
+                )
+            return lambda: class_instance(*args, **self.func_kwargs)
         elif self.func_name == "_flat_getattr":
             # Resolve exports missing from the client API cache (PEP 562 / pybind11).
             attr_name = self.func_args[0]

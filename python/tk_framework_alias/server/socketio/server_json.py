@@ -273,7 +273,10 @@ class AliasServerJSONEncoder(json.JSONEncoder):
         """Encode a class type object such that is JSON serializable."""
 
         obj_id = id(obj)
-        if obj_id in self._seen_ids:
+        # Always embed full members for tk-framework-alias API extensions (plain
+        # Python class). A circular-ref stub leaves ``__members__`` empty on the
+        # client and extension RPC methods never materialize.
+        if obj_id in self._seen_ids and obj.__name__ != "AliasApiExtensions":
             return {
                 "__module_name__": obj.__module__,
                 "__class_name__": obj.__name__,
