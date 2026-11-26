@@ -26,6 +26,7 @@ from ...api import alias_api
 from ...api.extensions import (
     add_alias_api_extensions_to_module,
 )
+from ..alias_api_cache import alias_api_cache_needs_extension_rebuild
 from ..api_request import AliasApiRequestWrapper
 from ..server_json import AliasServerJSON
 from ...utils.invoker import execute_in_main_thread
@@ -320,6 +321,10 @@ class AliasServerNamespace(socketio.Namespace):
             or not os.path.exists(cache_module_filepath)
             or not filecmp.cmp(api_info["file_path"], cache_module_filepath)
             or extensions_updated
+            or (
+                os.path.exists(cache_filepath)
+                and alias_api_cache_needs_extension_rebuild(cache_filepath)
+            )
         ):
             try:
                 # Create the Alias API cache
