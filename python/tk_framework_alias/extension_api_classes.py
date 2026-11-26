@@ -11,11 +11,15 @@
 """
 Client-side class construction policy for the Alias API cache.
 
-Alias 2027.1+ menubar support requires constructing ``alias_api.gui`` menu types on
-the Alias server. ``alias_api.AliasApiExtensions`` is a plain Python extension class:
-instances are lightweight client handles and methods RPC to a fresh server-side instance.
+Cached pybind types normally forward client ``()`` to the Alias server and return an
+instance proxy. ``AliasApiExtensions`` is plain Python and must stay on the client.
+Menubar types listed in ``ALIAS_API_SERVER_CONSTRUCTED_CLASSES`` also need extra gui
+RPC stubs (``gui_api_methods``).
 
-All other pybind types keep server-side construction (#143) except ``AliasApiExtensions``.
+Policy on the client:
+
+- ``AliasApiExtensions``: local placeholder, then :func:`install_alias_api_extensions_on_module`
+- All other cached classes: server-side ``()`` (e.g. ``Stage``, menu types)
 
 Extension classes are (re)installed on the ``alias_api`` module after cache load so
 menubar-related class-encoding changes cannot leave ``FunctionProxyWrapper`` objects
@@ -54,7 +58,11 @@ def uses_local_client_constructor(module_name, class_name):
 
 def uses_server_side_constructor(module_name, class_name):
     """
-    Return True if the client type must forward ``()`` to the Alias server (2027.1+ gui).
+    Return True for menubar types that need ``gui_api_methods`` injection.
+
+    These types are a subset of classes that server-construct on ``()`` (all pybind
+    types except :func:`uses_local_client_constructor`). The allowlist marks menubar
+    types for stub injection; it is not the only server-construction gate.
 
     :rtype: bool
     """

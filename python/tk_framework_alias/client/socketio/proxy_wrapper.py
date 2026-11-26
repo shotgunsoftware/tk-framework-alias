@@ -19,6 +19,7 @@ from ...extension_api_classes import (
     ALIAS_API_EXTENSION_CLASSES,
     install_alias_api_extensions_on_module,
     uses_local_client_constructor,
+    uses_server_side_constructor,
 )
 from ...gui_api_methods import GUI_CLASS_INSTANCE_METHODS
 
@@ -835,7 +836,7 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         self, class_attrs, module_proxy, class_name, module_name
     ):
         """
-        Replace encoded constructor stubs with server-side ``()`` (PR #143).
+        Replace encoded constructor stubs with server-side ``()``.
 
         Encoded ``__new__`` instance-method stubs send the wrong payload (Alias 2026.0
         menubar). Forwarding ``()`` to the server matches ``Stage(name, path)`` and menus.
@@ -866,7 +867,8 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         Create an object from the proxy data to represent a class type in Alias api.
 
         ``AliasApiExtensions`` stays on the client (installed on the module after load).
-        Menu types and all other pybind types forward ``()`` to the server (#143).
+        Every other cached class forwards ``()`` to the server. Menubar types in
+        :func:`uses_server_side_constructor` also receive ``gui_api_methods`` RPC stubs.
 
         :return: The class type object.
         :rtype: type
@@ -885,7 +887,7 @@ class AliasClientClassProxyWrapper(AliasClientObjectProxyWrapper):
         if uses_local_client_constructor(module_name, class_name):
             return self._placeholder_alias_api_extensions_type(class_name)
 
-        if module_name == "alias_api.gui":
+        if uses_server_side_constructor(module_name, class_name):
             self._inject_gui_class_methods(class_attrs, module_proxy, class_name)
 
         self._attach_server_side_constructor(

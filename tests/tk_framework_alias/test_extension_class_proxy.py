@@ -106,7 +106,7 @@ def test_extension_rpc_via_module_install():
 
 
 def test_pybind_class_uses_server_side_constructor():
-    """Pybind types such as Stage forward ``()`` to the server like PR #143."""
+    """Pybind types such as Stage forward ``()`` to the Alias server."""
 
     module_proxy = mock.Mock()
     module_proxy.send_request.return_value = mock.sentinel.stage_proxy
